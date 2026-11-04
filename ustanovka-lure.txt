@@ -19,8 +19,8 @@
 ШАГ 4. Получить сертификат (одна строка, в том же окне):
   /root/.acme.sh/acme.sh --renew -d lure.eaglesteam.ru --ecc --yes-I-know-dns-manual-mode-enough-go-ahead-please && mkdir -p /opt/ai-chat/certs/lure && /root/.acme.sh/acme.sh --install-cert -d lure.eaglesteam.ru --ecc --key-file /opt/ai-chat/certs/lure/key.pem --fullchain-file /opt/ai-chat/certs/lure/fullchain.pem --reloadcmd "cd /opt/ai-chat && docker compose restart caddy"
 
-ШАГ 5. Поставить LURE (адрес репозитория пришлю):
-  cd /root && curl -fsSL АДРЕС_СКРИПТА -o install-lure.sh && bash install-lure.sh АДРЕС_РЕПОЗИТОРИЯ
+ШАГ 5. Поставить LURE:
+  cd /root && curl -fsSL https://raw.githubusercontent.com/chulkovbiznez/lure/main/install-lure.sh -o install-lure.sh && bash install-lure.sh https://github.com/chulkovbiznez/lure.git
 Скрипт попросит ключ из шага 2: вставь (правой кнопкой мыши) и нажми Enter. Символы не видны, так и должно быть.
 В конце будет «ГОТОВО». Открой https://lure.eaglesteam.ru, войди своим ID 11111.
 
