@@ -12,3 +12,9 @@
 
 Цены берутся из движка New API (`/api/pricing`: model ratio × completion ratio × group ratio), поэтому меняются только там.
 Деньги LURE не связаны с оплатами и бинаром EAGLES.
+
+## Белые списки (вечером в некоторых городах)
+Открываются только сервисы Яндекса, поэтому браузер ходит не на сервер, а так:
+- страница лежит в Object Storage, бакет `lure.eaglesteam.ru` (как сайт EAGLES), сертификат из Certificate Manager;
+- запросы идут в функцию `lure-gw` (`gateway/index.js`, functions.yandexcloud.net), она передаёт их на сервер: `https://ai.eaglesteam.ru/lure-gw/...` → сервис lure;
+- адрес функции записан в `public/config.js` (`window.LURE_API`). Пустой — страница ходит на свой сервер напрямую.

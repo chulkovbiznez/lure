@@ -202,10 +202,10 @@ async function api(req, res, url) {
     const tok = crypto.randomBytes(32).toString('hex');
     db.sessions[tok] = { id, at: Date.now(), es: v.session, ul: Date.now() }; // es: ключ EAGLES для ПИН, ul: когда последний раз был открыт
     save();
-    return send(res, 200, { ok: true, me: pub(u) }, { 'Set-Cookie': 'lure_s=' + tok + '; Path=/; Max-Age=' + SESSION_DAYS * 86400 + '; HttpOnly; Secure; SameSite=Lax' });
+    return send(res, 200, { ok: true, me: pub(u), token: tok }, { 'Set-Cookie': 'lure_s=' + tok + '; Path=/; Max-Age=' + SESSION_DAYS * 86400 + '; HttpOnly; Secure; SameSite=Lax' });
   }
   if (p === '/api/logout' && m === 'POST') {
-    const t = cookies(req).lure_s; if (t) { delete db.sessions[t]; save(); }
+    const t = sessTok(req); if (t) { delete db.sessions[t]; save(); }
     return send(res, 200, { ok: true }, { 'Set-Cookie': 'lure_s=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax' });
   }
 

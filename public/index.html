@@ -373,6 +373,7 @@ body:not([data-tab=chat]) #dOpen{display:none}
 </div></div>
 
 
+<script src="/config.js"></script>
 <script>
 (function(){
 var $=function(i){return document.getElementById(i)};
@@ -385,13 +386,18 @@ function toast(t){var d=document.createElement('div');d.className='toast';d.text
 function rub(n){n=Number(n)||0;return (Math.abs(n)<10?n.toFixed(2):Math.round(n*10)/10).toString().replace('.',',')+' ₽'}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function chkLock(u){return function(j){if(j&&j.error==='pin_locked'&&u.indexOf('/api/pin/')<0)showPin('enter');return j}}
-function post(u,b){return fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(b||{})}).then(function(r){return r.json()}).then(chkLock(u))}
-function get(u){return fetch(u,{credentials:'same-origin'}).then(function(r){return r.json()}).then(chkLock(u))}
+/* запросы идут либо на этот же сервер, либо (при белых списках) через функцию Яндекса: window.LURE_API в config.js */
+var API=window.LURE_API||'',CRED=API?'omit':'same-origin';
+function U(p){return API?API+(API.indexOf('?')<0?'?':'&')+'p='+encodeURIComponent(p):p}
+function TOK(v){try{if(v===undefined)return localStorage.getItem('lure_tok')||'';if(v)localStorage.setItem('lure_tok',v);else localStorage.removeItem('lure_tok')}catch(e){return ''}}
+function H(h){h=h||{};var t=TOK();if(t)h['X-Lure-Session']=t;return h}
+function post(u,b){return fetch(U(u),{method:'POST',headers:H({'Content-Type':'application/json'}),credentials:CRED,body:JSON.stringify(b||{})}).then(function(r){return r.json()}).then(chkLock(u))}
+function get(u){return fetch(U(u),{headers:H(),credentials:CRED}).then(function(r){return r.json()}).then(chkLock(u))}
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){return null}}
 
 /* ---------- вход ---------- */
 var lid='';
-function showLogin(){sss(0);$('app').hidden=true;$('login').hidden=false;$('l1').hidden=false;$('l2').hidden=true;$('lp').hidden=true}
+function showLogin(){sss(0);TOK(null);$('app').hidden=true;$('login').hidden=false;$('l1').hidden=false;$('l2').hidden=true;$('lp').hidden=true}
 /* ---------- ПИН: один на весь EAGLES (тот же, что на сайте) ---------- */
 var PM='',P1='',MAXU='https://max.ru/u/f9LHodD0cOIec-v91ujcZ-dap9pM51MzN00AwcIMTy-x29hys8Mcg8n8HJ4';
 function ssg(){try{return sessionStorage.getItem('lure_ul')}catch(e){return null}}
@@ -437,7 +443,7 @@ $('lBtn2').onclick=function(){
   var b=this;b.disabled=true;$('lErr2').textContent='';
   post('/api/login/verify',{id:lid,code:c}).then(function(r){b.disabled=false;
     if(!r.ok){$('lErr2').textContent=err(r.error,r);return}
-    afterLogin(r.me)}).catch(function(){b.disabled=false;$('lErr2').textContent='Нет связи. Проверь интернет. Если включён VPN, выключи его.'})};
+    if(r.token)TOK(r.token);afterLogin(r.me)}).catch(function(){b.disabled=false;$('lErr2').textContent='Нет связи. Проверь интернет. Если включён VPN, выключи его.'})};
 $('lBack').onclick=function(){$('l1').hidden=false;$('l2').hidden=true;$('lErr2').textContent=''};
 
 /* ---------- приложение ---------- */
@@ -535,7 +541,7 @@ $('sendBtn').onclick=function(){
     else if(errText){dialog.msgs.pop();if(!$('q').value)$('q').value=text;grow()}
     dStore(dialog);if(dialog===CUR)drawMsgs();if(errText)toast(errText);
     if(info){ME.balance=info.balance;ME.spentToday=Math.round((ME.spentToday+info.cost)*100)/100;setMe(ME)}}
-  fetch('/api/chat',{method:'POST',credentials:'same-origin',signal:ctl.signal,headers:{'Content-Type':'application/json'},
+  fetch(U('/api/chat'),{method:'POST',credentials:CRED,signal:ctl.signal,headers:H({'Content-Type':'application/json'}),
     body:JSON.stringify({model:model,messages:dialog.msgs.map(function(m){return{role:m.role,content:m.content}})})}).then(function(r){
     var ct=r.headers.get('content-type')||'';
     if(ct.indexOf('event-stream')<0)return r.json().then(function(j){if(j.error==='auth')showLogin();if(j.error==='need_pro'){ME.access=false;go('chat')}if(j.error==='need_terms')$('terms').hidden=false;if(j.error==='pin_locked')showPin('enter');done(err(j.error,j))});
