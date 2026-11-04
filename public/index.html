@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<title>LURE демо</title>
+<meta name="theme-color" content="#070708">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/znak.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap">
+<style>
+@font-face{font-family:"EAGLES Gold";src:url(/fonts/EAGLES-Gold.ttf) format("truetype");font-weight:900;font-display:swap}
+@font-face{font-family:"Montserrat EK";src:url(/fonts/Montserrat-900.ttf) format("truetype");font-weight:900;font-display:swap}
+:root{--bg:#070708;--card:#141217;--card2:#1b181d;--line:#2a2622;--text:#f4f4f2;--dim:#a29b90;--dim2:#6f6a64;
+--gold:#ffd23f;--gold1:#ffe08a;--gold2:#e9a23b;--orange:#ff6a2b;--red:#e8321a;--green:#3ecf6c;
+--f:"Montserrat","Montserrat EK",system-ui,-apple-system,"Segoe UI",sans-serif;--g:"EAGLES Gold","Montserrat EK","Arial Black",sans-serif;color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--f);height:100%}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none;padding:0}
+a{color:var(--gold)}
+[hidden]{display:none!important}
+.wrap{max-width:720px;margin:0 auto;padding:0 16px}
+.gold{background:linear-gradient(180deg,var(--gold1),var(--gold) 45%,var(--gold2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.btn{display:block;width:100%;border-radius:16px;padding:16px;background:linear-gradient(90deg,#ff6a2b,#ff9a3c);color:#1a0d05;font:900 16px var(--f);text-align:center;box-shadow:0 10px 26px rgba(255,106,43,.28)}
+.btn:disabled{opacity:.5}
+.btn2{border:1px solid var(--line);background:#0d0c0f;border-radius:12px;padding:10px 14px;font:700 13.5px var(--f);color:var(--text)}
+.inp{width:100%;height:52px;border-radius:14px;border:1px solid var(--line);background:#100e12;padding:0 16px;font:600 16px var(--f);outline:none}
+.inp:focus{border-color:var(--gold2)}
+.card{background:linear-gradient(180deg,#17141a,#110f13);border:1px solid var(--line);border-radius:22px;padding:16px;margin-bottom:12px}
+.muted{color:var(--dim);font-size:13.5px;line-height:1.5}
+.err{color:#ff7b6b;font-size:13.5px;min-height:20px;margin:8px 0}
+.okc{color:var(--green)}
+h2{font:900 13px var(--f);letter-spacing:1.2px;text-transform:uppercase;color:var(--dim);margin:20px 2px 10px}
+
+/* вход */
+#login{min-height:100%;display:flex;flex-direction:column;justify-content:center;padding:32px 0}
+.logo{text-align:center;margin-bottom:28px}
+.logo img{width:64px;height:64px;border-radius:50%;box-shadow:0 0 40px rgba(255,190,60,.35)}
+.logo b{display:block;font:900 64px/1 var(--g);letter-spacing:6px;margin-top:14px}
+.logo span{display:block;font:800 11px var(--f);letter-spacing:4px;color:var(--dim);margin-top:8px}
+.logo p{margin:14px auto 0;max-width:340px;color:var(--dim);font:600 14px/1.5 var(--f)}
+
+/* шапка */
+.top{position:sticky;top:0;z-index:10;background:rgba(7,7,8,.88);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-bottom:1px solid #16141a}
+.top .wrap{display:flex;align-items:center;gap:10px;height:58px;padding-top:env(safe-area-inset-top,0)}
+.top img{width:30px;height:30px;border-radius:50%}
+.top b{font:900 24px var(--g);letter-spacing:3px}
+.back{flex:none;color:var(--dim);text-decoration:none;font:800 13px var(--f);border:1px solid var(--line);border-radius:999px;padding:7px 11px;margin-right:2px}
+.bal{margin-left:auto;border:1px solid rgba(255,210,63,.35);background:#1a1510;border-radius:999px;padding:7px 12px;font:800 13.5px var(--f);color:var(--gold);white-space:nowrap}
+
+/* нижнее меню как в кабинете EAGLES */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:20;background:rgba(12,11,13,.9);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-top:1px solid var(--line);padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px))}
+.nav div{display:grid;grid-template-columns:repeat(5,1fr);max-width:720px;margin:0 auto}
+.nav button{position:relative;display:grid;justify-items:center;gap:3px;padding:6px 0;font:700 11px var(--f);color:#6d675f}
+.nav svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.nav .on{color:var(--orange)}
+.nav .on:before{content:"";position:absolute;top:-8px;left:30%;right:30%;height:3px;border-radius:0 0 3px 3px;background:var(--orange);box-shadow:0 0 12px var(--orange)}
+main{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+
+/* чат */
+#chat{display:flex;flex-direction:column;height:calc(100dvh - 58px - 72px - env(safe-area-inset-bottom,0px))}
+.mbar{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:10px 16px 8px;max-width:720px;margin:0 auto;width:100%}
+.mbar::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 13px;font:800 12.5px var(--f);color:var(--dim)}
+.chip.on{background:#2a2216;border-color:var(--gold2);color:var(--gold)}
+.chip.tool{color:var(--text)}
+.msgs{flex:1;overflow-y:auto;padding:6px 0 10px}
+.msgs .wrap{display:flex;flex-direction:column;gap:12px}
+.m{max-width:92%;border-radius:18px;padding:11px 14px;font:500 15px/1.55 var(--f);overflow-wrap:anywhere}
+.m.u{align-self:flex-end;background:#2a2216;border:1px solid #3a2e1a;border-bottom-right-radius:6px;white-space:pre-wrap}
+.m.a{align-self:flex-start;background:var(--card);border:1px solid var(--line);border-bottom-left-radius:6px}
+.m.a p{margin:0 0 8px}.m.a p:last-child{margin:0}
+.m.a pre{background:#0b0a0c;border:1px solid var(--line);border-radius:10px;padding:10px;overflow-x:auto;font:500 13px/1.45 ui-monospace,Consolas,monospace;margin:8px 0}
+.m.a code{font:500 13.5px ui-monospace,Consolas,monospace;background:#0b0a0c;border-radius:5px;padding:1px 4px}
+.m.a pre code{background:none;padding:0}
+.m.a h3,.m.a h4{margin:10px 0 6px;font:800 16px var(--f)}
+.m.a ul,.m.a ol{margin:4px 0 8px;padding-left:22px}
+.meta{font:700 11px var(--f);color:var(--dim2);margin-top:6px;display:flex;gap:10px;align-items:center}
+.meta button{color:var(--dim);font:700 11px var(--f)}
+.typing:after{content:"▍";animation:bl 1s steps(2) infinite;color:var(--gold)}
+@keyframes bl{50%{opacity:0}}
+.empty{text-align:center;padding:40px 10px;color:var(--dim)}
+.empty b{display:block;font:900 30px var(--g);letter-spacing:3px;margin-bottom:8px}
+.sugg{display:grid;gap:8px;margin-top:18px;text-align:left}
+.sugg button{border:1px solid var(--line);background:var(--card);border-radius:14px;padding:12px 14px;font:600 14px var(--f);text-align:left;color:var(--text)}
+.composer{border-top:1px solid #16141a;padding:10px 0}
+.composer .wrap{display:flex;gap:8px;align-items:flex-end}
+.composer textarea{flex:1;resize:none;min-height:48px;border-radius:16px;border:1px solid var(--line);background:#100e12;padding:13px 14px;font:500 15.5px/1.4 var(--f);outline:none}
+.composer textarea:focus{border-color:var(--gold2)}
+.send{flex:none;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#ff6a2b,#ffb03a);display:grid;place-items:center}
+.send svg{width:22px;height:22px;fill:#1a0d05}
+.send.stop{background:#2a2622}.send.stop svg{fill:var(--text)}
+.hint{font:600 11.5px var(--f);color:var(--dim2);text-align:center;margin-top:6px}
+
+/* диалоги */
+.sheet{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center}
+.sheet>div{width:100%;max-width:720px;max-height:80vh;overflow-y:auto;background:#141217;border:1px solid var(--line);border-bottom:0;border-radius:22px 22px 0 0;padding:18px 16px calc(20px + env(safe-area-inset-bottom))}
+.dl{display:flex;align-items:center;gap:10px;padding:12px 4px;border-bottom:1px solid #1f1c20}
+.dl button.t{flex:1;text-align:left;font:700 14px var(--f);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dl small{color:var(--dim2);font-size:11.5px}
+.dl .x{color:var(--dim2);font-size:18px;padding:0 6px}
+
+/* кошелёк */
+.big{text-align:center;padding:22px 16px;border-color:rgba(255,210,63,.4);background:linear-gradient(160deg,#241b10,#100d0a)}
+.big small{display:block;color:var(--dim);font:800 12px var(--f);letter-spacing:.08em}
+.big b{display:block;font:900 40px var(--f);color:var(--gold);margin:6px 0}
+.row{display:flex;justify-content:space-between;gap:10px;padding:10px 2px;border-bottom:1px solid #1e1a15;font-size:13.5px}
+.row span{color:var(--dim);min-width:0;overflow:hidden;text-overflow:ellipsis}
+.row b{white-space:nowrap}
+.plus{color:var(--green)}
+.flex{display:flex;gap:8px}
+.soon{text-align:center;padding:36px 18px}
+.soon .ic{font-size:44px}
+.soon b{display:block;font:900 22px var(--f);margin:10px 0 6px}
+.codebox{font:700 14px ui-monospace,Consolas,monospace;background:#0b0a0c;border:1px solid var(--line);border-radius:12px;padding:12px;white-space:pre-wrap;user-select:all}
+.toast{position:fixed;z-index:60;left:50%;bottom:calc(92px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#22190e;border:1px solid var(--gold2);color:var(--text);font:700 13px var(--f);padding:10px 14px;border-radius:12px;max-width:90vw;text-align:center}
+.foot{text-align:center;color:#55555c;font-size:11.5px;margin:24px 0 8px;line-height:1.5}
+
+/* v2: тоньше, выбор нейросети сверху */
+.top .wrap{gap:4px;height:56px}
+.ico{flex:none;width:38px;height:38px;display:grid;place-items:center;border-radius:12px;color:var(--dim);border:0;padding:0;margin:0}
+.ico svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.ico:hover,.ico:focus-visible{background:#141217;color:var(--text)}
+.mid{flex:1;min-width:0;display:flex;justify-content:center}
+.pick{display:flex;align-items:center;gap:4px;max-width:100%;padding:8px 10px;border-radius:12px;font:600 15.5px var(--f);color:var(--text);letter-spacing:.1px}
+.pick span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pick svg{flex:none;width:18px;height:18px;fill:none;stroke:var(--gold);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.pick:hover,.pick:focus-visible{background:#141217}
+.brand{display:flex;align-items:center;gap:8px}
+.brand img{width:24px;height:24px}
+.top .brand b{font:900 17px var(--g);letter-spacing:4px}
+body:not([data-tab=chat]) .sub,body:not([data-tab=chat]) #dOpen{visibility:hidden}
+body:not([data-tab=chat]) .sub{display:none}
+body.locked .sub{display:none}body.locked #dOpen{visibility:hidden}
+.bal{font:600 12.5px var(--f);padding:6px 11px;border-color:rgba(255,210,63,.22);background:transparent}
+.mpanel{position:fixed;z-index:30;left:50%;transform:translateX(-50%);top:calc(60px + env(safe-area-inset-top,0px));width:min(360px,calc(100vw - 24px));background:#121014;border:1px solid #26221f;border-radius:18px;padding:6px;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.opt{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:11px 12px;border-radius:12px}
+.opt:hover,.opt:focus-visible{background:#1b181d}
+.opt span{flex:1;min-width:0}
+.opt b{display:block;font:600 14.5px var(--f);color:var(--text)}
+.opt small{display:block;font:500 12px/1.4 var(--f);color:var(--dim2);margin-top:2px}
+.opt i{flex:none;width:18px;height:18px}
+.opt.on i{background:no-repeat center/18px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffd23f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E")}
+.empty{padding:0;min-height:52vh;display:grid;place-items:center;font:500 25px/1.3 var(--f);color:var(--text);letter-spacing:-.2px;text-align:center}
+.m{font:400 15.5px/1.62 var(--f)}
+.m.a{max-width:100%;background:none;border:0;padding:2px 2px}
+.m.a b,.m.a strong{font-weight:700}
+.m.u{background:#1c1813;border-color:#2b241b;border-radius:20px;border-bottom-right-radius:6px}
+.meta,.meta button{font:500 11.5px var(--f)}
+.composer{border-top:0;padding:8px 0 12px}
+.composer .wrap{align-items:flex-end;background:none}
+.composer textarea{border-radius:24px;font:400 15.5px/1.4 var(--f);min-height:48px;padding:13px 18px;background:#121014;border-color:#24201d}
+.send{width:44px;height:44px;margin-bottom:2px}
+.nav{border-top-color:#1a1719;background:rgba(9,8,10,.92)}
+.nav button{font:500 10.5px var(--f)}
+.nav svg{stroke-width:1.6}
+.nav .on:before{height:2px;top:-8px;box-shadow:0 0 8px var(--orange)}
+h2{font:700 11.5px var(--f);letter-spacing:1.4px}
+.btn{font:700 15.5px var(--f)}
+.btn2{font:600 13.5px var(--f)}
+.card{border-color:#221f1c}
+.big b{font-weight:700}
+
+/* v3: LURE наверху, выбор ниже */
+.top .wrap{height:50px}
+.brand{gap:7px}
+.brand img{width:20px;height:20px;opacity:.95}
+.top .brand b{font:900 15px var(--g);letter-spacing:6px;color:var(--gold1);background:none;-webkit-text-fill-color:currentColor;padding-left:6px}
+.sub{display:flex;justify-content:center;padding:0 16px 6px;max-width:720px;margin:0 auto}
+.pick{font:500 13px var(--f);color:var(--dim);padding:5px 10px;border:1px solid #221f1c;border-radius:999px;gap:2px}
+.pick span{max-width:62vw}
+.pick svg{width:15px;height:15px;stroke:var(--gold2)}
+.mpanel{top:calc(92px + env(safe-area-inset-top,0px))}
+
+/* v4: LURE + раздел */
+#chat{height:calc(100dvh - 90px - 72px - env(safe-area-inset-bottom,0px))}
+.brand em{font:400 15px var(--f);font-style:normal;color:var(--text);letter-spacing:.3px;margin-left:2px}
+.top .brand b{padding-left:3px}
+/* v5: премиальная шапка */
+.top{background:#070708;border-bottom:0}
+.top:after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:linear-gradient(90deg,transparent,rgba(233,162,59,.45) 50%,transparent)}
+.top .wrap{height:54px;gap:0}
+.top .wrap>.back{width:64px;justify-content:start;display:flex;align-items:center}
+.mid{justify-content:center}
+.brand{flex-direction:column;align-items:center;gap:3px}
+.top .brand b{font:900 16px/1 var(--g);letter-spacing:9px;padding-left:9px;color:var(--gold)}
+.brand em{font:500 8.5px/1 var(--f);letter-spacing:3.2px;text-transform:uppercase;color:var(--dim);margin:0;padding-left:3.2px}
+.bal{width:64px;flex:none;margin:0;padding:0;border:0;background:none;text-align:right;font:600 13px var(--f);color:var(--gold1);font-variant-numeric:tabular-nums}
+.sub{justify-content:space-between;align-items:center;padding:4px 16px 6px}
+.sub .ico{width:36px;height:36px}
+.pick{border:0;padding:6px 8px;font:500 13.5px var(--f);color:var(--text)}
+.pick svg{stroke:var(--dim)}
+body:not([data-tab=chat]) #dOpen{display:none}
+#chat{height:calc(100dvh - 100px - 72px - env(safe-area-inset-bottom,0px))}
+.mpanel{top:calc(104px + env(safe-area-inset-top,0px))}
+
+/* v6: логотип на входе */
+.logo .biglogo{width:min(340px,86vw);height:auto;border-radius:0;box-shadow:none;display:block;margin:0 auto}
+.logo p{margin-top:10px}
+#login .wrap{padding-top:28px}
+
+/* v7: слово LURE из логотипа */
+.brand img.word{width:auto;height:22px;opacity:1;border-radius:0;display:block}
+.brand{gap:4px}
+/* v8–v13: лучшая модель, тонкие рамки, длинные сообщения */
+.opt.best{border:1.5px solid var(--gold2)!important;background:linear-gradient(180deg,#221b10,#15110c)!important;box-shadow:0 0 0 1px rgba(255,210,63,.12),0 6px 18px rgba(233,162,59,.12);border-radius:14px;margin:2px 0 6px}
+.tagb{display:inline-block;margin-left:8px;vertical-align:2px;font:800 9.5px var(--f);letter-spacing:.08em;font-style:normal;color:#1a0d05;background:linear-gradient(180deg,var(--gold1),var(--gold2));border-radius:6px;padding:2px 6px}
+/* тонкие премиальные рамки */
+.card,.inp,.btn2,.seg,.voice,.chips2 button,.gmo,.ochips button,.gi,.gobar,.composer textarea,.chip,.sugg button,.m.a,.sheet>div,.back,.mpanel{border-width:.5px!important}
+.card,.seg,.gi{border-color:#2c2824}
+.refb{border-width:.5px;border-color:#3e372f}
+.gobar{border-color:rgba(233,162,59,.55)}
+.ochips button.on,.voice.on,.gmo.on,.opt.best{border-color:rgba(233,162,59,.75)!important}
+.ochips button{font-weight:500}.ochips button.on{font-weight:600}
+.inp:focus,.composer textarea:focus{border-color:rgba(233,162,59,.6)!important}
+.ta{display:block;height:auto;min-height:46px;padding:12px 14px;font:400 15.5px/1.45 var(--f);color:var(--text);resize:none;overflow-y:hidden;border-radius:14px}
+.ta::placeholder{color:#6f6a64;font-weight:400}
+.m.u .ut.clip{max-height:calc(15 * 1.62em);overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 2.4em),transparent);mask-image:linear-gradient(180deg,#000 calc(100% - 2.4em),transparent)}
+.m.u .more{display:block;margin:4px 0 0 auto;font:600 13px var(--f);color:var(--gold);padding:2px 0}
+</style>
+</head>
+<body>
+
+<!-- ВХОД -->
+<section id="login" hidden><div class="wrap" style="max-width:440px">
+  <div class="logo">
+    <img class="biglogo" src="/lure-logo.webp" width="640" height="395" alt="LURE. Покажи свой мир">
+    <p>Лучшие нейросети в одном месте: Claude, GPT и Gemini. Вход тем же аккаунтом, что и в EAGLES.</p>
+  </div>
+  <div id="l1">
+    <input class="inp" id="lLogin" placeholder="Твой ID или почта" autocomplete="username" inputmode="email">
+    <div class="err" id="lErr1"></div>
+    <button class="btn" id="lBtn1">Получить код на почту</button>
+    <p class="muted" style="text-align:center;margin-top:16px">Если LURE не открывается или не отвечает, выключи VPN.</p>
+    <p class="muted" style="text-align:center;margin-top:16px">Нет аккаунта EAGLES? <a href="https://app.eaglesteam.ru/">Зарегистрируйся бесплатно</a></p>
+  </div>
+  <div id="l2" hidden>
+    <p class="muted" id="lHint" style="text-align:center"></p>
+    <input class="inp" id="lCode" placeholder="Код из письма" inputmode="numeric" autocomplete="one-time-code" maxlength="6" style="text-align:center;letter-spacing:6px;font-size:22px">
+    <div class="err" id="lErr2"></div>
+    <button class="btn" id="lBtn2">Войти</button>
+    <p style="text-align:center;margin-top:14px"><button class="btn2" id="lBack">← Другой ID или почта</button></p>
+  </div>
+  <div id="lp" hidden>
+    <p id="pTitle" style="text-align:center;font:700 18px var(--f);margin:0 0 6px"></p>
+    <p class="muted" id="pHint" style="text-align:center;min-height:20px"></p>
+    <input class="inp" id="pCode" placeholder="Код из письма" inputmode="numeric" autocomplete="one-time-code" maxlength="6" hidden style="text-align:center;letter-spacing:6px;font-size:22px;margin-bottom:10px">
+    <input class="inp" id="pIn" type="password" inputmode="numeric" autocomplete="off" maxlength="4" aria-label="ПИН" style="text-align:center;letter-spacing:16px;font-size:28px">
+    <div class="err" id="pErr"></div>
+    <p style="text-align:center;margin-top:14px"><button class="btn2" id="pForgot">Забыл ПИН</button></p>
+    <p style="text-align:center;margin-top:8px"><button class="btn2" id="pOut">Войти другим аккаунтом</button></p>
+  </div>
+</div></section>
+
+<!-- ПРИЛОЖЕНИЕ -->
+<div id="app" hidden>
+  <header class="top"><div class="wrap">
+    <a class="back ico" href="https://app.eaglesteam.ru/profile.html" aria-label="Вернуться в EAGLES"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></a>
+    <div class="mid"><span class="brand"><img class="word" src="/lure-word.webp" alt="LURE" width="268" height="60"><em id="secName">Чаты</em></span></div>
+    <button class="bal" id="balChip" type="button">… ₽</button>
+  </div>
+  <div class="sub">
+    <button class="ico" id="dOpen" type="button" aria-label="Диалоги"><svg viewBox="0 0 24 24"><path d="M4 8h16M4 16h10"/></svg></button>
+    <button class="pick" id="mPick" type="button" aria-haspopup="listbox"><span id="mName">…</span><svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg></button>
+    <button class="ico" id="dNew2" type="button" aria-label="Новый диалог"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+  </div>
+  </header>
+  <div class="mpanel" id="mpanel" hidden><div class="mlist" id="mlistSel" role="listbox"></div></div>
+
+  <main>
+    <!-- Чат -->
+    <section id="chat" data-tab="chat">
+      
+      <div class="msgs" id="msgs"><div class="wrap" id="mlist"></div></div>
+      <div class="composer"><div class="wrap">
+        <textarea id="q" rows="1" placeholder="Спроси что угодно"></textarea>
+        <button class="send" id="sendBtn" type="button" aria-label="Отправить"><svg viewBox="0 0 24 24"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg></button>
+      </div></div>
+    </section>
+
+    <!-- Нет Pro -->
+    <section id="nopro" hidden><div class="wrap">
+      <div class="card soon" style="margin-top:16px;border-color:rgba(255,210,63,.4)"><div class="ic">🦅</div><b>LURE доступен с подпиской EAGLES Pro</b>
+        <p class="muted" id="noproTxt">Оформи Pro в своём кабинете EAGLES, и LURE откроется. Деньги за нейросети считаются отдельно, в кошельке LURE.</p>
+        <a class="btn" style="text-decoration:none;margin-top:14px" href="https://app.eaglesteam.ru/profile.html">Оформить Pro в EAGLES</a>
+        <p style="margin-top:12px"><button class="btn2" id="reLogin">Я уже оформил, войти заново</button></p></div>
+    </div></section>
+
+    <!-- Звук -->
+    <section data-tab="sound" hidden><div class="wrap">
+      <div class="card soon" style="margin-top:16px"><div class="ic">🎙</div><b>Звук скоро</b>
+        <p class="muted">ElevenLabs: озвучка текста готовыми голосами, звуковые эффекты, позже твой собственный голос. Цена будет видна до нажатия, списание только за готовое.</p></div>
+    </div></section>
+
+    <!-- Картинки -->
+    <section data-tab="img" hidden><div class="wrap">
+      <div class="card soon" style="margin-top:16px"><div class="ic">🖼</div><b>Изображения скоро</b>
+        <p class="muted">Nano Banana и GPT Image: напишешь словами, получишь картинку. Цена будет видна до нажатия, списание только за готовую.</p></div>
+    </div></section>
+
+    <!-- Видео -->
+    <section data-tab="video" hidden><div class="wrap">
+      <div class="card soon" style="margin-top:16px"><div class="ic">🎬</div><b>Видео скоро</b>
+        <p class="muted">Veo 3, Seedance 2 и Gemini Omni Flash. Ролик готовится несколько минут, страницу можно закрыть: готовое видео будет ждать здесь.</p></div>
+    </div></section>
+
+    <!-- Кошелёк -->
+    <section data-tab="wallet" hidden><div class="wrap" style="padding-top:16px">
+      <div class="card big"><small>НА СЧЁТЕ</small><b id="wBal">… ₽</b><p class="muted" id="wDay" style="margin:0"></p></div>
+      <div class="card">
+        <b style="font:800 15px var(--f)">Пополнить</b>
+        <p class="muted" style="margin:6px 0 12px">Оплата картой и по СБП скоро появится здесь. Если у тебя есть подарочный код, введи его ниже. Твой ID: <b id="wId" style="color:var(--text)"></b></p>
+        <div class="flex"><input class="inp" id="rCode" placeholder="LURE-XXXX-XXXX" autocomplete="off" style="text-transform:uppercase"><button class="btn2" id="rBtn" style="flex:none">Ввести</button></div>
+        <div class="err" id="rErr"></div>
+        <a class="btn2" style="display:inline-block;text-decoration:none" target="_blank" rel="noopener" href="https://max.ru/u/f9LHodD0cOIec-v91ujcZ-dap9pM51MzN00AwcIMTy-x29hys8Mcg8n8HJ4">Вопрос Андрею в МАКС →</a>
+      </div>
+      <h2>Цены</h2>
+      <div class="card" id="priceList"><p class="muted">Загружаю…</p></div>
+      <h2>История</h2>
+      <div class="card" id="hist"><p class="muted">Пока пусто.</p></div>
+
+      <div id="owner" hidden>
+        <h2>Касса LURE · видишь только ты</h2>
+        <div class="card" id="oSum"><p class="muted">Загружаю…</p></div>
+        <div class="card">
+          <b style="font:800 15px var(--f)">Коды пополнения</b>
+          <div class="flex" style="margin-top:10px"><input class="inp" id="cSum" placeholder="Сумма, ₽" inputmode="numeric"><input class="inp" id="cCnt" placeholder="Сколько" inputmode="numeric" value="1" style="max-width:110px"></div>
+          <button class="btn" id="cBtn" style="margin-top:10px">Создать коды</button>
+          <div id="cOut" style="margin-top:10px"></div>
+        </div>
+        <div class="card">
+          <b style="font:800 15px var(--f)">Пополнить по ID</b>
+          <div class="flex" style="margin-top:10px"><input class="inp" id="kId" placeholder="ID EAGLES"><input class="inp" id="kSum" placeholder="Сумма, ₽" inputmode="decimal"></div>
+          <button class="btn2" id="kBtn" style="margin-top:10px;width:100%">Зачислить</button>
+          <p class="muted" style="margin:8px 0 0">Сумма с минусом списывает деньги, например −50.</p>
+          <div class="err" id="kErr"></div>
+        </div>
+        <div class="card" id="oPeople"></div>
+      </div>
+      <p style="text-align:center"><button class="btn2" id="logout">Выйти из LURE</button></p>
+      <p class="foot">LURE · сервис на сайте EAGLES · Зеркало твоего бизнеса<br>Ответы нейросетей могут содержать ошибки, проверяй важное.<br><a href="/oferta.html" target="_blank" rel="noopener">Оферта</a> · <a href="/politika.html" target="_blank" rel="noopener">Конфиденциальность</a> · <a href="/soglasie.html" target="_blank" rel="noopener">Согласие на обработку данных</a></p>
+    </div></section>
+  </main>
+
+  <nav class="nav"><div>
+    <button data-go="chat" class="on"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>Чаты</button>
+    <button data-go="img"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>Изображения</button>
+    <button data-go="video"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="4"/><path d="M10 9l5 3-5 3z"/></svg>Видео</button>
+    <button data-go="sound"><svg viewBox="0 0 24 24"><path d="M4 10v4M8 6v12M12 3v18M16 7v10M20 10v4"/></svg>Звук</button>
+    <button data-go="wallet"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10h18M16 15h2"/><path d="M6 6l9-3 2 3"/></svg>Баланс</button>
+  </div></nav>
+</div>
+
+<div class="sheet" id="terms" hidden><div>
+  <b style="font:800 18px var(--f)">Правила LURE</b>
+  <ol class="muted" style="padding-left:20px;margin:12px 0;line-height:1.5">
+    <li>LURE: сервис на сайте EAGLES. Ответы, картинки и видео создают нейросети, они могут ошибаться. Важное проверяй.</li>
+    <li>Нельзя просить и создавать: реальных людей без их согласия, особенно политиков, глав государств и известных людей; политику, экстремизм, насилие, оружие, наркотики; оскорбления религий и народов; материалы 18+; подделки документов и обман; всё, что нарушает законы РФ.</li>
+    <li>За свои запросы и за то, как ты используешь результат, отвечаешь ты сам.</li>
+    <li>Каждый запрос сохраняется с твоим ID. За нарушение доступ к LURE закрывается.</li>
+    <li>Деньги на балансе LURE идут только на нейросети и не участвуют в выплатах EAGLES.</li>
+  </ol>
+  <p class="muted" style="margin:0 0 14px;font-size:13px;line-height:1.5">Нажимая «Принимаю правила», ты принимаешь <a href="/oferta.html" target="_blank" rel="noopener">оферту LURE</a>, даёшь <a href="/soglasie.html" target="_blank" rel="noopener">согласие на обработку персональных данных</a> и подтверждаешь, что тебе есть 18 лет. <a href="/politika.html" target="_blank" rel="noopener">Политика конфиденциальности</a>.</p>
+  <div class="err" id="tErr"></div>
+  <button class="btn" id="tOk">Принимаю правила</button>
+</div></div>
+<div class="sheet" id="dlgs" hidden><div>
+  <div class="flex" style="align-items:center;margin-bottom:6px"><b style="font:900 18px var(--f);flex:1">Диалоги</b><button class="btn2" id="dNew">＋ Новый</button></div>
+  <div id="dList"></div>
+</div></div>
+
+
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)};
+var ME=null, MODELS=[], CUR=null, ctl=null;
+var ERR={not_found:'Такого ID или почты нет в EAGLES.',too_often:'Код уже отправлен. Новый можно через минуту.',mail_limit:'Сегодня слишком много писем, попробуй завтра.',mail_failed:'Письмо не ушло, попробуй ещё раз.',bad_code:'Неверный код.',expired:'Код устарел, запроси новый.',frozen:'Аккаунт EAGLES заблокирован.',blocked:'Доступ к LURE закрыт. Напиши Андрею.',need_pro:'LURE доступен с подпиской EAGLES Pro.',need_terms:'Сначала прими правила LURE.',pin_locked:'Введи ПИН.',rec_limit:'Попытки на сегодня закончились. Напиши в техподдержку.',bad_pin_format:'ПИН: 4 цифры.',no_email:'У аккаунта нет почты. Напиши Андрею.',missing_fields:'Введи код из письма.',
+  no_money:'На счёте не хватает денег. Пополни кошелёк.',day_limit:'На сегодня лимит расходов исчерпан. Завтра снова можно.',busy:'Дождись ответа на прошлый вопрос.',too_long:'Слишком длинный текст, сократи его.',bad_model:'Эта модель сейчас недоступна.',engine_down:'Нейросети сейчас недоступны, попробуй через минуту.',engine_busy:'Нейросеть перегружена, попробуй через минуту.',engine_error:'Нейросеть не ответила, попробуй ещё раз или выбери другую.',
+  used:'Этот код уже использован.',too_many:'Слишком много попыток, попробуй через час.',auth:'Вход устарел, войди заново.',server_error:'Ошибка сервера, попробуй ещё раз.',not_owner:'Только для Андрея.',bad_sum:'Проверь сумму.',no_user:'Такой ID ещё не заходил в LURE.'};
+function err(e,r){if(e==='locked'){var m=Number(r&&r.retryAfterMin)||60;return 'Слишком много попыток. Вход откроется '+(m>=60?'через час.':'через '+m+' мин.')}return ERR[e]||'Не получилось. Попробуй ещё раз.'}
+function toast(t){var d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(function(){d.remove()},2800)}
+function rub(n){n=Number(n)||0;return (Math.abs(n)<10?n.toFixed(2):Math.round(n*10)/10).toString().replace('.',',')+' ₽'}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function chkLock(u){return function(j){if(j&&j.error==='pin_locked'&&u.indexOf('/api/pin/')<0)showPin('enter');return j}}
+function post(u,b){return fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(b||{})}).then(function(r){return r.json()}).then(chkLock(u))}
+function get(u){return fetch(u,{credentials:'same-origin'}).then(function(r){return r.json()}).then(chkLock(u))}
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){return null}}
+
+/* ---------- вход ---------- */
+var lid='';
+function showLogin(){sss(0);$('app').hidden=true;$('login').hidden=false;$('l1').hidden=false;$('l2').hidden=true;$('lp').hidden=true}
+/* ---------- ПИН: один на весь EAGLES (тот же, что на сайте) ---------- */
+var PM='',P1='',MAXU='https://max.ru/u/f9LHodD0cOIec-v91ujcZ-dap9pM51MzN00AwcIMTy-x29hys8Mcg8n8HJ4';
+function ssg(){try{return sessionStorage.getItem('lure_ul')}catch(e){return null}}
+function sss(v){try{if(v)sessionStorage.setItem('lure_ul','1');else sessionStorage.removeItem('lure_ul')}catch(e){}}
+function showPin(mode,hint){PM=mode;P1='';$('app').hidden=true;$('dlgs').hidden=true;$('terms').hidden=true;$('login').hidden=false;$('l1').hidden=true;$('l2').hidden=true;$('lp').hidden=false;
+  $('pIn').value='';$('pIn').disabled=false;$('pCode').value='';$('pErr').textContent='';$('pCode').hidden=mode!=='rec';$('pForgot').hidden=mode!=='enter';
+  $('pTitle').textContent={enter:'Введи ПИН',set:'Придумай ПИН из 4 цифр',rep:'Повтори ПИН',rec:'Код из письма и новый ПИН'}[mode];
+  $('pHint').textContent=hint||{enter:'Тот же ПИН, что на сайте EAGLES.',set:'Он будет общим для LURE и сайта EAGLES.',rep:'',rec:''}[mode];
+  setTimeout(function(){(mode==='rec'?$('pCode'):$('pIn')).focus()},100)}
+function unlocked(){sss(1);$('lp').hidden=true;get('/api/me').then(function(r){if(r.ok&&!r.locked)start(r.me);else showLogin()})}
+function netErr(){$('pIn').disabled=false;$('pErr').textContent='Нет связи. Если включён VPN, выключи его.'}
+function pinErr(r){$('pIn').disabled=false;if(r.error==='auth'){showLogin();return}
+  if(r.error==='pin_blocked'){showPin('enter');$('pErr').textContent='ПИН введён неверно 5 раз. Нажми «Забыл ПИН», на почту придёт код.';return}
+  if(r.error==='no_pin'){showPin('set');return}
+  if(r.error==='rec_limit'){$('pErr').innerHTML='Попытки на сегодня закончились. Напиши в техподдержку:<br><a href="'+MAXU+'" target="_blank" rel="noopener">Андрей в МАКС</a> · <span style="user-select:all">chulkovbiznez@gmail.com</span>';return}
+  $('pErr').textContent=r.error==='bad_pin'?'Неверный ПИН. Осталось попыток: '+r.left:r.error==='bad_code'?'Неверный код из письма.':err(r.error,r)}
+$('pIn').oninput=function(){var v=this.value.replace(/\D/g,'').slice(0,4);if(v!==this.value)this.value=v;if(v.length<4)return;var x=this;
+  if(PM==='set'){P1=v;showPin('rep');P1=v;return}
+  if(PM==='rep'){if(v!==P1){showPin('set');$('pErr').textContent='ПИН не совпал, попробуй ещё раз.';return}
+    x.disabled=true;post('/api/pin/set',{pin:v}).then(function(r){if(r.ok)unlocked();else if(r.error==='pin_exists')showPin('enter','ПИН уже задан на сайте EAGLES. Введи его.');else pinErr(r)}).catch(netErr);return}
+  if(PM==='enter'){x.disabled=true;post('/api/pin/check',{pin:v}).then(function(r){x.value='';if(r.ok)unlocked();else pinErr(r)}).catch(netErr);return}
+  if(PM==='rec'){var c=$('pCode').value.replace(/\D/g,'');if(c.length!==6){x.value='';$('pErr').textContent='Сначала введи 6 цифр из письма.';return}
+    x.disabled=true;post('/api/pin/rec_verify',{code:c,pin:v}).then(function(r){x.value='';if(r.ok)unlocked();else pinErr(r)}).catch(netErr)}};
+$('pCode').oninput=function(){var v=this.value.replace(/\D/g,'').slice(0,6);if(v!==this.value)this.value=v;if(v.length===6)$('pIn').focus()};
+$('pForgot').onclick=function(){var b=this;b.disabled=true;post('/api/pin/rec_request').then(function(r){b.disabled=false;if(!r.ok){pinErr(r);return}showPin('rec','Код отправлен на '+(r.emailHint||'твою почту')+'. Введи его и придумай новый ПИН.')}).catch(function(){b.disabled=false;netErr()})};
+$('pOut').onclick=function(){post('/api/logout').then(showLogin,showLogin)};
+function afterLogin(m){sss(1);post('/api/pin/state').then(function(s){if(s.ok&&!s.has)showPin('set');else start(m)}).catch(function(){start(m)})}
+function boot(){get('/api/me').then(function(r){if(!r.ok){showLogin();return}
+  if(!r.locked&&ssg()){start(r.me);return}
+  post('/api/pin/state').then(function(s){if(!s.ok){pinErr(s);showLogin();return}if(!s.has){showPin('set');return}
+    if(r.locked)showPin('enter');else post('/api/lock').then(function(){showPin('enter')})}).catch(showLogin)}).catch(showLogin)}
+$('lBtn1').onclick=function(){
+  var v=$('lLogin').value.trim();if(!v){$('lErr1').textContent='Впиши свой ID или почту.';return}
+  var b=this;b.disabled=true;$('lErr1').textContent='';
+  post('/api/login/request',{login:v}).then(function(r){b.disabled=false;
+    if(!r.ok){$('lErr1').textContent=err(r.error,r);return}
+    lid=r.id;$('l1').hidden=true;$('l2').hidden=false;$('lHint').innerHTML='Код отправлен на <b></b>. Он придёт от kod@eaglesteam.ru.';$('lHint').querySelector('b').textContent=r.emailHint||'твою почту';$('lCode').value='';setTimeout(function(){$('lCode').focus()},100);
+  }).catch(function(){b.disabled=false;$('lErr1').textContent='Нет связи. Проверь интернет. Если включён VPN, выключи его.'})};
+$('lLogin').onkeydown=function(e){if(e.key==='Enter')$('lBtn1').click()};
+$('lCode').oninput=function(){var v=this.value.replace(/\D/g,'').slice(0,6);if(v!==this.value)this.value=v;if(v.length===6)$('lBtn2').click()};
+$('lBtn2').onclick=function(){
+  var c=$('lCode').value.trim();if(!/^\d{6}$/.test(c)){$('lErr2').textContent='Код: 6 цифр из письма.';return}
+  var b=this;b.disabled=true;$('lErr2').textContent='';
+  post('/api/login/verify',{id:lid,code:c}).then(function(r){b.disabled=false;
+    if(!r.ok){$('lErr2').textContent=err(r.error,r);return}
+    afterLogin(r.me)}).catch(function(){b.disabled=false;$('lErr2').textContent='Нет связи. Проверь интернет. Если включён VPN, выключи его.'})};
+$('lBack').onclick=function(){$('l1').hidden=false;$('l2').hidden=true;$('lErr2').textContent=''};
+
+/* ---------- приложение ---------- */
+function setMe(m){ME=m;$('balChip').textContent=rub(m.balance);$('wBal').textContent=rub(m.balance);$('wId').textContent=m.id;
+  $('wDay').textContent='Сегодня потрачено '+rub(m.spentToday)+' из '+rub(m.dayLimit)+' в сутки';$('owner').hidden=!m.owner}
+function start(m){setMe(m);$('login').hidden=true;$('app').hidden=false;loadModels();openDialog(ls(key('cur'))||null);go(location.hash.replace('#','')||'chat');if(m.access&&!m.terms)$('terms').hidden=false}
+$('tOk').onclick=function(){var b=this;b.disabled=true;$('tErr').textContent='';post('/api/terms').then(function(r){b.disabled=false;if(!r.ok){if(r.error==='auth')showLogin();return}setMe(r.me);$('terms').hidden=true}).catch(function(){b.disabled=false;$('tErr').textContent='Нет связи. Если включён VPN, выключи его.'})};
+function key(k){return 'lure_'+(ME?ME.id:'x')+'_'+k}
+function go(t){if(!/^(chat|sound|img|video|wallet)$/.test(t))t='chat';document.body.dataset.tab=t;$('secName').textContent={chat:'Чаты',sound:'Звук',img:'Изображения',video:'Видео',wallet:'Баланс'}[t];$('mpanel').hidden=true;
+  var lock=ME&&!ME.access&&t!=='wallet';$('nopro').hidden=!lock;document.body.classList.toggle('locked',!!lock);
+  if(lock&&ME.plan==='pro')$('noproTxt').textContent='Срок подписки Pro закончился. Продли её в кабинете EAGLES и войди в LURE заново.';
+  [].forEach.call(document.querySelectorAll('section[data-tab]'),function(s){s.hidden=lock||s.dataset.tab!==t});
+  [].forEach.call(document.querySelectorAll('.nav button'),function(b){b.classList.toggle('on',b.dataset.go===t)});
+  if(t==='wallet')loadWallet();history.replaceState(null,'','#'+t)}
+[].forEach.call(document.querySelectorAll('.nav button'),function(b){b.onclick=function(){go(b.dataset.go)}});
+$('balChip').onclick=function(){go('wallet')};
+
+/* ---------- модели ---------- */
+function pretty(id){var s=String(id).split('/').pop();
+  s=s.replace(/^claude-?/i,'Claude ').replace(/^gpt-?/i,'GPT-').replace(/^gemini-?/i,'Gemini ').replace(/^o(\d)/i,'o$1').replace(/(\d)-(\d)/g,'$1.$2').replace(/-/g,' ').replace(/\s+/g,' ').trim();
+  return s.replace(/\b(sonnet|opus|haiku|flash|pro|omni|mini|nano|lite)\b/gi,function(w){return w[0].toUpperCase()+w.slice(1).toLowerCase()})}
+function typical(m){if(!m)return 0;if(m.perCall)return m.perCallRub;return (1500*m.per1M.in+600*m.per1M.out)/1e6}
+function isBest(id){return /opus-5/i.test(id)?1:0}
+function loadModels(){get('/api/models').then(function(r){if(!r.ok){if(r.error==='auth')showLogin();return}
+  MODELS=r.models.filter(function(m){return !m.perCall}).sort(function(a,b){return isBest(b.id)-isBest(a.id)});var sel=ls(key('model'));
+  if(!MODELS.some(function(m){return m.id===sel}))sel=(MODELS.filter(function(m){return /sonnet/i.test(m.id)})[0]||MODELS[0]||{}).id;
+  ls(key('model'),sel||null);drawModels();drawPrices(r.models)})}
+var DESC=[[/opus/i,'Самая умная, для сложных задач'],[/sonnet/i,'Отличная на каждый день'],[/haiku/i,'Быстрая и недорогая'],[/gpt/i,'Универсальная от OpenAI'],[/gemini.*pro/i,'Сильная от Google'],[/flash/i,'Быстрая и самая дешёвая']];
+function desc(id){for(var i=0;i<DESC.length;i++)if(DESC[i][0].test(id))return DESC[i][1];return ''}
+function drawModels(){var sel=ls(key('model'));var m=MODELS.filter(function(x){return x.id===sel})[0];
+  $('mName').textContent=m?pretty(m.id):'LURE';
+  $('mlistSel').innerHTML=MODELS.map(function(x){return '<button class="opt'+(x.id===sel?' on':'')+(isBest(x.id)?' best':'')+'" data-m="'+esc(x.id)+'" role="option"><span><b>'+esc(pretty(x.id))+(isBest(x.id)?'<em class="tagb">ЛУЧШАЯ</em>':'')+'</b><small>'+esc(desc(x.id))+' · ≈ '+rub(typical(x))+' за ответ</small></span><i></i></button>'}).join('');
+  [].forEach.call($('mlistSel').querySelectorAll('[data-m]'),function(b){b.onclick=function(){ls(key('model'),b.dataset.m);$('mpanel').hidden=true;drawModels()}})}
+$('mPick').onclick=function(e){e.stopPropagation();$('mpanel').hidden=!$('mpanel').hidden};
+document.addEventListener('click',function(e){if(!$('mpanel').hidden&&!$('mpanel').contains(e.target))$('mpanel').hidden=true});
+$('dOpen').onclick=function(){openList()};
+function drawPrices(all){$('priceList').innerHTML=all.length?all.map(function(m){return '<div class="row"><span>'+esc(pretty(m.id))+'</span><b>'+(m.perCall?rub(m.perCallRub)+' за раз':'≈ '+rub(typical(m))+' за ответ')+'</b></div>'}).join('')+'<p class="muted" style="margin:10px 0 0">Цена зависит от длины вопроса и ответа. Точная сумма видна под каждым ответом и в истории.</p>':'<p class="muted">Модели пока не подключены.</p>'}
+
+/* ---------- диалоги (хранятся в этом браузере) ---------- */
+/* диалоги хранятся на сервере LURE, видны с любого устройства */
+function newDialog(){return {id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),title:'',msgs:[]}}
+function dStore(d){post('/api/dialog',{id:d.id,title:d.title,msgs:d.msgs}).then(function(r){if(r&&r.error==='dialog_full')toast('Диалог слишком длинный, начни новый');else if(r&&r.error==='auth')showLogin()}).catch(function(){toast('Диалог не сохранился: нет связи')})}
+function openDialog(id){var tmp=CUR=newDialog();ls(key('cur'),id||CUR.id);drawMsgs();if(!id)return;
+  get('/api/dialog?id='+encodeURIComponent(id)).then(function(r){if(CUR!==tmp||tmp.msgs.length)return;if(r.ok&&r.dialog){CUR=r.dialog;drawMsgs()}else ls(key('cur'),tmp.id)}).catch(function(){})}
+function drawList(L){$('dList').innerHTML=L.length?L.map(function(x){return '<div class="dl"><button class="t" data-o="'+esc(x.id)+'">'+esc(x.t||'Без названия')+'</button><small>'+new Date(x.at).toLocaleDateString('ru-RU')+'</small><button class="x" data-x="'+esc(x.id)+'" aria-label="Удалить">×</button></div>'}).join(''):'<p class="muted">Диалогов пока нет.</p>';
+  [].forEach.call($('dList').querySelectorAll('[data-o]'),function(b){b.onclick=function(){openDialog(b.dataset.o);$('dlgs').hidden=true}});
+  [].forEach.call($('dList').querySelectorAll('[data-x]'),function(b){b.onclick=function(){var id=b.dataset.x;drawList(L.filter(function(x){return x.id!==id}));post('/api/dialog/delete',{id:id}).catch(function(){});if(CUR&&CUR.id===id)openDialog(null)}})}
+function openList(){$('dList').innerHTML='<p class="muted">Загружаю…</p>';$('dlgs').hidden=false;
+  get('/api/dialogs').then(function(r){if(!r.ok){if(r.error==='auth')showLogin();return}drawList(r.list)}).catch(function(){$('dList').innerHTML='<p class="muted">Нет связи. Если включён VPN, выключи его.</p>'})}
+$('dNew2').onclick=function(){openDialog(null);$('q').focus()};
+$('dNew').onclick=function(){openDialog(null);$('dlgs').hidden=true;$('q').focus()};
+$('dlgs').onclick=function(e){if(e.target===this)this.hidden=true};
+
+/* ---------- текст ответа ---------- */
+function md(s){var out=[],parts=String(s).split(/```/);
+  parts.forEach(function(p,i){if(i%2){var nl=p.indexOf('\n');out.push('<pre><code>'+esc(nl>-1&&nl<20?p.slice(nl+1):p)+'</code></pre>');return}
+    var lines=esc(p).split('\n'),html='',list=null;
+    function close(){if(list){html+='</'+list+'>';list=null}}
+    lines.forEach(function(l){var m;
+      if(m=l.match(/^\s*[-*•]\s+(.*)/)){if(list!=='ul'){close();html+='<ul>';list='ul'}html+='<li>'+inl(m[1])+'</li>';return}
+      if(m=l.match(/^\s*\d+[.)]\s+(.*)/)){if(list!=='ol'){close();html+='<ol>';list='ol'}html+='<li>'+inl(m[1])+'</li>';return}
+      close();
+      if(m=l.match(/^#{1,3}\s+(.*)/)){html+='<h3>'+inl(m[1])+'</h3>';return}
+      if(m=l.match(/^#{4,6}\s+(.*)/)){html+='<h4>'+inl(m[1])+'</h4>';return}
+      if(l.trim())html+='<p>'+inl(l)+'</p>'});
+    close();out.push(html)});
+  return out.join('')}
+function inl(s){return s.replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/(^|[^*])\*([^*\s][^*]*)\*/g,'$1<i>$2</i>')}
+
+function drawMsgs(){var L=$('mlist');
+  if(!CUR.msgs.length){L.innerHTML='<div class="empty">Чем помочь сегодня?</div>';return}
+  L.innerHTML=CUR.msgs.map(function(m,i){return m.role==='user'?'<div class="m u"><div class="ut clip">'+esc(m.content)+'</div></div>':'<div class="m a"><div class="tx">'+md(m.content)+'</div><div class="meta">'+(m.model?esc(pretty(m.model)):'')+(m.cost!=null?' · '+rub(m.cost):'')+'<button data-c="'+i+'">Копировать</button></div></div>'}).join('');
+  [].forEach.call(L.querySelectorAll('[data-c]'),function(b){b.onclick=function(){var t=CUR.msgs[+b.dataset.c].content;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){toast('Скопировано')},function(){toast('Не получилось скопировать')})}});
+  clipU(L);var box=$('msgs');box.scrollTop=box.scrollHeight}
+function clipU(L){[].forEach.call(L.querySelectorAll('.m.u .ut.clip'),function(u){if(u.scrollHeight<=u.clientHeight+2){u.classList.remove('clip');return}
+  if(u.nextSibling)return;var b=document.createElement('button');b.className='more';b.textContent='ещё';
+  b.onclick=function(){var o=u.classList.toggle('clip');b.textContent=o?'ещё':'свернуть'};u.parentNode.appendChild(b)})}
+
+/* ---------- отправка ---------- */
+var SEND='<svg viewBox="0 0 24 24"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg>',STOP='<svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
+function grow(){var t=$('q'),cs=getComputedStyle(t),max=parseFloat(cs.lineHeight)*7+parseFloat(cs.paddingTop)+parseFloat(cs.paddingBottom)+1;t.style.height='auto';var hh=t.scrollHeight;t.style.height=Math.min(hh,max)+'px';t.style.overflowY=hh>max?'auto':'hidden'}
+$('q').oninput=grow;
+$('q').onkeydown=function(e){if(e.key==='Enter'&&!e.shiftKey&&window.matchMedia('(min-width:700px)').matches){e.preventDefault();$('sendBtn').click()}};
+$('sendBtn').onclick=function(){
+  if(ctl){ctl.abort();return}
+  var text=$('q').value.trim(),model=ls(key('model'));if(!text)return;if(!model){toast('Модели ещё загружаются');return}
+  if(ME.balance<=0){toast(ERR.no_money);go('wallet');return}
+  CUR.msgs.push({role:'user',content:text});if(!CUR.title)CUR.title=text.slice(0,60);
+  $('q').value='';grow();drawMsgs();dStore(CUR);
+  var L=$('mlist'),el=document.createElement('div');el.className='m a';el.innerHTML='<div class="tx typing"></div>';L.appendChild(el);$('msgs').scrollTop=$('msgs').scrollHeight;
+  var tx=el.querySelector('.tx'),acc='',info=null,dialog=CUR;
+  ctl=new AbortController();$('sendBtn').innerHTML=STOP;$('sendBtn').classList.add('stop');
+  function done(errText){ctl=null;$('sendBtn').innerHTML=SEND;$('sendBtn').classList.remove('stop');
+    if(acc)dialog.msgs.push({role:'assistant',content:acc,model:model,cost:info?info.cost:null});
+    else if(errText){dialog.msgs.pop();if(!$('q').value)$('q').value=text;grow()}
+    dStore(dialog);if(dialog===CUR)drawMsgs();if(errText)toast(errText);
+    if(info){ME.balance=info.balance;ME.spentToday=Math.round((ME.spentToday+info.cost)*100)/100;setMe(ME)}}
+  fetch('/api/chat',{method:'POST',credentials:'same-origin',signal:ctl.signal,headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:model,messages:dialog.msgs.map(function(m){return{role:m.role,content:m.content}})})}).then(function(r){
+    var ct=r.headers.get('content-type')||'';
+    if(ct.indexOf('event-stream')<0)return r.json().then(function(j){if(j.error==='auth')showLogin();if(j.error==='need_pro'){ME.access=false;go('chat')}if(j.error==='need_terms')$('terms').hidden=false;if(j.error==='pin_locked')showPin('enter');done(err(j.error,j))});
+    var rd=r.body.getReader(),dec=new TextDecoder(),buf='',ev='';
+    function pump(){return rd.read().then(function(x){if(x.done){done(acc?'':'Нейросеть не ответила');return}
+      buf+=dec.decode(x.value,{stream:true});var i;
+      while((i=buf.indexOf('\n'))>-1){var line=buf.slice(0,i).trim();buf=buf.slice(i+1);
+        if(line.indexOf('event:')===0){ev=line.slice(6).trim();continue}
+        if(line.indexOf('data:')!==0){if(!line)ev='';continue}
+        var d=line.slice(5).trim();if(d==='[DONE]')continue;
+        try{var j=JSON.parse(d);
+          if(ev==='lure'){info=j;continue}
+          var c=j.choices&&j.choices[0]&&j.choices[0].delta&&j.choices[0].delta.content;
+          if(c){acc+=c;tx.innerHTML=md(acc);tx.classList.add('typing');var b=$('msgs');if(b.scrollHeight-b.scrollTop-b.clientHeight<160)b.scrollTop=b.scrollHeight}
+        }catch(e){}}
+      return pump()})}
+    return pump()}).catch(function(e){done(e&&e.name==='AbortError'?(acc?'':'Остановлено'):'Связь прервалась. Если включён VPN, выключи его.')})};
+
+/* ---------- кошелёк ---------- */
+var KIND={topup:'Пополнение кодом',credit:'Пополнение',gift:'Подарок',spend:'Ответ'};
+function loadWallet(){get('/api/wallet').then(function(r){if(!r.ok){if(r.error==='auth')showLogin();return}setMe(r.me);
+  $('hist').innerHTML=r.hist.length?r.hist.map(function(h){return '<div class="row"><span>'+new Date(h.at).toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+' · '+esc(h.kind==='spend'?pretty(h.note.split(' · ')[0]):(h.note||KIND[h.kind]))+'</span><b class="'+(h.sum>0?'plus':'')+'">'+(h.sum>0?'+':'')+rub(h.sum)+'</b></div>'}).join(''):'<p class="muted">Пока пусто.</p>';
+  if(r.me.owner)loadOwner()})}
+$('rBtn').onclick=function(){var c=$('rCode').value.trim();if(!c)return;var b=this;b.disabled=true;$('rErr').textContent='';
+  post('/api/redeem',{code:c}).then(function(r){b.disabled=false;if(!r.ok){$('rErr').textContent=err(r.error);return}$('rCode').value='';toast('Зачислено '+rub(r.sum));setMe(r.me);loadWallet()}).catch(function(){b.disabled=false})};
+$('logout').onclick=function(){post('/api/logout').then(function(){location.hash='';showLogin()})};
+$('reLogin').onclick=function(){post('/api/logout').then(function(){location.hash='';showLogin()})};
+
+/* ---------- касса Андрея ---------- */
+function loadOwner(){get('/api/admin/summary').then(function(r){if(!r.ok)return;
+  $('oSum').innerHTML='<div class="row"><span>Людей в LURE</span><b>'+r.users+'</b></div><div class="row"><span>Денег на счетах людей</span><b>'+rub(r.balances)+'</b></div><div class="row"><span>Потрачено сегодня</span><b>'+rub(r.spentDay)+'</b></div><div class="row"><span>Потрачено за месяц</span><b>'+rub(r.spentMonth)+'</b></div><div class="row"><span>Пополнено за месяц</span><b>'+rub(r.topMonth)+'</b></div><p class="muted" style="margin:10px 0 0">Сверяй «потрачено за месяц» с расходом в Polza: разница и есть твой доход.</p>';
+  $('oPeople').innerHTML='<b style="font:800 15px var(--f)">Люди</b>'+(r.people.map(function(p){return '<div class="row"><span>'+esc(p.name)+' · ID '+esc(p.id)+(p.blocked?' · закрыт':'')+'</span><b>'+rub(p.balance)+'</b></div>'}).join('')||'<p class="muted">Пока никого.</p>')+
+    (r.codes.length?'<p class="muted" style="margin-top:12px">Неиспользованные коды: '+r.codes.map(function(c){return esc(c.code)+' ('+c.sum+' ₽)'}).join(', ')+'</p>':'')})}
+$('cBtn').onclick=function(){var b=this;b.disabled=true;post('/api/admin/codes',{sum:$('cSum').value,count:$('cCnt').value}).then(function(r){b.disabled=false;
+  if(!r.ok){toast(err(r.error));return}$('cOut').innerHTML='<p class="muted">Коды на '+r.sum+' ₽, каждый срабатывает один раз:</p><div class="codebox">'+r.codes.join('\n')+'</div>';loadOwner()}).catch(function(){b.disabled=false})};
+$('kBtn').onclick=function(){$('kErr').textContent='';post('/api/admin/credit',{id:$('kId').value,sum:String($('kSum').value).replace(',','.').replace(/[−–—]/,'-').replace(/\s/g,'')}).then(function(r){
+  if(!r.ok){$('kErr').textContent=err(r.error);return}toast('Готово, на счёте '+rub(r.balance));$('kSum').value='';loadWallet()})};
+
+/* ---------- старт ---------- */
+boot();
+})();
+</script>
+</body>
+</html>
