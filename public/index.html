@@ -220,6 +220,35 @@ body:not([data-tab=chat]) #dOpen{display:none}
 .ta::placeholder{color:#6f6a64;font-weight:400}
 .m.u .ut.clip{max-height:calc(15 * 1.62em);overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 2.4em),transparent);mask-image:linear-gradient(180deg,#000 calc(100% - 2.4em),transparent)}
 .m.u .more{display:block;margin:4px 0 0 auto;font:600 13px var(--f);color:var(--gold);padding:2px 0}
+/* картинки и видео */
+.olab{display:block;font:600 12px var(--f);color:#8a837a;margin:14px 0 6px;text-transform:uppercase;letter-spacing:.06em}
+.ochips{display:flex;flex-wrap:wrap;gap:6px}
+.ochips button{border:.5px solid var(--line);background:#0d0c0f;border-radius:10px;padding:8px 12px;font:500 13px var(--f);color:#bdb6ac;display:flex;align-items:center;gap:7px}
+.ochips button.on{border-color:rgba(233,162,59,.75);color:var(--gold);background:#1d1810;font-weight:600}
+.ochips .ar{display:inline-block;border:1.5px solid currentColor;border-radius:2px}
+.refb{margin-top:10px;width:100%;border:.5px dashed #3e372f;border-radius:12px;padding:10px;font:600 13px var(--f);color:#a39b90;background:none}
+.refs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.refs:empty{display:none}
+.refs span{position:relative;width:56px;height:56px;border-radius:10px;overflow:hidden;border:.5px solid var(--line)}
+.refs img{width:100%;height:100%;object-fit:cover}
+.refs button{position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;background:#000a;color:#fff;font:700 12px var(--f);line-height:20px;padding:0}
+.gobar{display:flex;gap:12px;align-items:center;background:linear-gradient(180deg,#17141a,#110f13);border:.5px solid rgba(233,162,59,.55);border-radius:20px;padding:10px 10px 10px 16px;margin-bottom:6px}
+.gobar small{display:block;font:600 11px var(--f);color:#8a837a;text-transform:uppercase;letter-spacing:.06em}.gobar b{font:900 22px var(--f);color:var(--gold);white-space:nowrap}
+.gobar .btn{padding:14px 10px}
+.gal{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.gi{position:relative;border-radius:14px;overflow:hidden;border:.5px solid #2c2824;background:#0d0c0f;cursor:pointer}
+.gi img,.gi video{display:block;width:100%;height:auto;background:#000}
+.gi .ph{display:grid;place-items:center;color:rgba(255,255,255,.85);font:700 12px var(--f);text-align:center;padding:10px;background:radial-gradient(circle at 30% 25%,#ffd23f55,transparent 55%),radial-gradient(circle at 80% 80%,#ff6a2b55,transparent 55%),linear-gradient(160deg,#2a2016,#0d0b10)}
+.gi small{display:block;padding:6px 8px;color:#8a837a;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gi .bar{position:absolute;left:8px;right:8px;bottom:34px;height:4px;border-radius:4px;background:#2a2622;overflow:hidden}.gi .bar i{display:block;height:100%;background:var(--orange);width:0;transition:width 1s linear}
+.gi .play{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);width:42px;height:42px;border-radius:50%;background:#000a;color:#fff;display:grid;place-items:center;font-size:16px;pointer-events:none}
+.viewer{position:fixed;inset:0;z-index:60;background:#000d;display:grid;place-items:center;padding:16px}
+.viewer .vbox{width:min(560px,100%);max-height:100%;overflow:auto;background:#121014;border:.5px solid #2c2824;border-radius:18px;padding:12px}
+#vMedia img,#vMedia video{display:block;width:100%;max-height:62vh;object-fit:contain;border-radius:12px;background:#000}
+#vInfo{font-size:12.5px;margin:10px 2px}
+.viewer .flex{display:flex;gap:8px}.viewer .flex>*{flex:1;text-align:center;text-decoration:none}
+body:not([data-tab=chat]):not([data-tab=img]):not([data-tab=video]) .sub{display:none}
+body[data-tab=img] .sub,body[data-tab=video] .sub{display:flex;visibility:visible}
+body[data-tab=img] #dNew2,body[data-tab=video] #dNew2{visibility:hidden}
 </style>
 </head>
 <body>
@@ -296,16 +325,34 @@ body:not([data-tab=chat]) #dOpen{display:none}
     </div></section>
 
     <!-- Картинки -->
-    <section data-tab="img" hidden><div class="wrap">
-      <div class="card soon" style="margin-top:16px"><div class="ic">🖼</div><b>Изображения скоро</b>
-        <p class="muted">Nano Banana и GPT Image: напишешь словами, получишь картинку. Цена будет видна до нажатия, списание только за готовую.</p></div>
+    <section data-tab="img" hidden><div class="wrap" style="padding-top:14px">
+      <div class="card"><b class="ttl">Что нарисовать</b>
+        <textarea class="inp" id="imgP" rows="3" style="resize:none;margin-top:8px" placeholder="Например: золотой орёл над ночной Москвой, кинематографичный свет"></textarea>
+        <div class="refs" id="imgR"></div>
+        <button class="refb" type="button" data-ref="img">＋ Добавить фото-референс</button>
+        <div id="imgO"></div></div>
+      <div class="gobar"><div><small>К оплате</small><b id="imgPrice">—</b></div><button class="btn" id="imgGo" style="width:auto;flex:1">Создать картинку</button></div>
+      <p class="muted" style="font-size:12px;margin:2px 4px 14px">Списание только за готовый результат. Не получилось, деньги не списываются.</p>
+      <h2>Мои картинки</h2>
+      <div class="gal" id="imgG"><p class="muted" style="grid-column:1/-1;margin:0">Здесь будут твои картинки.</p></div>
     </div></section>
 
     <!-- Видео -->
-    <section data-tab="video" hidden><div class="wrap">
-      <div class="card soon" style="margin-top:16px"><div class="ic">🎬</div><b>Видео скоро</b>
-        <p class="muted">Veo 3, Seedance 2 и Gemini Omni Flash. Ролик готовится несколько минут, страницу можно закрыть: готовое видео будет ждать здесь.</p></div>
+    <section data-tab="video" hidden><div class="wrap" style="padding-top:14px">
+      <div class="card"><b class="ttl">Что снять</b>
+        <textarea class="inp" id="videoP" rows="3" style="resize:none;margin-top:8px" placeholder="Например: орёл взлетает со скалы на рассвете, камера облетает его по кругу"></textarea>
+        <div class="refs" id="videoR"></div>
+        <button class="refb" type="button" data-ref="video">＋ Добавить фото (первый кадр или референс)</button>
+        <div id="videoO"></div></div>
+      <div class="gobar"><div><small>К оплате</small><b id="videoPrice">—</b></div><button class="btn" id="videoGo" style="width:auto;flex:1">Создать видео</button></div>
+      <p class="muted" style="font-size:12px;margin:2px 4px 14px">Ролик готовится несколько минут. Страницу можно закрыть: готовое видео будет ждать здесь. Списание только за готовое.</p>
+      <h2>Мои видео</h2>
+      <div class="gal" id="videoG"><p class="muted" style="grid-column:1/-1;margin:0">Здесь будут твои ролики.</p></div>
     </div></section>
+    <input type="file" id="refFile" accept="image/jpeg,image/png,image/webp" multiple hidden>
+    <div class="viewer" id="viewer" hidden><div class="vbox"><div id="vMedia"></div><p id="vInfo" class="muted"></p>
+      <div class="flex"><a class="btn" id="vDl" target="_blank" rel="noopener" download>Скачать</a><button class="btn2" id="vRef" type="button">В референс</button><button class="btn2" id="vDel" type="button">Удалить</button></div>
+      <button class="btn2" id="vClose" type="button" style="margin-top:8px;width:100%">Закрыть</button></div></div>
 
     <!-- Кошелёк -->
     <section data-tab="wallet" hidden><div class="wrap" style="padding-top:16px">
@@ -457,7 +504,7 @@ function go(t){if(!/^(chat|sound|img|video|wallet)$/.test(t))t='chat';document.b
   if(lock&&ME.plan==='pro')$('noproTxt').textContent='Срок подписки Pro закончился. Продли её в кабинете EAGLES и войди в LURE заново.';
   [].forEach.call(document.querySelectorAll('section[data-tab]'),function(s){s.hidden=lock||s.dataset.tab!==t});
   [].forEach.call(document.querySelectorAll('.nav button'),function(b){b.classList.toggle('on',b.dataset.go===t)});
-  if(t==='wallet')loadWallet();history.replaceState(null,'','#'+t)}
+  if(t==='wallet')loadWallet();if(!lock&&isMedia(t))mediaTab(t);else if(MODELS.length)drawModels();history.replaceState(null,'','#'+t)}
 [].forEach.call(document.querySelectorAll('.nav button'),function(b){b.onclick=function(){go(b.dataset.go)}});
 $('balChip').onclick=function(){go('wallet')};
 
@@ -477,10 +524,65 @@ function drawModels(){var sel=ls(key('model'));var m=MODELS.filter(function(x){r
   $('mName').textContent=m?pretty(m.id):'LURE';
   $('mlistSel').innerHTML=MODELS.map(function(x){return '<button class="opt'+(x.id===sel?' on':'')+(isBest(x.id)?' best':'')+'" data-m="'+esc(x.id)+'" role="option"><span><b>'+esc(pretty(x.id))+(isBest(x.id)?'<em class="tagb">ЛУЧШАЯ</em>':'')+'</b><small>'+esc(desc(x.id))+' · ≈ '+rub(typical(x))+' за ответ</small></span><i></i></button>'}).join('');
   [].forEach.call($('mlistSel').querySelectorAll('[data-m]'),function(b){b.onclick=function(){ls(key('model'),b.dataset.m);$('mpanel').hidden=true;drawModels()}})}
-$('mPick').onclick=function(e){e.stopPropagation();$('mpanel').hidden=!$('mpanel').hidden};
+$('mPick').onclick=function(e){e.stopPropagation();var t=curTab();if(isMedia(t)){if(!MC)return;drawMediaModels(t)}else drawModels();$('mpanel').hidden=!$('mpanel').hidden};
 document.addEventListener('click',function(e){if(!$('mpanel').hidden&&!$('mpanel').contains(e.target))$('mpanel').hidden=true});
 $('dOpen').onclick=function(){openList()};
 function drawPrices(all){$('priceList').innerHTML=all.length?all.map(function(m){return '<div class="row"><span>'+esc(pretty(m.id))+'</span><b>'+(m.perCall?rub(m.perCallRub)+' за раз':'≈ '+rub(typical(m))+' за ответ')+'</b></div>'}).join('')+'<p class="muted" style="margin:10px 0 0">Цена зависит от длины вопроса и ответа. Точная сумма видна под каждым ответом и в истории.</p>':'<p class="muted">Модели пока не подключены.</p>'}
+
+/* ---------- картинки и видео ---------- */
+var MC=null, MSEL={}, MOPT={img:{},video:{}}, REFS={img:[],video:[]}, GAL={img:[],video:[]}, POLL=null, REFKIND='img';
+ERR.media_off='Картинки и видео ещё подключаются. Скоро заработают.';ERR.no_prompt='Опиши, что нужно создать.';ERR.refs_big='Фото слишком тяжёлые. Убери одно или два.';ERR.jobs_busy='Уже идут 3 задания. Дождись, пока одно закончится.';ERR.engine_error='Нейросеть не приняла задание. Попробуй изменить описание.';
+function isMedia(t){return t==='img'||t==='video'}
+function curTab(){return document.body.dataset.tab}
+function mModel(t){if(!MC)return null;var L=MC[t]||[];var k=MSEL[t]||ls(key('mk_'+t));return L.filter(function(x){return x.k===k})[0]||L[0]||null}
+function loadCat(cb){if(MC){cb&&cb();return}get('/api/media/catalog').then(function(r){if(!r.ok){if(r.error==='auth')showLogin();return}MC=r.cat;MC.ready=r.ready;cb&&cb()}).catch(function(){})}
+function mediaName(){var m=mModel(curTab());$('mName').textContent=m?m.n:'…'}
+function drawMediaModels(t){var m=mModel(t);
+  $('mlistSel').innerHTML=(MC[t]||[]).map(function(x){var mn=Math.min.apply(null,Object.keys(x.table).map(function(k){return x.table[k]}));
+    return '<button class="opt'+(m&&x.k===m.k?' on':'')+'" data-k="'+esc(x.k)+'" role="option"><span><b>'+esc(x.n)+'</b><small>'+esc(x.d)+' · от '+rub(mn)+'</small></span><i></i></button>'}).join('');
+  [].forEach.call($('mlistSel').querySelectorAll('[data-k]'),function(b){b.onclick=function(){MSEL[t]=b.dataset.k;ls(key('mk_'+t),b.dataset.k);$('mpanel').hidden=true;mediaName();drawOpts(t)}})}
+var ARN={'auto':'Авто','1:1':'1:1','9:16':'9:16','16:9':'16:9','4:5':'4:5','3:4':'3:4','4:3':'4:3','2:3':'2:3','3:2':'3:2','21:9':'21:9'};
+function arIcon(a){if(a==='auto')return '';var p=a.split(':'),w=+p[0],h=+p[1],s=14/Math.max(w,h);return '<i class="ar" style="width:'+Math.round(w*s)+'px;height:'+Math.round(h*s)+'px"></i>'}
+function chipRow(t,name,vals,label,fmt){if(!vals||vals.length<2)return '';var cur=MOPT[t][name];
+  return '<b class="ttl" style="display:block;margin:12px 0 6px;font-size:13px">'+label+'</b><div class="ochips">'+vals.map(function(v){return '<button type="button" class="'+(String(v)===String(cur)?'on':'')+'" data-o="'+name+'" data-v="'+esc(v)+'">'+fmt(v)+'</button>'}).join('')+'</div>'}
+function drawOpts(t){var m=mModel(t),o=MOPT[t];if(!m){$(t+'O').innerHTML='';return}
+  if(m.ar.indexOf(o.ar)<0)o.ar=m.ar[0];if(m.res&&m.res.indexOf(o.res)<0)o.res=m.res[0];if(m.q&&m.q.indexOf(o.q)<0)o.q=m.q[0];if(m.dur&&m.dur.indexOf(+o.dur)<0)o.dur=m.dur[0];if(o.audio===undefined)o.audio=true;
+  var h=chipRow(t,'ar',m.ar,'Формат',function(v){return arIcon(v)+ARN[v]})+chipRow(t,'res',m.res,'Качество',function(v){return String(v).toUpperCase()})+chipRow(t,'q',m.q,'Детализация',function(v){return v==='high'?'Высокая':'Обычная'})+chipRow(t,'dur',m.dur,'Длина',function(v){return v+' сек'});
+  if(m.audio)h+=chipRow(t,'audio',[true,false],'Звук',function(v){return v===true||v==='true'?'Со звуком':'Без звука'});
+  $(t+'O').innerHTML=h;
+  [].forEach.call($(t+'O').querySelectorAll('[data-o]'),function(b){b.onclick=function(){var v=b.dataset.v;o[b.dataset.o]=b.dataset.o==='audio'?v==='true':b.dataset.o==='dur'?+v:v;drawOpts(t)}});
+  var p=m.table[[m.res?o.res:'',m.q?o.q:'',m.dur?o.dur:''].join('|')];$(t+'Price').textContent=p?(m.q?'≈ ':'')+rub(p):'—';drawRefs(t)}
+function drawRefs(t){var m=mModel(t),L=REFS[t];$(t+'R').innerHTML=L.map(function(s,i){return '<span><img src="'+s+'" alt=""><button type="button" data-rx="'+i+'" aria-label="Убрать">×</button></span>'}).join('');
+  [].forEach.call($(t+'R').querySelectorAll('[data-rx]'),function(b){b.onclick=function(){L.splice(+b.dataset.rx,1);drawRefs(t)}});
+  var rb=document.querySelector('.refb[data-ref="'+t+'"]');if(rb)rb.hidden=!m||L.length>=m.refs}
+function shrink(file){return new Promise(function(ok,no){var fr=new FileReader();fr.onerror=no;fr.onload=function(){var im=new Image();im.onerror=no;im.onload=function(){var k=Math.min(1,1600/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);ok(c.toDataURL('image/jpeg',.85))};im.src=fr.result};fr.readAsDataURL(file)})}
+[].forEach.call(document.querySelectorAll('.refb[data-ref]'),function(b){b.onclick=function(){REFKIND=b.dataset.ref;$('refFile').value='';$('refFile').click()}});
+$('refFile').onchange=function(){var t=REFKIND,m=mModel(t),fs=[].slice.call(this.files||[]).slice(0,m?m.refs-REFS[t].length:0);
+  Promise.all(fs.map(shrink)).then(function(L){REFS[t]=REFS[t].concat(L);drawRefs(t)},function(){toast('Не получилось открыть фото')})};
+function gItem(x,i){var t=x.kind==='img'?'img':'video',run=x.status==='run';
+  var body=run?'<div class="ph" style="aspect-ratio:'+(x.ar&&x.ar!=='auto'?x.ar.replace(':','/'):'1/1')+'">'+(t==='img'?'Рисую…':'Снимаю… это займёт несколько минут')+'</div>'
+    :t==='img'?'<img src="'+esc(x.url)+'" alt="" loading="lazy">':'<video src="'+esc(x.url)+'#t=0.1" preload="metadata" muted playsinline></video><span class="play">▶</span>';
+  return '<div class="gi" data-gi="'+i+'">'+body+'<small>'+esc(x.model||'')+(x.cost||x.price?' · '+rub(x.cost||x.price):'')+'</small></div>'}
+function drawGal(t){var L=GAL[t];$(t+'G').innerHTML=L.length?L.map(gItem).join(''):'<p class="muted" style="grid-column:1/-1;margin:0">'+(t==='img'?'Здесь будут твои картинки.':'Здесь будут твои ролики.')+'</p>';
+  [].forEach.call($(t+'G').querySelectorAll('[data-gi]'),function(d){d.onclick=function(){var x=L[+d.dataset.gi];if(x&&x.status!=='run')view(x)}})}
+function loadGal(){get('/api/media/list').then(function(r){if(!r.ok)return;GAL.img=[];GAL.video=[];r.list.forEach(function(x){GAL[x.kind==='img'?'img':'video'].push(x)});drawGal('img');drawGal('video');poll()}).catch(function(){})}
+function poll(){clearTimeout(POLL);var ids=GAL.img.concat(GAL.video).filter(function(x){return x.status==='run'}).map(function(x){return x.id});if(!ids.length)return;
+  POLL=setTimeout(function(){get('/api/media/status?ids='+ids.slice(0,10).join('.')).then(function(r){if(!r.ok){poll();return}
+    r.jobs.forEach(function(j){['img','video'].forEach(function(t){GAL[t]=GAL[t].map(function(x){return x.id===j.id?Object.assign({},x,j):x}).filter(function(x){if(x.id===j.id&&x.status==='failed'){toast('Не получилось: '+(x.err||'ошибка')+'. Деньги не списаны.');return false}return true})})});
+    if(ME&&r.balance!=null){ME.balance=r.balance;$('balChip').textContent=rub(r.balance)}drawGal('img');drawGal('video');poll()}).catch(poll)},6000)}
+var VX=null;
+function view(x){VX=x;$('vMedia').innerHTML=x.kind==='img'?'<img src="'+esc(x.url)+'" alt="" style="width:100%;border-radius:12px">':'<video src="'+esc(x.url)+'" controls autoplay playsinline style="width:100%;border-radius:12px"></video>';
+  $('vInfo').textContent=(x.model||'')+(x.cost?' · '+rub(x.cost):'')+(x.prompt?' · '+x.prompt:'');$('vDl').href=x.url;$('vRef').hidden=x.kind!=='img';$('viewer').hidden=false}
+function vClose(){$('viewer').hidden=true;$('vMedia').innerHTML=''}
+$('vClose').onclick=vClose;$('viewer').onclick=function(e){if(e.target===this)vClose()};
+$('vDel').onclick=function(){if(!VX||!confirm('Удалить из галереи?'))return;var id=VX.id;['img','video'].forEach(function(t){GAL[t]=GAL[t].filter(function(x){return x.id!==id});drawGal(t)});post('/api/media/delete',{id:id}).catch(function(){});vClose()};
+$('vRef').onclick=function(){if(!VX)return;var u=VX.url;vClose();fetch(u).then(function(r){return r.blob()}).then(shrink).then(function(s){var t=curTab()==='video'?'video':'img',m=mModel(t);if(m&&REFS[t].length<m.refs){REFS[t].push(s);drawRefs(t);toast('Добавлено в референсы')}}).catch(function(){toast('Не получилось взять фото')})};
+function create(t){var m=mModel(t),o=MOPT[t],b=$(t+'Go'),pr=$(t+'P').value.trim();if(!m)return;if(pr.length<2){toast(ERR.no_prompt);$(t+'P').focus();return}
+  b.disabled=true;post('/api/media/create',{k:m.k,prompt:pr,ar:o.ar,res:o.res,q:o.q,dur:o.dur,audio:o.audio,refs:REFS[t]}).then(function(r){b.disabled=false;
+    if(!r.ok){if(r.error==='auth'){showLogin();return}if(r.error==='no_money'){toast(ERR.no_money);go('wallet');return}toast(err(r.error,r));return}
+    GAL[t].unshift(r.job);drawGal(t);poll();toast(t==='img'?'Рисую. Картинка появится ниже.':'Снимаю. Видео появится ниже через несколько минут.')}).catch(function(){b.disabled=false;toast('Нет связи. Если включён VPN, выключи его.')})}
+$('imgGo').onclick=function(){create('img')};$('videoGo').onclick=function(){create('video')};
+function mediaTab(t){loadCat(function(){if(curTab()!==t)return;mediaName();drawOpts(t);if(MC&&!MC.ready)$(t+'Price').textContent='скоро'});loadGal()}
 
 /* ---------- диалоги (хранятся в этом браузере) ---------- */
 /* диалоги хранятся на сервере LURE, видны с любого устройства */

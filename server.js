@@ -168,7 +168,7 @@ function proUntil(u) {
 function hasAccess(u) { return isOwner(u) || proUntil(u) > Date.now(); }
 function pub(u) {
   return { id: u.id, name: u.name, plan: u.plan, balance: r2(u.balance || 0), spentToday: spentToday(u), dayLimit: DAY_LIMIT, owner: isOwner(u),
-    access: hasAccess(u), proUntil: isOwner(u) ? 0 : proUntil(u), terms: (u.termsV || 0) >= TERMS_V };
+    access: hasAccess(u), proUntil: isOwner(u) ? 0 : proUntil(u), terms: (u.termsV || 0) >= TERMS_V, held: r2(u.held || 0) };
 }
 
 // простая защита от перебора кодов пополнения
@@ -177,6 +177,7 @@ function tooManyFails(key) { const f = fails[key]; return f && f.n >= 5 && Date.
 function addFail(key) { const f = fails[key] = fails[key] && Date.now() - fails[key].t < 3600000 ? fails[key] : { n: 0, t: Date.now() }; f.n++; }
 
 const busy = new Set(); // один запрос к нейросети на человека одновременно
+const MEDIA = require('./media.js')({ db, ENV, DATA_DIR, op, save, send, readBody, addSpent, spentToday, r2, DAY_LIMIT });
 
 async function api(req, res, url) {
   const p = url.pathname;
@@ -284,6 +285,13 @@ async function api(req, res, url) {
 
   if (p === '/api/chat' && m === 'POST') { if (!hasAccess(u)) return send(res, 200, { ok: false, error: 'need_pro' }); if ((u.termsV || 0) < TERMS_V) return send(res, 200, { ok: false, error: 'need_terms' }); return chat(req, res, u); }
 
+  // ----- картинки и видео -----
+  if (p.startsWith('/api/media/')) {
+    await MEDIA(req, res, p, m, u, () => !hasAccess(u) ? 'need_pro' : (u.termsV || 0) < TERMS_V ? 'need_terms' : '');
+    if (!res.headersSent) send(res, 404, { ok: false, error: 'not_found' });
+    return;
+  }
+
   // ----- касса Андрея -----
   if (p.startsWith('/api/admin/')) {
     if (!isOwner(u)) return send(res, 200, { ok: false, error: 'not_owner' });
@@ -337,7 +345,7 @@ async function chat(req, res, u) {
   if (busy.has(u.id)) return send(res, 200, { ok: false, error: 'busy' });
 
   // сколько можно потратить: баланс и суточный лимит
-  const room = Math.min(u.balance || 0, DAY_LIMIT - spentToday(u));
+  const room = Math.min((u.balance || 0) - (u.held || 0), DAY_LIMIT - spentToday(u) - (u.held || 0));
   const estIn = Math.ceil(chars / 2.5) + 50;
   const inCost = costRub(model, estIn, 0);
   const outPer = costRub(model, 0, 1);
