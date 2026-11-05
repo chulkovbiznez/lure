@@ -1,0 +1,16 @@
+openapi: 3.0.0
+info:
+  title: polza-api
+  version: 1.0.0
+paths:
+  /api/{rest+}:
+    x-yc-apigateway-any-method:
+      parameters:
+        - name: rest
+          in: path
+          required: true
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: cloud_functions
+        function_id: d4elkmki33fkv2tt72vc

@@ -24,7 +24,8 @@ const items = d => Array.isArray(d) ? d : (d && Array.isArray(d.items) ? d.items
   const username = (L[0] || '').trim(), password = L[1] || '', target = (L[2] || '').trim();
   if (!username || !password || !target) fail('нет логина, пароля или адреса функции');
   const revert = target === 'revert';
-  if (!revert && !/^https:\/\/functions\.yandexcloud\.net\/[a-z0-9]+$/.test(target)) fail('адрес функции должен быть вида https://functions.yandexcloud.net/xxxx');
+  const viaGw = /^https:\/\/[a-z0-9]+\.apigw\.yandexcloud\.net$/.test(target);
+  if (!revert && !viaGw && !/^https:\/\/functions\.yandexcloud\.net\/[a-z0-9]+$/.test(target)) fail('адрес должен быть вида https://xxxx.apigw.yandexcloud.net');
   const lg = await call('POST', '/api/user/login', { username, password });
   if (!lg.success) fail('вход в New API: ' + (lg.message || 'не удалось'));
   const d = lg.data || {};
@@ -41,12 +42,14 @@ const items = d => Array.isArray(d) ? d : (d && Array.isArray(d.items) ? d.items
     let nb;
     if (revert) { if (!saved[c.id]) continue; nb = saved[c.id]; }
     else {
-      if (/functions\.yandexcloud\.net/.test(base)) { say('Канал «' + c.name + '» уже идёт через функцию: ' + base); continue; }
+      if (/yandexcloud\.net/.test(base)) { say('Канал «' + c.name + '» уже идёт через функцию: ' + base); continue; }
       if (!/polza\.ai/.test(base)) continue;
       const u = new URL(base);
       if (u.hostname !== 'polza.ai') fail('канал «' + c.name + '» смотрит на ' + u.origin + ', а функция настроена на https://polza.ai — напиши Claude');
       saved[c.id] = base;
-      nb = target + '?p=' + (u.pathname.replace(/\/$/, '') || '');
+      const path = u.pathname.replace(/\/$/, '') || '';
+      if (viaGw && !/^\/api(\/|$)/.test(path)) fail('путь канала «' + c.name + '» ' + path + ' не начинается с /api — напиши Claude');
+      nb = viaGw ? target + path : target + '?p=' + path;
     }
     const full = await call('GET', '/api/channel/' + c.id);
     if (!full.success || !full.data) fail('не прочитал канал ' + c.id);
