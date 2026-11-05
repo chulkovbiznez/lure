@@ -24,7 +24,7 @@ const items = d => Array.isArray(d) ? d : (d && Array.isArray(d.items) ? d.items
   const username = (L[0] || '').trim(), password = L[1] || '', target = (L[2] || '').trim();
   if (!username || !password || !target) fail('нет логина, пароля или адреса функции');
   const revert = target === 'revert';
-  const viaGw = /^https:\/\/[a-z0-9]+\.apigw\.yandexcloud\.net$/.test(target);
+  const viaGw = /^https:\/\/[a-z0-9]+(\.[a-z0-9]+)*\.apigw\.yandexcloud\.net$/.test(target);
   if (!revert && !viaGw && !/^https:\/\/functions\.yandexcloud\.net\/[a-z0-9]+$/.test(target)) fail('адрес должен быть вида https://xxxx.apigw.yandexcloud.net');
   const lg = await call('POST', '/api/user/login', { username, password });
   if (!lg.success) fail('вход в New API: ' + (lg.message || 'не удалось'));
