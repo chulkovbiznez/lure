@@ -10,6 +10,28 @@ D=/opt/ai-chat
 [ -f $D/docker-compose.yml ] || { echo "Не нашёл $D/docker-compose.yml"; exit 1; }
 command -v git >/dev/null || apt-get install -y git
 
+if [ "$REPO" = "--auto-key" ]; then
+  # Сам создаёт в New API токен LURE и вписывает ключ. Работает и вечером при белых списках.
+  git -C $D/lure pull --ff-only
+  cd $D
+  docker compose up -d lure >/dev/null
+  echo
+  echo "Логин администратора New API (тот, с которым входишь на ai.eaglesteam.ru), затем Enter:"
+  read -r NU
+  echo "Пароль от New API, затем Enter (символы не появятся, так и должно быть):"
+  read -rs NP; echo
+  OUT=$(printf '%s\n%s\n' "$NU" "$NP" | docker compose exec -T lure node tools/newapi-key.js || true)
+  unset NP
+  KEY=$(printf '%s\n' "$OUT" | sed -n 's/^KEY //p' | tail -1)
+  if [ -z "$KEY" ]; then echo "Не получилось: $(printf '%s\n' "$OUT" | sed -n 's/^ERR //p' | tail -1)"; exit 1; fi
+  if grep -q "^NEWAPI_KEY=" $D/lure.env; then sed -i "s|^NEWAPI_KEY=.*|NEWAPI_KEY=$KEY|" $D/lure.env; else echo "NEWAPI_KEY=$KEY" >> $D/lure.env; fi
+  unset KEY
+  docker compose up -d --force-recreate lure >/dev/null
+  sleep 3
+  echo "ГОТОВО. Токен LURE создан, ключ вписан, LURE перезапущен."
+  exit 0
+fi
+
 if [ "$REPO" != "--key" ]; then
   if [ -d $D/lure/.git ]; then git -C $D/lure pull --ff-only; else git clone --depth 1 "$REPO" $D/lure; fi
 fi
