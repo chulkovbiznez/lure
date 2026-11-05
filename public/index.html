@@ -554,7 +554,7 @@ function drawOpts(t){var m=mModel(t),o=MOPT[t];if(!m){$(t+'O').innerHTML='';retu
   var p=m.table[[m.res?o.res:'',m.q?o.q:'',m.dur?o.dur:''].join('|')];$(t+'Price').textContent=p?(m.q?'≈ ':'')+rub(p):'—';drawRefs(t)}
 function drawRefs(t){var m=mModel(t),L=REFS[t];$(t+'R').innerHTML=L.map(function(s,i){return '<span><img src="'+s+'" alt=""><button type="button" data-rx="'+i+'" aria-label="Убрать">×</button></span>'}).join('');
   [].forEach.call($(t+'R').querySelectorAll('[data-rx]'),function(b){b.onclick=function(){L.splice(+b.dataset.rx,1);drawRefs(t)}});
-  var rb=document.querySelector('.refb[data-ref="'+t+'"]');if(rb)rb.hidden=!m||L.length>=m.refs}
+  var rb=document.querySelector('.refb[data-ref="'+t+'"]');if(rb){rb.hidden=!m||L.length>=m.refs;rb.textContent='＋ Добавить фото'+(t==='video'?' (первый кадр или референс)':'-референс')+(m?' · можно до '+m.refs+(L.length?', добавлено '+L.length:''):'')}}
 function shrink(file){return new Promise(function(ok,no){var fr=new FileReader();fr.onerror=no;fr.onload=function(){var im=new Image();im.onerror=no;im.onload=function(){var k=Math.min(1,1600/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);ok(c.toDataURL('image/jpeg',.85))};im.src=fr.result};fr.readAsDataURL(file)})}
 [].forEach.call(document.querySelectorAll('.refb[data-ref]'),function(b){b.onclick=function(){REFKIND=b.dataset.ref;$('refFile').value='';$('refFile').click()}});
 $('refFile').onchange=function(){var t=REFKIND,m=mModel(t),fs=[].slice.call(this.files||[]).slice(0,m?m.refs-REFS[t].length:0);
