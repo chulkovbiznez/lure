@@ -14,7 +14,7 @@ module.exports = function media(ctx) {
   const SAVER = ENV.SAVER_URL || '';             // функция media-saver
   const SAVER_KEY = ENV.SAVER_KEY || '';
   // наценка своя у каждой модели (так LURE не дороже Syntx и Higgsfield); можно поменять в lure.env: MARKUP_NB21=1.8
-  const MK = { nb21: 1.66, nbpro: 1.15, gpt26: 1.3, veof: 1.45, veo: 1.15, sd25: 1.15, sd2: 1.15, omni: 1.3 };
+  const MK = { nb21: 1.66, nbpro: 1.5, gpt26: 1.5, veof: 1.5, veo: 1.5, sd25: 1.5, sd2: 1.5, omni: 1.5 };
   const MAX_JOBS = 3;                            // одновременно у одного человека
   const REF_CHARS = 2.7e6;                       // все фото-референсы вместе, символов base64 (лимит шлюзов Яндекса ~3,5 МБ)
 
