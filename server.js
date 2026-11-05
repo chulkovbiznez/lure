@@ -284,6 +284,9 @@ async function api(req, res, url) {
 
   if (p === '/api/chat' && m === 'POST') { if (!hasAccess(u)) return send(res, 200, { ok: false, error: 'need_pro' }); if ((u.termsV || 0) < TERMS_V) return send(res, 200, { ok: false, error: 'need_terms' }); return chat(req, res, u); }
 
+  // ----- Пульт EAGLES: помощник Андрея (pult.js), только владелец, только чтение -----
+  if (p.startsWith('/api/pult/')) { if (!isOwner(u)) return send(res, 200, { ok: false, error: 'not_owner' }); return PULT.handle(p, m, req, res, S); }
+
   // ----- касса Андрея -----
   if (p.startsWith('/api/admin/')) {
     if (!isOwner(u)) return send(res, 200, { ok: false, error: 'not_owner' });
@@ -406,6 +409,8 @@ function stat(req, res, url) {
     res.end(data);
   });
 }
+
+const PULT = require('./pult')({ db, eagles, NEWAPI, NEWAPI_KEY, msk, today, r2, readBody, send, DATA_DIR, loadPrices, prices: () => PRICES, costRub, ENV });
 
 http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');

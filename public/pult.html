@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<title>Пульт EAGLES</title>
+<meta name="theme-color" content="#070708">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/znak.webp">
+<style>
+@font-face{font-family:"Montserrat EK";src:url(/fonts/Montserrat-900.ttf) format("truetype");font-weight:900;font-display:swap}
+:root{--bg:#070708;--card:#141217;--line:#2a2622;--gold:#ffd23f;--gold2:#ffe08a;--amber:#e9a23b;--orange:#ff6a2b;--tx:#f3eee6;--mu:#9a938a;--f:Montserrat,"Montserrat EK",system-ui,sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:400 15px/1.5 var(--f)}
+body{min-height:100dvh;display:flex;flex-direction:column}
+header{position:sticky;top:0;z-index:5;background:rgba(7,7,8,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:calc(10px + env(safe-area-inset-top)) 16px 10px;display:flex;align-items:center;gap:12px}
+header a{color:var(--gold2);text-decoration:none;font-weight:700;font-size:14px}
+header h1{margin:0;font:900 18px var(--f);letter-spacing:.06em;background:linear-gradient(180deg,var(--gold2),var(--amber));-webkit-background-clip:text;background-clip:text;color:transparent}
+main{flex:1;width:100%;max-width:760px;margin:0 auto;padding:14px 16px 140px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.muted{color:var(--mu);font-size:13px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{font-size:12px;padding:4px 10px;border-radius:99px;border:1px solid var(--line);color:var(--mu)}
+.chip.on{color:#bff0c4;border-color:#2f5b35}
+.q{cursor:pointer;color:var(--gold2);border-color:#4a3d22;background:#1b1710}
+.btn{border:0;border-radius:12px;padding:10px 14px;font:800 14px var(--f);background:linear-gradient(180deg,var(--gold),var(--amber));color:#1a1206;cursor:pointer}
+.btn2{border:1px solid var(--line);border-radius:12px;padding:9px 13px;font:700 13px var(--f);background:transparent;color:var(--tx);cursor:pointer}
+.btn:disabled,.btn2:disabled{opacity:.5}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#rep{white-space:pre-wrap;margin:10px 0}
+.msg{margin:10px 0;padding:10px 12px;border-radius:14px;white-space:pre-wrap;max-width:92%}
+.me{background:#221d14;border:1px solid #4a3d22;margin-left:auto}
+.ai{background:var(--card);border:1px solid var(--line)}
+.ai .row{margin-top:6px}
+.say{font-size:12px;padding:4px 10px}
+footer{position:fixed;left:0;right:0;bottom:0;background:rgba(7,7,8,.95);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
+footer .in{max-width:760px;margin:0 auto;display:flex;gap:8px;align-items:flex-end}
+textarea{flex:1;min-width:0;resize:none;max-height:140px;background:#0f0e11;color:var(--tx);border:1px solid var(--line);border-radius:14px;padding:10px 12px;font:400 15px/1.4 var(--f)}
+#mic{width:46px;height:46px;border-radius:50%;padding:0;font-size:20px;flex:none}
+#mic.rec{background:var(--orange);animation:pulse 1s infinite}
+#send{height:46px;flex:none}
+@keyframes pulse{50%{box-shadow:0 0 0 8px rgba(255,106,43,.25)}}
+label.sw{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--mu)}
+.toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:#2a2216;border:1px solid #4a3d22;color:var(--gold2);padding:10px 14px;border-radius:12px;z-index:9;max-width:90%}
+</style>
+</head>
+<body>
+<header><a href="/">← LURE</a><h1>ПУЛЬТ EAGLES</h1></header>
+<main>
+  <div class="card">
+    <b>Утренняя сводка</b> <span class="muted" id="repDate"></span>
+    <div id="rep" class="muted">Загружаю…</div>
+    <div class="row"><button class="btn" id="repPlay" hidden>▶ Слушать</button><button class="btn2" id="repNew">Сделать сводку сейчас</button></div>
+  </div>
+  <div class="card">
+    <b>Источники</b> <span class="muted">· Пульт только читает, ничего не меняет</span>
+    <div class="chips" id="src"></div>
+  </div>
+  <div class="card">
+    <b>Спроси</b>
+    <div class="chips" id="qs"></div>
+    <div class="row" style="margin-top:10px"><label class="sw"><input type="checkbox" id="voiceOn"> Отвечать голосом</label></div>
+  </div>
+  <div id="chat"></div>
+</main>
+<footer><div class="in">
+  <button class="btn2" id="mic" title="Сказать голосом">🎙</button>
+  <textarea id="t" rows="1" placeholder="Например: сколько вчера купили токенов?"></textarea>
+  <button class="btn" id="send">➤</button>
+</div></footer>
+<script src="/config.js"></script>
+<script>
+var $=function(i){return document.getElementById(i)};
+var API=window.LURE_API||'',CRED=API?'omit':'same-origin';
+function U(p){return API?API+(API.indexOf('?')<0?'?':'&')+'p='+encodeURIComponent(p):p}
+function TOK(){try{return localStorage.getItem('lure_tok')||''}catch(e){return ''}}
+function H(h){h=h||{};var t=TOK();if(t)h['X-Lure-Session']=t;return h}
+function chk(j){if(j&&(j.error==='auth'||j.error==='pin_locked'||j.error==='not_owner')){location.href='/';throw new Error(j.error)}return j}
+function post(u,b){return fetch(U(u),{method:'POST',headers:H({'Content-Type':'application/json'}),credentials:CRED,body:JSON.stringify(b||{})}).then(function(r){return r.json()}).then(chk)}
+function get(u){return fetch(U(u),{headers:H(),credentials:CRED}).then(function(r){return r.json()}).then(chk)}
+function toast(t){var d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(function(){d.remove()},3200)}
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+var ERR={no_engine:'Пульту нужен ключ New API на сервере (его ставим днём).',engine_error:'Нейросеть не ответила, попробуй ещё раз.',server_error:'Ошибка сервера, попробуй ещё раз.',empty:'Напиши вопрос.',gateway:'Сервер не отвечает.'};
+
+/* ---------- голос: сначала голос нейросети (ElevenLabs), если его нет — голос телефона ---------- */
+var cur=null;
+function stopVoice(){if(cur){cur.pause();cur=null}try{speechSynthesis.cancel()}catch(e){}}
+function playB64(b64,mime){stopVoice();cur=new Audio('data:'+(mime||'audio/mpeg')+';base64,'+b64);return cur.play()}
+function phoneVoice(text){try{stopVoice();var u=new SpeechSynthesisUtterance(text);u.lang='ru-RU';u.rate=1.05;speechSynthesis.speak(u)}catch(e){toast('Голос недоступен на этом устройстве')}}
+function say(text,btn){if(btn)btn.disabled=true;
+  post('/api/pult/tts',{text:text}).then(function(r){if(r.ok)return playB64(r.audio,r.mime);phoneVoice(text)}).catch(function(){phoneVoice(text)}).then(function(){if(btn)btn.disabled=false})}
+
+/* ---------- сводка и источники ---------- */
+var rep=null;
+function load(){get('/api/pult/state').then(function(s){
+  rep=s.report;
+  $('repDate').textContent=rep?'· '+rep.date.split('-').reverse().join('.'):'';
+  $('rep').textContent=rep?rep.text:(s.making?'Готовлю сводку…':'Сводки ещё нет. Она появляется каждое утро в 9:00 по Москве.');
+  $('rep').className=rep?'':'muted';$('repPlay').hidden=!rep;
+  var S=s.sources,L=[['EAGLES',S.eagles],['LURE',true],['New API',S.newapi],['Polza',S.polza],['Яндекс Облако',S.yandex],['Мозг (Claude)',s.engine]];
+  $('src').innerHTML='';L.forEach(function(x){var c=document.createElement('span');c.className='chip'+(x[1]?' on':'');c.textContent=(x[1]?'✓ ':'○ ')+x[0];$('src').appendChild(c)});
+  if(s.making)setTimeout(load,8000);
+}).catch(function(){})}
+$('repPlay').onclick=function(){if(!rep)return;var b=this;
+  if(rep.audio){b.disabled=true;get('/api/pult/audio?d='+rep.date).then(function(r){if(r.ok)return playB64(r.audio,r.mime);phoneVoice(rep.text)}).catch(function(){phoneVoice(rep.text)}).then(function(){b.disabled=false})}
+  else say(rep.text,b)};
+$('repNew').onclick=function(){post('/api/pult/report').then(function(r){if(!r.ok)return toast(ERR[r.error]||r.error);toast('Готовлю сводку, это минута-две');$('rep').textContent='Готовлю сводку…';setTimeout(load,15000)}).catch(function(){toast(ERR.gateway)})};
+
+/* ---------- вопросы ---------- */
+var hist=[];
+['Сколько заработали вчера и за месяц?','Сколько вчера купили токенов в рублях?','Сколько новых людей за неделю по пакетам?','Кто перестал платить?','Сколько выплата партнёрам в субботу?','Что мне оплатить на этой неделе?','Дай три идеи для роста'].forEach(function(q){
+  var c=document.createElement('span');c.className='chip q';c.textContent=q;c.onclick=function(){ask(q)};$('qs').appendChild(c)});
+$('voiceOn').checked=ls('pult_voice')==='1';$('voiceOn').onchange=function(){ls('pult_voice',this.checked?'1':'0')};
+function bubble(cls,text){var d=document.createElement('div');d.className='msg '+cls;d.textContent=text;$('chat').appendChild(d);d.scrollIntoView({behavior:'smooth',block:'end'});return d}
+var busy=false;
+function ask(q){q=String(q||'').trim();if(!q||busy)return;busy=true;$('send').disabled=true;$('t').value='';
+  bubble('me',q);var a=bubble('ai','Смотрю цифры…');
+  post('/api/pult/ask',{q:q,hist:hist}).then(function(r){
+    if(!r.ok){a.textContent=ERR[r.error]||('Ошибка: '+r.error);return}
+    a.textContent=r.answer;hist.push({role:'user',content:q},{role:'assistant',content:r.answer});hist=hist.slice(-10);
+    var row=document.createElement('div');row.className='row';var b=document.createElement('button');b.className='btn2 say';b.textContent='🔊 Послушать';b.onclick=function(){say(r.answer,b)};row.appendChild(b);
+    var m=document.createElement('span');m.className='muted';m.textContent=' ≈ '+String(r.cost).replace('.',',')+' ₽';row.appendChild(m);a.appendChild(row);
+    if($('voiceOn').checked)say(r.answer,b);
+  }).catch(function(e){a.textContent=ERR.gateway}).then(function(){busy=false;$('send').disabled=false})}
+$('send').onclick=function(){ask($('t').value)};
+$('t').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();ask(this.value)}});
+$('t').addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(140,this.scrollHeight)+'px'});
+
+/* ---------- микрофон: запись → распознавание на сервере; если нельзя — распознавание телефона ---------- */
+var rec=null,chunks=[];
+function blobB64(b){return new Promise(function(ok){var r=new FileReader();r.onload=function(){ok(String(r.result).split(',')[1]||'')};r.readAsDataURL(b)})}
+function phoneEars(){var SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return toast('Распознавание речи недоступно, напиши текстом');
+  var s=new SR();s.lang='ru-RU';s.onresult=function(e){ask(e.results[0][0].transcript)};s.onerror=function(){toast('Не расслышал, попробуй ещё раз')};s.start()}
+$('mic').onclick=function(){
+  stopVoice();
+  if(rec&&rec.state==='recording'){rec.stop();return}
+  if(!navigator.mediaDevices||!window.MediaRecorder)return phoneEars();
+  navigator.mediaDevices.getUserMedia({audio:true}).then(function(st){
+    chunks=[];rec=new MediaRecorder(st);rec.ondataavailable=function(e){if(e.data.size)chunks.push(e.data)};
+    rec.onstop=function(){st.getTracks().forEach(function(t){t.stop()});$('mic').classList.remove('rec');
+      var b=new Blob(chunks,{type:rec.mimeType||'audio/webm'});if(b.size<1500)return;
+      $('t').placeholder='Распознаю…';
+      blobB64(b).then(function(x){return post('/api/pult/stt',{audio:x,mime:b.type})}).then(function(r){$('t').placeholder='Например: сколько вчера купили токенов?';if(r.ok)ask(r.text);else phoneEars()}).catch(function(){phoneEars()})};
+    rec.start();$('mic').classList.add('rec');toast('Говори. Нажми 🎙 ещё раз, когда закончишь');
+    setTimeout(function(){if(rec&&rec.state==='recording')rec.stop()},60000);
+  }).catch(function(){toast('Разреши доступ к микрофону')})};
+
+load();
+</script>
+</body>
+</html>
