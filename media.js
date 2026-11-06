@@ -22,35 +22,35 @@ module.exports = function media(ctx) {
   // tiers — запасные цены Polza (₽) на 06.11.2026, свежие подтягиваются из каталога Polza раз в час.
   const CAT = {
     img: [
-      { k: 'nb21', id: 'google/gemini-nano-banana-2.1', n: 'Nano Banana 2.1', d: 'Google · быстрая, лучшая цена', refs: 10,
+      { k: 'nb21', eta: 25, id: 'google/gemini-nano-banana-2.1', n: 'Nano Banana 2.1', d: 'Google · быстрая, лучшая цена', refs: 10,
         ar: ['auto', '1:1', '9:16', '16:9', '4:5', '3:4', '4:3', '2:3', '3:2', '21:9'], res: ['1K', '2K', '4K'],
         tiers: [{ c: [], r: 6.75 }, { c: ['image_resolution=1K'], r: 3 }, { c: ['image_resolution=2K'], r: 4.5 }, { c: ['image_resolution=4K'], r: 6.75 }] },
-      { k: 'nbpro', id: 'google/gemini-3-pro-image-preview', n: 'Nano Banana Pro', d: 'Google · лучшая для фото и текста на картинке', refs: 8,
+      { k: 'nbpro', eta: 45, id: 'google/gemini-3-pro-image-preview', n: 'Nano Banana Pro', d: 'Google · лучшая для фото и текста на картинке', refs: 8,
         ar: ['auto', '1:1', '9:16', '16:9', '4:5', '3:4', '4:3', '2:3', '3:2', '21:9'], res: ['1K', '2K', '4K'],
         tiers: [{ c: [], r: 13.5 }, { c: ['image_resolution=4K'], r: 18 }] },
-      { k: 'gpt26', id: 'openai/gpt-image-2.6-flare', n: 'GPT Image 2.6', d: 'OpenAI · точно следует описанию', refs: 16,
+      { k: 'gpt26', eta: 70, id: 'openai/gpt-image-2.6-flare', n: 'GPT Image 2.6', d: 'OpenAI · точно следует описанию', refs: 16,
         ar: ['auto', '1:1', '9:16', '16:9', '3:4', '4:3', '2:3', '3:2', '21:9'], q: ['medium', 'high'],
         tok: true, est: { medium: 9, high: 30 } }
     ],
     video: [
-      { k: 'veof', id: 'google/veo3_fast', n: 'Veo 3.1 Fast', d: 'Google · кино со звуком, быстро', refs: 3,
+      { k: 'veof', eta: 100, id: 'google/veo3_fast', n: 'Veo 3.1 Fast', d: 'Google · кино со звуком, быстро', refs: 3,
         ar: ['16:9', '9:16'], dur: [8], fixed: 45 },
-      { k: 'veo', id: 'google/veo3', n: 'Veo 3.1', d: 'Google · лучшее кино-качество со звуком и речью', refs: 2,
+      { k: 'veo', eta: 200, id: 'google/veo3', n: 'Veo 3.1', d: 'Google · лучшее кино-качество со звуком и речью', refs: 2,
         ar: ['16:9', '9:16'], dur: [4, 6, 8], res: ['720p', '1080p', '4k'],
         tiers: [{ c: ['resolution=720p'], r: 187.5 }, { c: ['resolution=1080p'], r: 197.5 }, { c: ['resolution=4k'], r: 277.5 }] },
-      { k: 'sd25', id: 'bytedance/seedance-2-5', n: 'Seedance 2.5', d: 'ByteDance · новейшая, длинные ролики до 30 сек', refs: 2,
+      { k: 'sd25', eta: 240, id: 'bytedance/seedance-2-5', n: 'Seedance 2.5', d: 'ByteDance · новейшая, длинные ролики до 30 сек', refs: 2,
         ar: ['9:16', '16:9', '1:1', '4:3', '3:4', '21:9'], dur: [5, 10, 15, 20, 30], res: ['480p', '720p'], audio: true, perSec: true,
         tiers: [{ c: ['resolution=480p', 'has_video=false'], r: 18.9 }, { c: ['resolution=720p', 'has_video=false'], r: 42.525 }] },
-      { k: 'sd2', id: 'bytedance/seedance-2', n: 'Seedance 2', d: 'ByteDance · живые движения людей', refs: 2,
+      { k: 'sd2', eta: 180, id: 'bytedance/seedance-2', n: 'Seedance 2', d: 'ByteDance · живые движения людей', refs: 2,
         ar: ['9:16', '16:9', '1:1', '4:3', '3:4', '21:9'], dur: [5, 10, 15], res: ['480p', '720p', '1080p'], audio: true, perSec: true,
         tiers: [{ c: ['resolution=480p', 'has_video=false'], r: 12.825 }, { c: ['resolution=720p', 'has_video=false'], r: 27.675 }, { c: ['resolution=1080p', 'has_video=false'], r: 68.85 }] },
-      { k: 'kl3', id: 'kling/v3', n: 'Kling 3.0', d: 'Kuaishou · лучшая для движения и кино, до 15 сек', refs: 2,
+      { k: 'kl3', eta: 200, id: 'kling/v3', n: 'Kling 3.0', d: 'Kuaishou · лучшая для движения и кино, до 15 сек', refs: 2,
         ar: ['16:9', '9:16', '1:1'], dur: [5, 10, 15], res: ['std', 'pro', '4K'], resKey: 'mode', audio: true, audioKey: 'sound', audioDef: false, perSec: true,
         tiers: [{ c: [], r: 45 }, { c: ['mode=std', 'sound=false'], r: 10 }, { c: ['mode=std', 'sound=true'], r: 14 }, { c: ['mode=pro', 'sound=false'], r: 12 }, { c: ['mode=pro', 'sound=true'], r: 18 }, { c: ['mode=4K'], r: 45 }] },
-      { k: 'kl26', id: 'kling/v2.6', n: 'Kling 2.6', d: 'Kuaishou · качественно и дешевле', refs: 1,
+      { k: 'kl26', eta: 150, id: 'kling/v2.6', n: 'Kling 2.6', d: 'Kuaishou · качественно и дешевле', refs: 1,
         ar: ['16:9', '9:16', '1:1'], dur: [5, 10], audio: true, audioKey: 'sound', audioDef: false,
         tiers: [{ c: [], r: 42 }, { c: ['duration=5', 'sound=false'], r: 42 }, { c: ['duration=10', 'sound=false'], r: 82.5 }, { c: ['duration=5', 'sound=true'], r: 82.5 }, { c: ['duration=10', 'sound=true'], r: 165 }] },
-      { k: 'omni', id: 'google/gemini-omni-1.1-flash', n: 'Gemini Omni Flash', d: 'Google · быстро и недорого', refs: 7,
+      { k: 'omni', eta: 120, id: 'google/gemini-omni-1.1-flash', n: 'Gemini Omni Flash', d: 'Google · быстро и недорого', refs: 7,
         ar: ['16:9', '9:16'], dur: [4, 6, 8, 10], res: ['720p', '1080p', '4k'], durStr: true,
         tiers: [{ c: ['duration=4', 'has_video=false'], r: 48 }, { c: ['duration=6', 'has_video=false'], r: 63 }, { c: ['duration=8', 'has_video=false'], r: 79 }, { c: ['duration=10', 'has_video=false'], r: 95 },
           { c: ['resolution=4k', 'duration=4', 'has_video=false'], r: 111 }, { c: ['resolution=4k', 'duration=6', 'has_video=false'], r: 126 }, { c: ['resolution=4k', 'duration=8', 'has_video=false'], r: 142 }, { c: ['resolution=4k', 'duration=10', 'has_video=false'], r: 158 }] }
@@ -188,6 +188,7 @@ module.exports = function media(ctx) {
       if (Date.now() - j.at > (j.kind === 'img' ? 30 : 60) * 60e3) return finish(j, 'failed', { err: 'Слишком долго' });
     } catch (e) {
       j.tries = (j.tries || 0) + 1;
+      if (j.tries <= 3 || j.tries % 10 === 0) console.error('media check', j.id, j.k, 'try', j.tries, e.message);
       if (j.tries > 60) finish(j, 'failed', { err: 'Нет связи с Polza' });
     } finally { checking.delete(j.id); }
   }
@@ -198,7 +199,7 @@ module.exports = function media(ctx) {
     if (p === '/api/media/catalog') {
       await refreshPrices().catch(() => {});
       const out = {};
-      for (const kind of ['img', 'video']) out[kind] = CAT[kind].map(x => ({ k: x.k, n: x.n, d: x.d, refs: x.refs, ar: x.ar, res: x.res || null, q: x.q || null, dur: x.dur || null, audio: !!x.audio, audioDef: x.audioDef !== false,
+      for (const kind of ['img', 'video']) out[kind] = CAT[kind].map(x => ({ k: x.k, n: x.n, d: x.d, refs: x.refs, ar: x.ar, res: x.res || null, q: x.q || null, dur: x.dur || null, audio: !!x.audio, eta: x.eta || 60, audioDef: x.audioDef !== false,
         table: priceTable(x) }));
       return send(res, 200, { ok: true, cat: out, ready: !!POLZA_KEY });
     }
