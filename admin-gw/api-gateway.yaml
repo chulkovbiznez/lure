@@ -1,0 +1,25 @@
+openapi: 3.0.0
+info:
+  title: admin-gw
+  version: 1.0.0
+paths:
+  /:
+    x-yc-apigateway-any-method:
+      x-yc-apigateway-integration:
+        type: http
+        url: https://ai.eaglesteam.ru/
+        timeouts:
+          read: 300s
+  /{path+}:
+    x-yc-apigateway-any-method:
+      parameters:
+        - name: path
+          in: path
+          required: true
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: http
+        url: https://ai.eaglesteam.ru/{path}
+        timeouts:
+          read: 300s
