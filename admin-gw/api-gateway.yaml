@@ -9,6 +9,7 @@ paths:
         type: http
         url: https://ai.eaglesteam.ru/
         timeouts:
+          connect: 5s
           read: 300s
   /{path+}:
     x-yc-apigateway-any-method:
@@ -22,4 +23,5 @@ paths:
         type: http
         url: https://ai.eaglesteam.ru/{path}
         timeouts:
+          connect: 5s
           read: 300s
