@@ -5,6 +5,24 @@
 const BUCKET = process.env.BUCKET || 'lure-media';
 const SECRET = process.env.SECRET || '';
 const MAX = 300e6;
+const AK = process.env.AK || '', SK = process.env.SK || '';   // статический ключ сервисного аккаунта — только для ссылок загрузки
+const crypto = require('crypto');
+const sha = x => crypto.createHash('sha256').update(x).digest('hex');
+const hmac = (k, x) => crypto.createHmac('sha256', k).update(x).digest();
+const enc = x => encodeURIComponent(x).replace(/[!'()*]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase());
+// подписанная ссылка S3 (SigV4, query string)
+function presign({ method, host, path, region, ak, sk, expires, now }) {
+  const d = (now || new Date()).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  const day = d.slice(0, 8), scope = day + '/' + region + '/s3/aws4_request';
+  const q = { 'X-Amz-Algorithm': 'AWS4-HMAC-SHA256', 'X-Amz-Credential': ak + '/' + scope, 'X-Amz-Date': d, 'X-Amz-Expires': String(expires), 'X-Amz-SignedHeaders': 'host' };
+  const cq = Object.keys(q).sort().map(k => enc(k) + '=' + enc(q[k])).join('&');
+  const cpath = path.split('/').map(enc).join('/');
+  const creq = [method, cpath, cq, 'host:' + host + '\n', 'host', 'UNSIGNED-PAYLOAD'].join('\n');
+  const sts = ['AWS4-HMAC-SHA256', d, scope, sha(creq)].join('\n');
+  const key = hmac(hmac(hmac(hmac('AWS4' + sk, day), region), 's3'), 'aws4_request');
+  return 'https://' + host + cpath + '?' + cq + '&X-Amz-Signature=' + crypto.createHmac('sha256', key).update(sts).digest('hex');
+}
+module.exports.presign = presign;
 const json = (code, o) => ({ statusCode: code, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(o) });
 
 module.exports.handler = async (event, context) => {
@@ -13,6 +31,13 @@ module.exports.handler = async (event, context) => {
   if (!SECRET || h['x-saver-key'] !== SECRET) return json(403, { error: 'forbidden' });
   let b = {};
   try { b = JSON.parse(event.isBase64Encoded ? Buffer.from(event.body || '', 'base64').toString('utf8') : (event.body || '{}')); } catch (e) { return json(400, { error: 'bad_json' }); }
+  if (b.presign) {   // ссылка, по которой браузер сам загрузит своё видео (15 минут)
+    const key = String(b.key || '');
+    if (!/^up\/[A-Za-z0-9_-]{1,40}\/[a-f0-9]{16}\.(mp4|mov|webm)$/.test(key)) return json(400, { error: 'bad_key' });
+    if (!AK || !SK) return json(500, { error: 'no_static_key' });
+    const put = presign({ method: 'PUT', host: 'storage.yandexcloud.net', path: '/' + BUCKET + '/' + key, region: 'ru-central1', ak: AK, sk: SK, expires: 900 });
+    return json(200, { put, url: 'https://storage.yandexcloud.net/' + BUCKET + '/' + key });
+  }
   let src;
   try { src = new URL(String(b.url || '')); } catch (e) { return json(400, { error: 'bad_url' }); }
   if (src.protocol !== 'https:' || !/(^|\.)polza\.ai$/.test(src.hostname)) return json(400, { error: 'bad_host' });

@@ -14,7 +14,7 @@ module.exports = function media(ctx) {
   const SAVER = ENV.SAVER_URL || '';             // функция media-saver
   const SAVER_KEY = ENV.SAVER_KEY || '';
   // наценка своя у каждой модели (так LURE не дороже Syntx и Higgsfield); можно поменять в lure.env: MARKUP_NB21=1.8
-  const MK = { nb21: 1.66, nbpro: 1.5, gpt26: 1.5, veof: 1.5, veo: 1.5, sd25: 1.5, sd2: 1.5, omni: 1.5, kl3: 1.5, kl26: 1.5 };
+  const MK = { nb21: 1.66, nbpro: 1.5, gpt26: 1.5, veof: 1.5, veo: 1.5, sd25: 1.5, sd2: 1.5, omni: 1.5, kl3: 1.5, kl26: 1.5, mc3: 1.5, mc26: 1.5 };
   const MAX_JOBS = 3;                            // одновременно у одного человека
   const REF_CHARS = 2.7e6;                       // все фото-референсы вместе, символов base64 (лимит шлюзов Яндекса ~3,5 МБ)
 
@@ -50,6 +50,12 @@ module.exports = function media(ctx) {
       { k: 'kl26', eta: 150, id: 'kling/v2.6', n: 'Kling 2.6', d: 'Kuaishou · качественно и дешевле', refs: 1,
         ar: ['16:9', '9:16', '1:1'], dur: [5, 10], audio: true, audioKey: 'sound', audioDef: false,
         tiers: [{ c: [], r: 42 }, { c: ['duration=5', 'sound=false'], r: 42 }, { c: ['duration=10', 'sound=false'], r: 82.5 }, { c: ['duration=5', 'sound=true'], r: 82.5 }, { c: ['duration=10', 'sound=true'], r: 165 }] },
+      { k: 'mc3', eta: 300, id: 'kling/v3-motion-control', n: 'Kling 3.0 Motion Control', d: 'Персонаж с фото повторяет движения из твоего видео', mc: true, refs: 1,
+        ar: ['auto'], res: ['720p', '1080p'], resKey: 'mode', perSec: true,
+        tiers: [{ c: [], r: 19 }, { c: ['mode=720p'], r: 14 }, { c: ['mode=1080p'], r: 19 }] },
+      { k: 'mc26', eta: 240, id: 'kling/v2.6-motion-control', n: 'Kling 2.6 Motion Control', d: 'Движения из видео, дешевле', mc: true, refs: 1,
+        ar: ['auto'], res: ['720p', '1080p'], resKey: 'mode', perSec: true,
+        tiers: [{ c: [], r: 13.5 }, { c: ['mode=720p'], r: 8.25 }, { c: ['mode=1080p'], r: 13.5 }] },
       { k: 'omni', eta: 120, id: 'google/gemini-omni-1.1-flash', n: 'Gemini Omni Flash', d: 'Google · быстро и недорого', refs: 7,
         ar: ['16:9', '9:16'], dur: [4, 6, 8, 10], res: ['720p', '1080p', '4k'], durStr: true,
         tiers: [{ c: ['duration=4', 'has_video=false'], r: 48 }, { c: ['duration=6', 'has_video=false'], r: 63 }, { c: ['duration=8', 'has_video=false'], r: 79 }, { c: ['duration=10', 'has_video=false'], r: 95 },
@@ -81,6 +87,11 @@ module.exports = function media(ctx) {
   refreshPrices();
 
   function polzaInput(m, o) {
+    if (m.mc) {
+      const inp = { videos: [{ type: 'url', data: o.vurl }], mode: o.res || m.res[0], character_orientation: o.orient };
+      if (o.prompt) inp.prompt = o.prompt;
+      return inp;
+    }
     const inp = { prompt: o.prompt };
     if (o.ar && m.ar.includes(o.ar) && o.ar !== 'auto') inp.aspect_ratio = o.ar;
     if (m.kind === 'img') {
@@ -120,6 +131,11 @@ module.exports = function media(ctx) {
     if (m.q) o.q = m.q.includes(b.q) ? b.q : m.q[0];
     if (m.dur) o.dur = m.dur.includes(Number(b.dur)) ? Number(b.dur) : m.dur[0];
     if (m.audio) o.audio = b.audio === undefined ? m.audioDef !== false : b.audio !== false;
+    if (m.mc) {
+      o.orient = b.orient === 'image' ? 'image' : 'video';
+      o.dur = Math.min(o.orient === 'image' ? 10 : 30, Math.max(1, Math.ceil(Number(b.vdur) || 0)));
+      o.vurl = String(b.vurl || '');
+    }
     return o;
   }
 
@@ -131,6 +147,8 @@ module.exports = function media(ctx) {
   function gal(id) { try { return JSON.parse(fs.readFileSync(gfile(id), 'utf8')); } catch (e) { return []; } }
   function galSave(id, list) { const f = gfile(id); fs.writeFileSync(f + '.tmp', JSON.stringify(list.slice(0, 500))); fs.renameSync(f + '.tmp', f); }
   const heldOf = u => r2(u.held || 0);
+  const safeId = id => String(id).replace(/[^\w-]/g, '_');
+  const MEDIA_BUCKET = ENV.MEDIA_BUCKET || 'lure-media';
   const pubJob = j => ({ id: j.id, kind: j.kind, model: j.n, k: j.k, prompt: j.o.prompt, ar: j.o.ar, dur: j.o.dur, res: j.o.res, status: j.status, price: j.price, cost: j.cost, url: j.url, at: j.at, err: j.err });
 
   async function polza(method, p, body) {
@@ -199,7 +217,7 @@ module.exports = function media(ctx) {
     if (p === '/api/media/catalog') {
       await refreshPrices().catch(() => {});
       const out = {};
-      for (const kind of ['img', 'video']) out[kind] = CAT[kind].map(x => ({ k: x.k, n: x.n, d: x.d, refs: x.refs, ar: x.ar, res: x.res || null, q: x.q || null, dur: x.dur || null, audio: !!x.audio, eta: x.eta || 60, audioDef: x.audioDef !== false,
+      for (const kind of ['img', 'video']) out[kind] = CAT[kind].map(x => ({ k: x.k, n: x.n, d: x.d, refs: x.refs, ar: x.ar, res: x.res || null, q: x.q || null, dur: x.dur || null, audio: !!x.audio, eta: x.eta || 60, mc: !!x.mc, ps: x.mc ? perSecTable(x) : null, audioDef: x.audioDef !== false,
         table: priceTable(x) }));
       return send(res, 200, { ok: true, cat: out, ready: !!POLZA_KEY });
     }
@@ -214,6 +232,22 @@ module.exports = function media(ctx) {
       galSave(u.id, gal(u.id).filter(x => x.id !== String(b.id || '')));
       return send(res, 200, { ok: true });
     }
+    if (p === '/api/media/upload' && m === 'POST') {   // ссылка для загрузки своего видео прямо в хранилище
+      const g = gate(); if (g) return send(res, 200, { ok: false, error: g });
+      if (!SAVER) return send(res, 200, { ok: false, error: 'media_off' });
+      const b = await readBody(req);
+      const ext = String(b.ext || '').toLowerCase();
+      if (!['mp4', 'mov', 'webm'].includes(ext)) return send(res, 200, { ok: false, error: 'bad_video' });
+      if (!(Number(b.size) > 0 && Number(b.size) <= 100e6)) return send(res, 200, { ok: false, error: 'video_big' });
+      const key = 'up/' + safeId(u.id) + '/' + crypto.randomBytes(8).toString('hex') + '.' + ext;
+      try {
+        const r = await fetch(SAVER, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Saver-Key': SAVER_KEY },
+          body: JSON.stringify({ presign: true, key }), signal: AbortSignal.timeout(20000) });
+        const j = await r.json();
+        if (!j.put) throw new Error(j.error || r.status);
+        return send(res, 200, { ok: true, put: j.put, url: j.url });
+      } catch (e) { console.error('presign', e.message); return send(res, 200, { ok: false, error: 'server_error' }); }
+    }
     if (p === '/api/media/create' && m === 'POST') {
       const g = gate(); if (g) return send(res, 200, { ok: false, error: g });
       if (!POLZA_KEY) return send(res, 200, { ok: false, error: 'media_off' });
@@ -221,7 +255,12 @@ module.exports = function media(ctx) {
       const mod = BY[String(b.k || '')];
       if (!mod) return send(res, 200, { ok: false, error: 'bad_model' });
       const o = clean(mod, b);
-      if (o.prompt.length < 2) return send(res, 200, { ok: false, error: 'no_prompt' });
+      if (o.prompt.length < 2 && !mod.mc) return send(res, 200, { ok: false, error: 'no_prompt' });
+      if (mod.mc) {
+        const pre = 'https://storage.yandexcloud.net/' + MEDIA_BUCKET + '/up/' + safeId(u.id) + '/';
+        if (!o.vurl.startsWith(pre) || !/^[a-f0-9]{16}\.(mp4|mov|webm)$/.test(o.vurl.slice(pre.length))) return send(res, 200, { ok: false, error: 'need_video' });
+        if (!(Array.isArray(b.refs) && b.refs.length)) return send(res, 200, { ok: false, error: 'need_photo' });
+      }
       const refs = (Array.isArray(b.refs) ? b.refs : []).slice(0, mod.refs).filter(x => typeof x === 'string' && /^data:image\/(jpeg|png|webp);base64,/.test(x));
       if (refs.reduce((s, x) => s + x.length, 0) > REF_CHARS) return send(res, 200, { ok: false, error: 'refs_big' });
       if (Object.values(db.jobs).filter(j => j.uid === u.id).length >= MAX_JOBS) return send(res, 200, { ok: false, error: 'jobs_busy' });
@@ -263,6 +302,7 @@ module.exports = function media(ctx) {
     return null;
   };
 
+  function perSecTable(m) { const t = {}; for (const res of m.res) t[res] = baseCost(m, { res, dur: 1 }) * markup(m); return t; }
   // таблица цен для витрины: человек видит цену до нажатия
   function priceTable(m) {
     const t = {};
