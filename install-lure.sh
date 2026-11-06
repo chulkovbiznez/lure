@@ -12,7 +12,7 @@ command -v git >/dev/null || apt-get install -y git
 
 if [ "$REPO" = "--auto-key" ]; then
   # Сам создаёт в New API токен LURE и вписывает ключ. Работает и вечером при белых списках.
-  git -C $D/lure pull --ff-only
+  git -C $D/lure fetch --depth 1 origin main && git -C $D/lure reset --hard FETCH_HEAD
   cd $D
   docker compose up -d lure >/dev/null
   echo
@@ -33,7 +33,7 @@ if [ "$REPO" = "--auto-key" ]; then
 fi
 
 if [ "$REPO" != "--key" ]; then
-  if [ -d $D/lure/.git ]; then git -C $D/lure pull --ff-only; else git clone --depth 1 "$REPO" $D/lure; fi
+  if [ -d $D/lure/.git ]; then git -C $D/lure fetch --depth 1 origin main && git -C $D/lure reset --hard FETCH_HEAD; else git clone --depth 1 "$REPO" $D/lure; fi
 fi
 mkdir -p $D/lure-data
 
