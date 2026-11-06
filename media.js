@@ -185,7 +185,7 @@ module.exports = function media(ctx) {
         return finish(j, 'done', { url, cost, polzaCost: isFinite(polzaCost) ? polzaCost : null, doneAt: Date.now() });
       }
       if (r.status === 'failed' || r.status === 'cancelled') return finish(j, 'failed', { err: (r.error && r.error.message) || 'Не получилось' });
-      if (Date.now() - j.at > (j.kind === 'img' ? 30 : 60) * 60e3) return finish(j, 'failed', { err: 'Слишком долго' });
+      if (Date.now() - j.at > (j.kind === 'img' ? 6 : 30) * 60e3) return finish(j, 'failed', { err: 'Нейросеть не успела, деньги не списаны. Попробуй ещё раз' });
     } catch (e) {
       j.tries = (j.tries || 0) + 1;
       if (j.tries <= 3 || j.tries % 10 === 0) console.error('media check', j.id, j.k, 'try', j.tries, e.message);
