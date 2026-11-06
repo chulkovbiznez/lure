@@ -567,7 +567,7 @@ $('mvFile').onchange=function(){var f=this.files&&this.files[0];if(!f)return;var
   if(['mp4','mov','webm'].indexOf(ext)<0){ext=/webm/.test(f.type)?'webm':/quicktime/.test(f.type)?'mov':/mp4/.test(f.type)?'mp4':''}
   if(!ext){toast(ERR.bad_video);return}if(f.size>100e6){toast(ERR.video_big);return}
   var v=document.createElement('video');v.preload='metadata';v.muted=true;var u=URL.createObjectURL(f);
-  v.onloadedmetadata=function(){var d=Math.round(v.duration*10)/10;URL.revokeObjectURL(u);if(!(d>0)){toast('Не получилось прочитать видео');return}MV={file:f,ext:ext,dur:d,name:f.name.length>22?f.name.slice(0,20)+'…':f.name};drawOpts('video')};
+  v.onloadedmetadata=function(){var d=Math.round(v.duration*10)/10;v.onerror=null;v.onloadedmetadata=null;v.removeAttribute('src');URL.revokeObjectURL(u);if(!(d>0)){toast('Не получилось прочитать видео');return}MV={file:f,ext:ext,dur:d,name:f.name.length>22?f.name.slice(0,20)+'…':f.name};drawOpts('video')};
   v.onerror=function(){URL.revokeObjectURL(u);toast('Не получилось прочитать видео')};v.src=u};
 function upVideo(btn){return post('/api/media/upload',{ext:MV.ext,size:MV.file.size}).then(function(r){if(!r.ok)throw r;
   return new Promise(function(ok,no){var x=new XMLHttpRequest();x.open('PUT',r.put);x.upload.onprogress=function(e){if(e.lengthComputable)btn.textContent='Загружаю видео '+Math.round(e.loaded/e.total*100)+'%'};
