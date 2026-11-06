@@ -546,12 +546,12 @@ function arIcon(a){if(a==='auto')return '';var p=a.split(':'),w=+p[0],h=+p[1],s=
 function chipRow(t,name,vals,label,fmt){if(!vals||vals.length<2)return '';var cur=MOPT[t][name];
   return '<b class="ttl" style="display:block;margin:12px 0 6px;font-size:13px">'+label+'</b><div class="ochips">'+vals.map(function(v){return '<button type="button" class="'+(String(v)===String(cur)?'on':'')+'" data-o="'+name+'" data-v="'+esc(v)+'">'+fmt(v)+'</button>'}).join('')+'</div>'}
 function drawOpts(t){var m=mModel(t),o=MOPT[t];if(!m){$(t+'O').innerHTML='';return}
-  if(m.ar.indexOf(o.ar)<0)o.ar=m.ar[0];if(m.res&&m.res.indexOf(o.res)<0)o.res=m.res[0];if(m.q&&m.q.indexOf(o.q)<0)o.q=m.q[0];if(m.dur&&m.dur.indexOf(+o.dur)<0)o.dur=m.dur[0];if(o.audio===undefined)o.audio=true;
-  var h=chipRow(t,'ar',m.ar,'Формат',function(v){return arIcon(v)+ARN[v]})+chipRow(t,'res',m.res,'Качество',function(v){return String(v).toUpperCase()})+chipRow(t,'q',m.q,'Детализация',function(v){return v==='high'?'Высокая':'Обычная'})+chipRow(t,'dur',m.dur,'Длина',function(v){return v+' сек'});
+  if(m.ar.indexOf(o.ar)<0)o.ar=m.ar[0];if(m.res&&m.res.indexOf(o.res)<0)o.res=m.res[0];if(m.q&&m.q.indexOf(o.q)<0)o.q=m.q[0];if(m.dur&&m.dur.indexOf(+o.dur)<0)o.dur=m.dur[0];if(o.audio===undefined||o._k!==m.k){if(o._k!==m.k)o.audio=m.audioDef!==false;o._k=m.k}
+  var h=chipRow(t,'ar',m.ar,'Формат',function(v){return arIcon(v)+ARN[v]})+chipRow(t,'res',m.res,'Качество',function(v){return {std:'Стандарт',pro:'Pro'}[v]||String(v).toUpperCase()})+chipRow(t,'q',m.q,'Детализация',function(v){return v==='high'?'Высокая':'Обычная'})+chipRow(t,'dur',m.dur,'Длина',function(v){return v+' сек'});
   if(m.audio)h+=chipRow(t,'audio',[true,false],'Звук',function(v){return v===true||v==='true'?'Со звуком':'Без звука'});
   $(t+'O').innerHTML=h;
   [].forEach.call($(t+'O').querySelectorAll('[data-o]'),function(b){b.onclick=function(){var v=b.dataset.v;o[b.dataset.o]=b.dataset.o==='audio'?v==='true':b.dataset.o==='dur'?+v:v;drawOpts(t)}});
-  var p=m.table[[m.res?o.res:'',m.q?o.q:'',m.dur?o.dur:''].join('|')];$(t+'Price').textContent=p?(m.q?'≈ ':'')+rub(p):'—';drawRefs(t)}
+  var p=m.table[[m.res?o.res:'',m.q?o.q:'',m.dur?o.dur:'',m.audio?(o.audio?1:0):''].join('|')];$(t+'Price').textContent=p?(m.q?'≈ ':'')+rub(p):'—';drawRefs(t)}
 function drawRefs(t){var m=mModel(t),L=REFS[t];$(t+'R').innerHTML=L.map(function(s,i){return '<span><img src="'+s+'" alt=""><button type="button" data-rx="'+i+'" aria-label="Убрать">×</button></span>'}).join('');
   [].forEach.call($(t+'R').querySelectorAll('[data-rx]'),function(b){b.onclick=function(){L.splice(+b.dataset.rx,1);drawRefs(t)}});
   var rb=document.querySelector('.refb[data-ref="'+t+'"]');if(rb){rb.hidden=!m||L.length>=m.refs;rb.textContent='＋ Добавить фото'+(t==='video'?' (первый кадр или референс)':'-референс')+(m?' · можно до '+m.refs+(L.length?', добавлено '+L.length:''):'')}}

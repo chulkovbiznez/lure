@@ -14,7 +14,7 @@ module.exports = function media(ctx) {
   const SAVER = ENV.SAVER_URL || '';             // функция media-saver
   const SAVER_KEY = ENV.SAVER_KEY || '';
   // наценка своя у каждой модели (так LURE не дороже Syntx и Higgsfield); можно поменять в lure.env: MARKUP_NB21=1.8
-  const MK = { nb21: 1.66, nbpro: 1.5, gpt26: 1.5, veof: 1.5, veo: 1.5, sd25: 1.5, sd2: 1.5, omni: 1.5 };
+  const MK = { nb21: 1.66, nbpro: 1.5, gpt26: 1.5, veof: 1.5, veo: 1.5, sd25: 1.5, sd2: 1.5, omni: 1.5, kl3: 1.5, kl26: 1.5 };
   const MAX_JOBS = 3;                            // одновременно у одного человека
   const REF_CHARS = 2.7e6;                       // все фото-референсы вместе, символов base64 (лимит шлюзов Яндекса ~3,5 МБ)
 
@@ -44,6 +44,12 @@ module.exports = function media(ctx) {
       { k: 'sd2', id: 'bytedance/seedance-2', n: 'Seedance 2', d: 'ByteDance · живые движения людей', refs: 2,
         ar: ['9:16', '16:9', '1:1', '4:3', '3:4', '21:9'], dur: [5, 10, 15], res: ['480p', '720p', '1080p'], audio: true, perSec: true,
         tiers: [{ c: ['resolution=480p', 'has_video=false'], r: 12.825 }, { c: ['resolution=720p', 'has_video=false'], r: 27.675 }, { c: ['resolution=1080p', 'has_video=false'], r: 68.85 }] },
+      { k: 'kl3', id: 'kling/v3', n: 'Kling 3.0', d: 'Kuaishou · лучшая для движения и кино, до 15 сек', refs: 2,
+        ar: ['16:9', '9:16', '1:1'], dur: [5, 10, 15], res: ['std', 'pro', '4K'], resKey: 'mode', audio: true, audioKey: 'sound', audioDef: false, perSec: true,
+        tiers: [{ c: [], r: 45 }, { c: ['mode=std', 'sound=false'], r: 10 }, { c: ['mode=std', 'sound=true'], r: 14 }, { c: ['mode=pro', 'sound=false'], r: 12 }, { c: ['mode=pro', 'sound=true'], r: 18 }, { c: ['mode=4K'], r: 45 }] },
+      { k: 'kl26', id: 'kling/v2.6', n: 'Kling 2.6', d: 'Kuaishou · качественно и дешевле', refs: 1,
+        ar: ['16:9', '9:16', '1:1'], dur: [5, 10], audio: true, audioKey: 'sound', audioDef: false,
+        tiers: [{ c: [], r: 42 }, { c: ['duration=5', 'sound=false'], r: 42 }, { c: ['duration=10', 'sound=false'], r: 82.5 }, { c: ['duration=5', 'sound=true'], r: 82.5 }, { c: ['duration=10', 'sound=true'], r: 165 }] },
       { k: 'omni', id: 'google/gemini-omni-1.1-flash', n: 'Gemini Omni Flash', d: 'Google · быстро и недорого', refs: 7,
         ar: ['16:9', '9:16'], dur: [4, 6, 8, 10], res: ['720p', '1080p', '4k'], durStr: true,
         tiers: [{ c: ['duration=4', 'has_video=false'], r: 48 }, { c: ['duration=6', 'has_video=false'], r: 63 }, { c: ['duration=8', 'has_video=false'], r: 79 }, { c: ['duration=10', 'has_video=false'], r: 95 },
@@ -82,8 +88,8 @@ module.exports = function media(ctx) {
       if (m.q && m.q.includes(o.q)) inp.quality = o.q;
     } else {
       if (m.dur.length > 1 || !m.fixed) inp.duration = m.durStr ? String(o.dur) : Number(o.dur);
-      if (m.res && m.res.includes(o.res)) inp.resolution = o.res;
-      if (m.audio) inp.generate_audio = o.audio !== false;
+      if (m.res && m.res.includes(o.res)) inp[m.resKey || 'resolution'] = o.res;
+      if (m.audio) inp[m.audioKey || 'generate_audio'] = o.audio !== false;
     }
     return inp;
   }
@@ -91,7 +97,8 @@ module.exports = function media(ctx) {
   function baseCost(m, o) {
     if (m.tok) return m.est[o.q] || m.est.high;
     if (m.fixed && !m.tiers) return m.fixed;
-    const vals = { image_resolution: o.res || (m.res && m.res[0]), resolution: o.res || (m.res && m.res[0]), duration: String(o.dur), has_video: 'false' };
+    const r0 = o.res || (m.res && m.res[0]), snd = String(o.audio !== false && !!m.audio);
+    const vals = { image_resolution: r0, resolution: r0, mode: r0, duration: String(o.dur), has_video: 'false', sound: snd, generate_audio: snd, audio: snd };
     if (m.k === 'omni' && !o.res) vals.resolution = '720p';
     let best = null, bestN = -1;
     for (const t of m.tiers || []) {
@@ -112,7 +119,7 @@ module.exports = function media(ctx) {
     if (m.res) o.res = m.res.includes(b.res) ? b.res : m.res[0];
     if (m.q) o.q = m.q.includes(b.q) ? b.q : m.q[0];
     if (m.dur) o.dur = m.dur.includes(Number(b.dur)) ? Number(b.dur) : m.dur[0];
-    if (m.audio) o.audio = b.audio !== false;
+    if (m.audio) o.audio = b.audio === undefined ? m.audioDef !== false : b.audio !== false;
     return o;
   }
 
@@ -191,7 +198,7 @@ module.exports = function media(ctx) {
     if (p === '/api/media/catalog') {
       await refreshPrices().catch(() => {});
       const out = {};
-      for (const kind of ['img', 'video']) out[kind] = CAT[kind].map(x => ({ k: x.k, n: x.n, d: x.d, refs: x.refs, ar: x.ar, res: x.res || null, q: x.q || null, dur: x.dur || null, audio: !!x.audio,
+      for (const kind of ['img', 'video']) out[kind] = CAT[kind].map(x => ({ k: x.k, n: x.n, d: x.d, refs: x.refs, ar: x.ar, res: x.res || null, q: x.q || null, dur: x.dur || null, audio: !!x.audio, audioDef: x.audioDef !== false,
         table: priceTable(x) }));
       return send(res, 200, { ok: true, cat: out, ready: !!POLZA_KEY });
     }
@@ -258,10 +265,10 @@ module.exports = function media(ctx) {
   // таблица цен для витрины: человек видит цену до нажатия
   function priceTable(m) {
     const t = {};
-    const rs = m.res || [null], qs = m.q || [null], ds = m.dur || [null];
-    for (const res of rs) for (const q of qs) for (const dur of ds) {
-      const o = { res, q, dur };
-      t[[res || '', q || '', dur || ''].join('|')] = price(m, o);
+    const rs = m.res || [null], qs = m.q || [null], ds = m.dur || [null], as = m.audio ? [true, false] : [null];
+    for (const res of rs) for (const q of qs) for (const dur of ds) for (const audio of as) {
+      const o = { res, q, dur, audio: audio !== false };
+      t[[res || '', q || '', dur || '', audio === null ? '' : audio ? 1 : 0].join('|')] = price(m, o);
     }
     return t;
   }
