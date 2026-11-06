@@ -562,7 +562,7 @@ $('refFile').onchange=function(){var t=REFKIND,m=mModel(t),fs=[].slice.call(this
 function etaOf(x){var m=MC&&(MC.img.concat(MC.video)).filter(function(z){return z.k===x.k})[0];var e=(m&&m.eta)||(x.kind==='img'?40:150);if(x.dur&&x.kind!=='img')e=Math.round(e*Math.max(1,x.dur/8));return e}
 function runPct(at,eta){var s=(Date.now()-at)/1000;return Math.min(97,Math.round(100*(1-Math.exp(-1.6*s/eta))/(1-Math.exp(-1.6))))}
 function runTxt(t,at,eta){var s=Math.max(0,Math.round((Date.now()-at)/1000)),left=eta-s,p=runPct(at,eta);
-  return '<span><b style="font-size:20px;display:block">'+p+'%</b>'+(t==='img'?'Рисую':'Снимаю')+'<br><span style="font-weight:500;opacity:.75">'+(left>5?'осталось ≈ '+(left>=90?Math.round(left/60)+' мин':left+' сек'):'почти готово…')+'</span></span>'}
+  return '<span><b style="font-size:20px;display:block">'+p+'%</b>'+(t==='img'?'Рисую':'Снимаю')+'<br><span style="font-weight:500;opacity:.75">'+(left>5?'осталось ≈ '+(left>=90?Math.round(left/60)+' мин':left+' сек'):left>-eta?'почти готово…':'очередь у нейросети, готовое появится здесь само')+'</span></span>'}
 setInterval(function(){[].forEach.call(document.querySelectorAll('[data-run]'),function(d){var at=+d.dataset.at,eta=+d.dataset.eta;d.innerHTML=runTxt(d.dataset.kind,at,eta);var b=d.parentNode.querySelector('.bar i');if(b)b.style.width=runPct(at,eta)+'%'})},1000);
 function gItem(x,i){var t=x.kind==='img'?'img':'video',run=x.status==='run';
   var body=run?'<div class="ph" data-run="'+esc(x.id)+'" data-at="'+(x.at||Date.now())+'" data-eta="'+etaOf(x)+'" data-kind="'+t+'" style="aspect-ratio:'+(x.ar&&x.ar!=='auto'?x.ar.replace(':','/'):'1/1')+'">'+runTxt(t,x.at||Date.now(),etaOf(x))+'</div><div class="bar"><i style="width:'+runPct(x.at||Date.now(),etaOf(x))+'%"></i></div>'
