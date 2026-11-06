@@ -250,6 +250,8 @@ body:not([data-tab=chat]):not([data-tab=img]):not([data-tab=video]) .sub{display
 body[data-tab=img] .sub,body[data-tab=video] .sub{display:flex;visibility:visible}
 body[data-tab=img] #dNew2,body[data-tab=video] #dNew2{visibility:hidden}
 .mp{font-size:15px!important;font-weight:500!important;line-height:1.45;overflow-y:hidden}
+#vInfo{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-size:12px;margin:8px 2px}
+#vInfo.open{display:block}
 </style>
 </head>
 <body>
@@ -580,7 +582,7 @@ var VX=null;
 function view(x){VX=x;$('vMedia').innerHTML=x.kind==='img'?'<img src="'+esc(x.url)+'" alt="" style="width:100%;border-radius:12px">':'<video src="'+esc(x.url)+'" controls autoplay playsinline style="width:100%;border-radius:12px"></video>';
   $('vInfo').textContent=(x.model||'')+(x.cost?' · '+rub(x.cost):'')+(x.prompt?' · '+x.prompt:'');$('vDl').href=x.url;$('vRef').hidden=$('vRefV').hidden=x.kind!=='img';$('viewer').hidden=false}
 function vClose(){$('viewer').hidden=true;$('vMedia').innerHTML=''}
-$('vClose').onclick=vClose;$('viewer').onclick=function(e){if(e.target===this)vClose()};
+$('vClose').onclick=vClose;$('vInfo').onclick=function(){this.classList.toggle('open')};$('viewer').onclick=function(e){if(e.target===this)vClose()};
 $('vDel').onclick=function(){if(!VX||!confirm('Удалить из галереи?'))return;var id=VX.id;['img','video'].forEach(function(t){GAL[t]=GAL[t].filter(function(x){return x.id!==id});drawGal(t)});post('/api/media/delete',{id:id}).catch(function(){});vClose()};
 function toRef(t){if(!VX)return;var u=VX.url;vClose();fetch(u).then(function(r){return r.blob()}).then(shrink).then(function(s){if(curTab()!==t)go(t);loadCat(function(){var m=mModel(t);if(m&&REFS[t].length<m.refs){REFS[t].push(s);drawRefs(t);toast(t==='video'?'Картинка добавлена в видео как кадр':'Добавлено в референсы')}else toast('У этой модели больше фото не добавить')})}).catch(function(){toast('Не получилось взять фото')})}
 $('vRef').onclick=function(){toRef('img')};$('vRefV').onclick=function(){toRef('video')};
