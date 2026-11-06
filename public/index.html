@@ -249,6 +249,7 @@ body:not([data-tab=chat]) #dOpen{display:none}
 body:not([data-tab=chat]):not([data-tab=img]):not([data-tab=video]) .sub{display:none}
 body[data-tab=img] .sub,body[data-tab=video] .sub{display:flex;visibility:visible}
 body[data-tab=img] #dNew2,body[data-tab=video] #dNew2{visibility:hidden}
+.mp{font-size:15px!important;font-weight:500!important;line-height:1.45;overflow-y:hidden}
 </style>
 </head>
 <body>
@@ -327,7 +328,7 @@ body[data-tab=img] #dNew2,body[data-tab=video] #dNew2{visibility:hidden}
     <!-- Картинки -->
     <section data-tab="img" hidden><div class="wrap" style="padding-top:14px">
       <div class="card"><b class="ttl">Что нарисовать</b>
-        <textarea class="inp" id="imgP" rows="3" style="resize:none;margin-top:8px" placeholder="Например: золотой орёл над ночной Москвой, кинематографичный свет"></textarea>
+        <textarea class="inp mp" id="imgP" rows="4" style="resize:none;margin-top:8px" placeholder="Например: золотой орёл над ночной Москвой, кинематографичный свет"></textarea>
         <div class="refs" id="imgR"></div>
         <button class="refb" type="button" data-ref="img">＋ Добавить фото-референс</button>
         <div id="imgO"></div></div>
@@ -340,7 +341,7 @@ body[data-tab=img] #dNew2,body[data-tab=video] #dNew2{visibility:hidden}
     <!-- Видео -->
     <section data-tab="video" hidden><div class="wrap" style="padding-top:14px">
       <div class="card"><b class="ttl">Что снять</b>
-        <textarea class="inp" id="videoP" rows="3" style="resize:none;margin-top:8px" placeholder="Например: орёл взлетает со скалы на рассвете, камера облетает его по кругу"></textarea>
+        <textarea class="inp mp" id="videoP" rows="4" style="resize:none;margin-top:8px" placeholder="Например: орёл взлетает со скалы на рассвете, камера облетает его по кругу"></textarea>
         <div class="refs" id="videoR"></div>
         <button class="refb" type="button" data-ref="video">＋ Добавить фото (первый кадр или референс)</button>
         <div id="videoO"></div></div>
@@ -583,12 +584,14 @@ $('vClose').onclick=vClose;$('viewer').onclick=function(e){if(e.target===this)vC
 $('vDel').onclick=function(){if(!VX||!confirm('Удалить из галереи?'))return;var id=VX.id;['img','video'].forEach(function(t){GAL[t]=GAL[t].filter(function(x){return x.id!==id});drawGal(t)});post('/api/media/delete',{id:id}).catch(function(){});vClose()};
 function toRef(t){if(!VX)return;var u=VX.url;vClose();fetch(u).then(function(r){return r.blob()}).then(shrink).then(function(s){if(curTab()!==t)go(t);loadCat(function(){var m=mModel(t);if(m&&REFS[t].length<m.refs){REFS[t].push(s);drawRefs(t);toast(t==='video'?'Картинка добавлена в видео как кадр':'Добавлено в референсы')}else toast('У этой модели больше фото не добавить')})}).catch(function(){toast('Не получилось взять фото')})}
 $('vRef').onclick=function(){toRef('img')};$('vRefV').onclick=function(){toRef('video')};
+function mgrow(e){var t=e.target||e,cs=getComputedStyle(t),lh=parseFloat(cs.lineHeight),pad=parseFloat(cs.paddingTop)+parseFloat(cs.paddingBottom),max=lh*12+pad+2,min=lh*4+pad+2;t.style.height='auto';var h=Math.max(min,t.scrollHeight);t.style.height=Math.min(h,max)+'px';t.style.overflowY=h>max?'auto':'hidden'}
+['imgP','videoP'].forEach(function(i){$(i).addEventListener('input',mgrow);setTimeout(function(){mgrow($(i))},0)});
 function create(t){var m=mModel(t),o=MOPT[t],b=$(t+'Go'),pr=$(t+'P').value.trim();if(!m)return;if(pr.length<2){toast(ERR.no_prompt);$(t+'P').focus();return}
   b.disabled=true;post('/api/media/create',{k:m.k,prompt:pr,ar:o.ar,res:o.res,q:o.q,dur:o.dur,audio:o.audio,refs:REFS[t]}).then(function(r){b.disabled=false;
     if(!r.ok){if(r.error==='auth'){showLogin();return}if(r.error==='no_money'){toast(ERR.no_money);go('wallet');return}toast(err(r.error,r));return}
     GAL[t].unshift(r.job);drawGal(t);poll();toast(t==='img'?'Рисую. Картинка появится ниже.':'Снимаю. Видео появится ниже через несколько минут.')}).catch(function(){b.disabled=false;toast('Нет связи. Если включён VPN, выключи его.')})}
 $('imgGo').onclick=function(){create('img')};$('videoGo').onclick=function(){create('video')};
-function mediaTab(t){loadCat(function(){if(curTab()!==t)return;mediaName();drawOpts(t);if(MC&&!MC.ready)$(t+'Price').textContent='скоро'});loadGal()}
+function mediaTab(t){setTimeout(function(){mgrow($(t+'P'))},0);loadCat(function(){if(curTab()!==t)return;mediaName();drawOpts(t);if(MC&&!MC.ready)$(t+'Price').textContent='скоро'});loadGal()}
 
 /* ---------- диалоги (хранятся в этом браузере) ---------- */
 /* диалоги хранятся на сервере LURE, видны с любого устройства */
