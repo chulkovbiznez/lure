@@ -475,6 +475,14 @@ $('pIn').oninput=function(){var v=this.value.replace(/\D/g,'').slice(0,4);if(v!=
 $('pCode').oninput=function(){var v=this.value.replace(/\D/g,'').slice(0,6);if(v!==this.value)this.value=v;if(v.length===6)$('pIn').focus()};
 $('pForgot').onclick=function(){var b=this;b.disabled=true;post('/api/pin/rec_request').then(function(r){b.disabled=false;if(!r.ok){pinErr(r);return}showPin('rec','Код отправлен на '+(r.emailHint||'твою почту')+'. Введи его и придумай новый ПИН.')}).catch(function(){b.disabled=false;netErr()})};
 $('pOut').onclick=function(){post('/api/logout').then(showLogin,showLogin)};
+/* Промпт из «Карт EAGLES» (08.11.2026): ссылка lure.eaglesteam.ru/#img&p=<промпт>. Промпт держим в sessionStorage,
+   чтобы он дожил до конца входа и ввода ПИН в этой же вкладке; адрес сразу чистим до #img. */
+var PF=null;(function(){var h=location.hash,i=h.indexOf('&p=');
+  if(i>0){try{PF=decodeURIComponent(h.slice(i+3)).slice(0,4000)}catch(e){PF=null}try{if(PF)sessionStorage.setItem('lure_pf',PF)}catch(e){}history.replaceState(null,'','#'+h.slice(1,i))}
+  if(!PF)try{PF=sessionStorage.getItem('lure_pf')}catch(e){}})();
+function usePF(){if(!PF||!ME||!ME.access)return;var t=PF;PF=null;try{sessionStorage.removeItem('lure_pf')}catch(e){}
+  if(curTab()!=='img')go('img');$('imgP').value=t;MOPT.img.ar='1:1';mgrow($('imgP'));if(MC)drawOpts('img');
+  toast('Промпт из Карт EAGLES готов. Выбери модель и нажми «Создать картинку»')}
 function afterLogin(m){sss(1);post('/api/pin/state').then(function(s){if(s.ok&&!s.has)showPin('set');else start(m)}).catch(function(){start(m)})}
 function boot(){get('/api/me').then(function(r){if(!r.ok){showLogin();return}
   if(!r.locked&&ssg()){start(r.me);return}
@@ -500,7 +508,7 @@ $('lBack').onclick=function(){$('l1').hidden=false;$('l2').hidden=true;$('lErr2'
 /* ---------- приложение ---------- */
 function setMe(m){ME=m;$('balChip').textContent=rub(m.balance);$('wBal').textContent=rub(m.balance);$('wId').textContent=m.id;
   $('wDay').textContent='Сегодня потрачено '+rub(m.spentToday)+' из '+rub(m.dayLimit)+' в сутки';$('owner').hidden=!m.owner}
-function start(m){setMe(m);$('login').hidden=true;$('app').hidden=false;loadModels();openDialog(ls(key('cur'))||null);go(location.hash.replace('#','')||'chat');if(m.access&&!m.terms)$('terms').hidden=false}
+function start(m){setMe(m);$('login').hidden=true;$('app').hidden=false;loadModels();openDialog(ls(key('cur'))||null);go(location.hash.replace('#','').split('&')[0]||'chat');if(m.access&&!m.terms)$('terms').hidden=false;usePF()}
 $('tOk').onclick=function(){var b=this;b.disabled=true;$('tErr').textContent='';post('/api/terms').then(function(r){b.disabled=false;if(!r.ok){if(r.error==='auth')showLogin();return}setMe(r.me);$('terms').hidden=true}).catch(function(){b.disabled=false;$('tErr').textContent='Нет связи. Если включён VPN, выключи его.'})};
 function key(k){return 'lure_'+(ME?ME.id:'x')+'_'+k}
 function go(t){if(!/^(chat|sound|img|video|wallet)$/.test(t))t='chat';document.body.dataset.tab=t;$('secName').textContent={chat:'Чаты',sound:'Звук',img:'Изображения',video:'Видео',wallet:'Баланс'}[t];$('mpanel').hidden=true;
