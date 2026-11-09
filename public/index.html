@@ -630,6 +630,11 @@ function view(x){VX=x;$('vMedia').innerHTML=x.kind==='img'?'<img src="'+esc(x.ur
 function vClose(){$('viewer').hidden=true;$('vMedia').innerHTML=''}
 $('vClose').onclick=vClose;$('vInfo').onclick=function(){this.classList.toggle('open')};$('viewer').onclick=function(e){if(e.target===this)vClose()};
 $('vDel').onclick=function(){if(!VX||!confirm('Удалить из галереи?'))return;var id=VX.id;['img','video'].forEach(function(t){GAL[t]=GAL[t].filter(function(x){return x.id!==id});drawGal(t)});post('/api/media/delete',{id:id}).catch(function(){});vClose()};
+// «Скачать»: качаем файл прямо на месте, без перехода во вкладку с картинкой (Андрей 09.11). Если не вышло — открываем как раньше.
+$('vDl').onclick=function(e){if(!VX||!VX.url)return;e.preventDefault();var u=VX.url,b=this,bt=b.textContent;b.textContent='Скачиваю…';
+  fetch(u).then(function(r){if(!r.ok)throw 0;return r.blob()}).then(function(bl){var ext=(bl.type.split('/')[1]||(VX.kind==='img'?'png':'mp4')).replace('jpeg','jpg').replace('quicktime','mov').split(';')[0];
+    var o=URL.createObjectURL(bl),a=document.createElement('a');a.href=o;a.download='LURE-'+(VX.id||Date.now())+'.'+ext;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(o)},60000);
+    b.textContent=bt;toast('Скачано ✓ Файл в «Загрузках»')}).catch(function(){b.textContent=bt;window.open(u,'_blank','noopener')})};
 function toRef(t){if(!VX)return;var u=VX.url;vClose();fetch(u).then(function(r){return r.blob()}).then(shrink).then(function(s){if(curTab()!==t)go(t);loadCat(function(){var m=mModel(t);if(m&&REFS[t].length<m.refs){REFS[t].push(s);drawRefs(t);toast(t==='video'?'Картинка добавлена в видео как кадр':'Добавлено в референсы')}else toast('У этой модели больше фото не добавить')})}).catch(function(){toast('Не получилось взять фото')})}
 $('vRef').onclick=function(){toRef('img')};$('vRefV').onclick=function(){toRef('video')};
 function mgrow(e){var t=e.target||e,cs=getComputedStyle(t),lh=parseFloat(cs.lineHeight),pad=parseFloat(cs.paddingTop)+parseFloat(cs.paddingBottom),max=lh*12+pad+2,min=lh*4+pad+2;t.style.height='auto';var h=Math.max(min,t.scrollHeight);t.style.height=Math.min(h,max)+'px';t.style.overflowY=h>max?'auto':'hidden'}
