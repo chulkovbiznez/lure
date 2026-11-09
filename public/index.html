@@ -270,6 +270,58 @@ body[data-tab=img] #dNew2,body[data-tab=video] #dNew2{visibility:hidden}
 .mp{font-size:15px!important;font-weight:500!important;line-height:1.45;overflow-y:hidden}
 #vInfo{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-size:12px;margin:8px 2px}
 #vInfo.open{display:block}
+
+/* НОВЫЙ ВХОД (09.11.2026): как окно ПИН, 6 ячеек, без кнопки «Войти» */
+#login .logo{position:relative;margin-bottom:6px}
+#login .logo::before{content:"";position:absolute;left:50%;top:50%;width:460px;height:460px;margin:-230px 0 0 -230px;border-radius:50%;background:radial-gradient(circle,rgba(255,176,46,.18),rgba(255,120,30,.05) 40%,rgba(0,0,0,0) 66%);pointer-events:none;animation:vhPulse 3.6s ease-in-out infinite}
+@keyframes vhPulse{50%{opacity:.6;transform:scale(1.06)}}
+#login .biglogo{position:relative;transition:width .45s cubic-bezier(.2,.8,.2,1)}
+#login.vh2 .biglogo{width:min(230px,62vw)}
+.vh-h{margin:18px 0 4px;text-align:center;font:800 23px/1.25 var(--f);color:var(--text)}
+.vh-sub{margin:0 auto;text-align:center;color:var(--dim);font:500 14px/1.5 var(--f);max-width:330px}
+.vh-sub b{color:var(--text);font-weight:700}
+.vh-fld{position:relative;margin-top:24px}
+.vh-fld input{height:58px;border-radius:16px;padding:0 18px 0 50px;font:600 17px var(--f);color:var(--text);transition:border-color .2s,box-shadow .2s}
+.vh-fld input:focus{border-color:rgba(255,210,63,.6);box-shadow:0 0 0 4px rgba(255,210,63,.08)}
+.vh-fld svg{position:absolute;left:17px;top:19px;width:20px;height:20px;stroke:var(--gold2);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#l1 .err{text-align:center}
+.vh-btn{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:58px;border-radius:16px;background:linear-gradient(180deg,#ffe9a3 0%,#ffd23f 42%,#f0a830 100%);color:#2a1a04;font:800 16.5px var(--f);box-shadow:0 12px 30px rgba(255,180,50,.28),inset 0 1px 0 rgba(255,255,255,.65),inset 0 -2px 0 rgba(150,80,0,.25);transition:transform .12s,filter .2s}
+.vh-btn::before{content:"";position:absolute;top:0;bottom:0;width:60%;left:-70%;background:linear-gradient(100deg,rgba(255,255,255,0),rgba(255,255,255,.55),rgba(255,255,255,0));transform:skewX(-18deg);animation:vhSweep 3.4s ease-in-out 1.2s infinite}
+@keyframes vhSweep{0%{left:-70%}45%,100%{left:130%}}
+.vh-btn:active{transform:scale(.985)}
+.vh-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.vh-btn .sp{display:none;width:18px;height:18px;border-radius:50%;border:2.5px solid rgba(42,26,4,.25);border-top-color:#2a1a04;animation:vhRot .7s linear infinite}
+.vh-btn.busy{filter:saturate(.8)}.vh-btn.busy .sp{display:block}.vh-btn.busy svg{display:none}
+@keyframes vhRot{to{transform:rotate(360deg)}}
+.vh-cells{position:relative;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px;margin:28px auto 0;max-width:340px}
+.vh-cells i{position:relative;display:flex;align-items:center;justify-content:center;aspect-ratio:5/6;border-radius:14px;background:#141217;border:1px solid var(--line);font:800 26px var(--f);font-style:normal;color:var(--gold1);font-variant-numeric:tabular-nums;transition:border-color .2s,background .2s,transform .2s,box-shadow .2s}
+.vh-cells i.f{border-color:rgba(255,210,63,.55);background:linear-gradient(180deg,#1f1a12,#141217);animation:vhPop .22s ease-out}
+@keyframes vhPop{50%{transform:scale(1.08)}}
+.vh-cells i.cur::after{content:"";width:2px;height:28px;border-radius:2px;background:var(--gold);animation:vhBlink 1s steps(2) infinite}
+@keyframes vhBlink{50%{opacity:0}}
+.vh-cells input{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;border:0;background:transparent;color:transparent;caret-color:transparent}
+.vh-cells.chk i{border-color:rgba(255,210,63,.7);animation:vhWave 1s ease-in-out infinite}
+.vh-cells.chk i:nth-child(2){animation-delay:.08s}.vh-cells.chk i:nth-child(3){animation-delay:.16s}.vh-cells.chk i:nth-child(4){animation-delay:.24s}.vh-cells.chk i:nth-child(5){animation-delay:.32s}.vh-cells.chk i:nth-child(6){animation-delay:.4s}
+@keyframes vhWave{50%{transform:translateY(-5px);box-shadow:0 8px 20px rgba(255,190,60,.25)}}
+.vh-cells.bad{animation:vhShake .42s}
+.vh-cells.bad i{border-color:rgba(255,107,90,.8);color:#ff6b5a}
+@keyframes vhShake{20%{transform:translateX(-9px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(3px)}}
+.vh-cells.good i{border-color:var(--green);color:#bff5cf;background:linear-gradient(180deg,#123222,#101a14)}
+.vh-cells.lock i{opacity:.35}
+.vh-msg{min-height:22px;margin:12px 2px 0;font:600 13.5px/1.45 var(--f);color:var(--dim);text-align:center}
+.vh-msg.err{color:#ff7b6b}.vh-msg.ok{color:var(--green)}
+.vh-lock{display:flex;gap:12px;align-items:center;margin-top:14px;padding:14px 16px;border-radius:16px;background:linear-gradient(180deg,#1f1410,#160f0d);border:1px solid rgba(255,107,90,.35)}
+.vh-lock[hidden]{display:none}
+.vh-lock svg{flex:none;width:28px;height:28px;stroke:#ff6b5a;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.vh-lock b{display:block;font:800 14.5px var(--f);color:#ffd9d3}
+.vh-lock span{font:600 13px var(--f);color:#c9a49d}
+.vh-lock em{font-style:normal;color:#fff;font-variant-numeric:tabular-nums}
+.vh-links{display:flex;justify-content:space-between;gap:10px;margin-top:20px}
+.vh-lnk{font:700 13.5px var(--f);color:var(--gold);padding:6px 0;background:none;border:0}
+.vh-lnk[disabled]{color:var(--dim2)}
+.vh-foot{margin-top:24px;text-align:center;font:500 12.5px/1.6 var(--f);color:var(--dim2)}
+.vh-foot a{font-weight:700;text-decoration:none}
+@media (prefers-reduced-motion:reduce){#login .logo::before,.vh-btn::before,.vh-cells i,.vh-cells.bad{animation:none!important}}
 </style>
 </head>
 <body>
@@ -281,21 +333,25 @@ body[data-tab=img] #dNew2,body[data-tab=video] #dNew2{visibility:hidden}
 <section id="login" hidden><div class="wrap" style="max-width:440px">
   <div class="logo">
     <img class="biglogo" src="/lure-logo.webp" width="640" height="395" alt="LURE. Покажи свой мир">
-    <p>Лучшие нейросети в одном месте: Claude, GPT и Gemini. Вход тем же аккаунтом, что и в EAGLES.</p>
   </div>
   <div id="l1">
-    <input class="inp" id="lLogin" placeholder="Твой ID или почта" autocomplete="username" inputmode="email">
-    <div class="err" id="lErr1"></div>
-    <button class="btn" id="lBtn1">Получить код на почту</button>
-    <p class="muted" style="text-align:center;margin-top:16px">Если LURE не открывается или не отвечает, выключи VPN.</p>
-    <p class="muted" style="text-align:center;margin-top:16px">Нет аккаунта EAGLES? <a href="https://app.eaglesteam.ru/">Зарегистрируйся бесплатно</a></p>
+    <h1 class="vh-h">Вход в LURE</h1>
+    <p class="vh-sub">Тот же аккаунт, что и в EAGLES. Впиши ID или почту, пришлём код.</p>
+    <form id="lF1" novalidate>
+      <div class="vh-fld"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><input class="inp" id="lLogin" placeholder="ID или почта" autocomplete="username" autocapitalize="none" spellcheck="false" inputmode="email" aria-label="ID или почта"></div>
+      <div class="err" id="lErr1"></div>
+      <button class="vh-btn" id="lBtn1" type="submit"><span class="sp"></span><span id="lBtn1t">Получить код</span><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    </form>
+    <p class="vh-foot">Нет аккаунта EAGLES? <a href="https://app.eaglesteam.ru/">Зарегистрируйся бесплатно</a><br>Если LURE не открывается, выключи VPN.</p>
   </div>
   <div id="l2" hidden>
-    <p class="muted" id="lHint" style="text-align:center"></p>
-    <input class="inp" id="lCode" placeholder="Код из письма" inputmode="numeric" autocomplete="one-time-code" maxlength="6" style="text-align:center;letter-spacing:6px;font-size:22px">
-    <div class="err" id="lErr2"></div>
-    <button class="btn" id="lBtn2">Войти</button>
-    <p style="text-align:center;margin-top:14px"><button class="btn2" id="lBack">← Другой ID или почта</button></p>
+    <h1 class="vh-h">Код из письма</h1>
+    <p class="vh-sub" id="lHint"></p>
+    <div class="vh-cells" id="lCells"><i></i><i></i><i></i><i></i><i></i><i></i><input id="lCode" inputmode="numeric" autocomplete="one-time-code" aria-label="Код из письма, 6 цифр"></div>
+    <div class="vh-msg" id="lErr2"></div>
+    <div class="vh-lock" id="lLock" hidden></div>
+    <div class="vh-links"><button class="vh-lnk" id="lBack" type="button">← Другой ID</button><button class="vh-lnk" id="lResend" type="button" disabled>Новый код через 0:59</button></div>
+    <p class="vh-foot">Письма нет? Загляни в «Спам» или «Промоакции».</p>
   </div>
   <div id="lp" hidden>
     <p id="pTitle" style="text-align:center;font:700 18px var(--f);margin:0 0 6px"></p>
@@ -469,12 +525,12 @@ function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null
 
 /* ---------- вход ---------- */
 var lid='';
-function showLogin(){zgrDone();sss(0);TOK(null);$('app').hidden=true;$('login').hidden=false;$('l1').hidden=false;$('l2').hidden=true;$('lp').hidden=true}
+function showLogin(){zgrDone();sss(0);TOK(null);$('app').hidden=true;$('login').hidden=false;$('l1').hidden=false;$('l2').hidden=true;$('lp').hidden=true;$('login').classList.remove('vh2')}
 /* ---------- ПИН: один на весь EAGLES (тот же, что на сайте) ---------- */
 var PM='',P1='',MAXU='https://max.ru/u/f9LHodD0cOIec-v91ujcZ-dap9pM51MzN00AwcIMTy-x29hys8Mcg8n8HJ4';
 function ssg(){try{return sessionStorage.getItem('lure_ul')}catch(e){return null}}
 function sss(v){try{if(v)sessionStorage.setItem('lure_ul','1');else sessionStorage.removeItem('lure_ul')}catch(e){}}
-function showPin(mode,hint){zgrDone();PM=mode;P1='';$('app').hidden=true;$('dlgs').hidden=true;$('terms').hidden=true;$('login').hidden=false;$('l1').hidden=true;$('l2').hidden=true;$('lp').hidden=false;
+function showPin(mode,hint){zgrDone();PM=mode;P1='';$('app').hidden=true;$('dlgs').hidden=true;$('terms').hidden=true;$('login').hidden=false;$('l1').hidden=true;$('l2').hidden=true;$('lp').hidden=false;$('login').classList.remove('vh2');
   $('pIn').value='';$('pIn').disabled=false;$('pCode').value='';$('pErr').textContent='';$('pCode').hidden=mode!=='rec';$('pForgot').hidden=mode!=='enter';
   $('pTitle').textContent={enter:'Введи ПИН',set:'Придумай ПИН из 4 цифр',rep:'Повтори ПИН',rec:'Код из письма и новый ПИН'}[mode];
   $('pHint').textContent=hint||{enter:'Тот же ПИН, что на сайте EAGLES.',set:'Он будет общим для LURE и сайта EAGLES.',rep:'',rec:''}[mode];
@@ -509,22 +565,58 @@ function boot(){get('/api/me').then(function(r){if(!r.ok){showLogin();return}
   if(!r.locked&&ssg()){start(r.me);return}
   post('/api/pin/state').then(function(s){if(!s.ok){pinErr(s);showLogin();return}if(!s.has){showPin('set');return}
     if(r.locked)showPin('enter');else post('/api/lock').then(function(){showPin('enter')})}).catch(showLogin)}).catch(showLogin)}
-$('lBtn1').onclick=function(){
-  var v=$('lLogin').value.trim();if(!v){$('lErr1').textContent='Впиши свой ID или почту.';return}
-  var b=this;b.disabled=true;$('lErr1').textContent='';
-  post('/api/login/request',{login:v}).then(function(r){b.disabled=false;
-    if(!r.ok){$('lErr1').textContent=err(r.error,r);return}
-    lid=r.id;$('l1').hidden=true;$('l2').hidden=false;$('lHint').innerHTML='Код отправлен на <b></b>. Он придёт от kod@eaglesteam.ru.';$('lHint').querySelector('b').textContent=r.emailHint||'твою почту';$('lCode').value='';setTimeout(function(){$('lCode').focus()},100);
-  }).catch(function(){b.disabled=false;$('lErr1').textContent='Нет связи. Проверь интернет. Если включён VPN, выключи его.'})};
-$('lLogin').onkeydown=function(e){if(e.key==='Enter')$('lBtn1').click()};
-$('lCode').oninput=function(){var v=this.value.replace(/\D/g,'').slice(0,6);if(v!==this.value)this.value=v;if(v.length===6)$('lBtn2').click()};
-$('lBtn2').onclick=function(){
-  var c=$('lCode').value.trim();if(!/^\d{6}$/.test(c)){$('lErr2').textContent='Код: 6 цифр из письма.';return}
-  var b=this;b.disabled=true;$('lErr2').textContent='';
-  post('/api/login/verify',{id:lid,code:c}).then(function(r){b.disabled=false;
-    if(!r.ok){$('lErr2').textContent=err(r.error,r);return}
-    if(r.token)TOK(r.token);afterLogin(r.me)}).catch(function(){b.disabled=false;$('lErr2').textContent='Нет связи. Проверь интернет. Если включён VPN, выключи его.'})};
-$('lBack').onclick=function(){$('l1').hidden=false;$('l2').hidden=true;$('lErr2').textContent=''};
+/* НОВЫЙ ВХОД (09.11.2026): кнопки «Войти» нет — 6 цифр, и проверка идёт сама. Вставка целиком из письма
+   («EAGLES: код для входа 123456») — берём цифры, последние 6. Обрыв связи — тихий повтор 1 раз. */
+var lLog='',lBusy=0,lLockT=0,lResAt=0,lResT=0,VH0='Вставь или впиши код. Вход откроется сам.';
+function vhMsg(t,c){var m=$('lErr2');m.innerHTML=t||'';m.className='vh-msg'+(c?' '+c:'')}
+function vhDraw(){var x=$('lCode'),v=x.value,C=$('lCells').querySelectorAll('i'),f=document.activeElement===x;
+  for(var k=0;k<6;k++){C[k].textContent=v[k]||'';C[k].classList.toggle('f',!!v[k]);C[k].classList.toggle('cur',f&&k===v.length&&!lBusy&&!x.disabled)}}
+function vhClear(){$('lCode').value='';$('lCells').className='vh-cells';vhDraw()}
+function vhUnlock(){clearTimeout(lLockT);$('lLock').hidden=true;$('lCode').disabled=false}
+function vhStep2(hint,old){vhUnlock();$('l1').hidden=true;$('l2').hidden=false;$('login').classList.add('vh2');
+  $('lHint').innerHTML=(old?'Код уже отправлен на <b></b>, он ещё действует.':'Отправили на <b></b>.')+' Письмо от kod@eaglesteam.ru';$('lHint').querySelector('b').textContent=hint||'твою почту';
+  vhClear();vhMsg(VH0);if(!old)lResAt=Date.now()+60000;vhRes();setTimeout(function(){$('lCode').focus();vhDraw()},120)}
+function vhBtn(on){var b=$('lBtn1');b.disabled=on;b.classList.toggle('busy',on);$('lBtn1t').textContent=on?'Отправляю код…':'Получить код'}
+$('lF1').onsubmit=function(e){e.preventDefault();
+  var v=$('lLogin').value.trim();if(!v){$('lErr1').textContent='Впиши свой ID или почту.';$('lLogin').focus();return}
+  vhBtn(true);$('lErr1').textContent='';
+  post('/api/login/request',{login:v}).then(function(r){vhBtn(false);
+    if(r.ok){lid=r.id;lLog=v;vhStep2(r.emailHint);return}
+    if(r.error==='too_often'&&lid&&lLog===v){vhStep2('',1);return}
+    $('lErr1').textContent=err(r.error,r)}).catch(function(){vhBtn(false);$('lErr1').textContent='Нет связи. Проверь интернет. Если включён VPN, выключи его.'})};
+$('lLogin').onkeydown=null;
+$('lCode').addEventListener('input',function(){var d=this.value.replace(/\D/g,'');if(d.length>6)d=d.slice(-6);this.value=d;
+  $('lCells').classList.remove('bad');if(!lBusy)vhMsg(VH0);vhDraw();if(d.length===6)vhVerify(d,0)});
+$('lCode').addEventListener('focus',vhDraw);$('lCode').addEventListener('blur',vhDraw);
+$('lCells').addEventListener('click',function(){$('lCode').focus()});
+function vhVerify(c,retry){if(lBusy||$('lCode').disabled)return;lBusy=1;$('lCells').className='vh-cells chk';vhDraw();vhMsg('Проверяю…');
+  post('/api/login/verify',{id:lid,code:c}).then(function(r){lBusy=0;
+    if(r.ok){$('lCells').className='vh-cells good';vhMsg('Готово, заходим…','ok');if(r.token)TOK(r.token);setTimeout(function(){afterLogin(r.me)},350);return}
+    if(r.error==='locked'){vhLocked(Number(r.retryAfterMin)||60);return}
+    $('lCells').className='vh-cells bad';
+    var t=err(r.error,r);
+    if(r.error==='bad_code'){t=retry?'Код не подошёл. Возможно, он уже сработал, пока не было связи. Нажми «Прислать новый код».':'Неверный код. Проверь письмо.';if(!retry&&r.left>0)t='Неверный код. Осталось попыток: '+r.left}
+    if(r.error==='expired'){lResAt=0;vhRes()}
+    vhMsg(t,'err');setTimeout(function(){$('lCode').value='';vhDraw()},450)
+  }).catch(function(){lBusy=0;
+    if(!retry){vhMsg('Проверяю…');setTimeout(function(){vhVerify(c,1)},900);return}
+    $('lCells').className='vh-cells';vhDraw();
+    vhMsg('Нет связи. Код не пропал. <button class="vh-lnk" id="lRetry" type="button">Проверить ещё раз</button><br>Если включён VPN, выключи его.','err');
+    $('lRetry').onclick=function(){vhVerify($('lCode').value,1)}})}
+function vhLocked(min){var until=Date.now()+min*60000,L=$('lLock');$('lCode').disabled=true;vhClear();$('lCells').className='vh-cells lock';vhMsg('');
+  clearTimeout(lResT);$('lResend').disabled=true;$('lResend').textContent='Новый код недоступен';
+  L.innerHTML='<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><div><b>Слишком много попыток</b><span>Вход по этому ID откроется через <em id="lLt"></em></span></div>';L.hidden=false;
+  (function t(){var s=Math.max(0,Math.ceil((until-Date.now())/1000)),e=$('lLt');if(!e)return;e.textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+    if(s>0)lLockT=setTimeout(t,1000);else{vhUnlock();vhClear();vhMsg('Можно снова. Нажми «Прислать новый код».');lResAt=0;vhRes()}})()}
+function vhRes(){clearTimeout(lResT);var r=$('lResend'),s=Math.ceil((lResAt-Date.now())/1000);if($('lCode').disabled)return;
+  if(s>0){r.disabled=true;r.textContent='Новый код через 0:'+String(s).padStart(2,'0');lResT=setTimeout(vhRes,500)}else{r.disabled=false;r.textContent='Прислать новый код'}}
+$('lResend').onclick=function(){var r=this;r.disabled=true;r.textContent='Отправляю…';
+  post('/api/login/request',{login:lLog||lid}).then(function(x){
+    if(x.ok){lid=x.id;vhClear();vhMsg('Новый код отправлен на почту.','ok');lResAt=Date.now()+60000;vhRes();$('lCode').focus();return}
+    if(x.error==='locked'){vhLocked(Number(x.retryAfterMin)||60);return}
+    if(x.error==='too_often')lResAt=Date.now()+60000;
+    vhMsg(err(x.error,x),'err');vhRes()}).catch(function(){vhMsg('Нет связи. Попробуй ещё раз через минуту.','err');lResAt=0;vhRes()})};
+$('lBack').onclick=function(){vhUnlock();clearTimeout(lResT);$('l1').hidden=false;$('l2').hidden=true;$('login').classList.remove('vh2');$('lErr1').textContent='';setTimeout(function(){$('lLogin').focus()},50)};
 
 /* ---------- приложение ---------- */
 function setMe(m){ME=m;$('balChip').textContent=rub(m.balance);$('wBal').textContent=rub(m.balance);$('wId').textContent=m.id;
