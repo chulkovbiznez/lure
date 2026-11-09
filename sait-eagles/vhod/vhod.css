@@ -1,0 +1,55 @@
+/* НОВЫЙ ВХОД EAGLES (09.11.2026): окна «Вход» и «Код из письма» как окно ПИН. Кнопки под кодом нет. */
+.egf .sheet.vh .box{top:0;border-radius:0;border-top:0;max-width:none;background:#070708;box-shadow:none;overflow:hidden}
+.egf .sheet.vh .in{max-width:440px;margin:0 auto;padding:max(46px,calc(env(safe-area-inset-top,0px) + 30px)) 22px calc(28px + env(safe-area-inset-bottom,0px))}
+.egf .sheet.vh .grab{display:none}
+.egf .sheet.vh .x{top:max(12px,env(safe-area-inset-top,0px));background:#17151a;border:1px solid #2a2622;color:#bbb}
+.vh-glow{position:absolute;left:50%;top:160px;width:520px;height:520px;margin:-260px 0 0 -260px;border-radius:50%;background:radial-gradient(circle,rgba(255,176,46,.20),rgba(255,120,30,.06) 40%,rgba(0,0,0,0) 66%);pointer-events:none;animation:vhPulse 3.6s ease-in-out infinite}
+@keyframes vhPulse{50%{opacity:.6;transform:scale(1.06)}}
+.vh-lg{position:relative;display:block;margin:0 auto;width:250px;max-width:76%;aspect-ratio:660/401;background:var(--vh-img) center/contain no-repeat}
+.vh-lg::after{content:"";position:absolute;inset:0;-webkit-mask:var(--vh-img) center/contain no-repeat;mask:var(--vh-img) center/contain no-repeat;background:linear-gradient(100deg,rgba(255,255,255,0) 40%,rgba(255,246,214,.7) 50%,rgba(255,255,255,0) 60%) no-repeat;background-size:300% 100%;animation:vhShine 3.2s ease-in-out 1s infinite}
+@keyframes vhShine{0%{background-position:120% 0}60%,100%{background-position:-60% 0}}
+#cdo .vh-lg{width:175px}
+.egf .sheet.vh h3{font-family:'Montserrat',system-ui,sans-serif;font-weight:800;font-size:23px;line-height:1.25;text-align:center;padding:0;margin:18px 0 6px;color:#f4f4f2}
+.egf .sheet.vh .hint{text-align:center;color:#a29b90;font-size:14px;line-height:1.5;margin:0 auto 4px;max-width:330px}
+.egf .sheet.vh .hint b{color:#f4f4f2}
+.vh-fld{position:relative;margin-top:22px}
+.egf .sheet.vh .vh-fld .fld{height:58px;border-radius:16px;padding:0 18px 0 50px;font-size:17px;font-weight:600;background:#100e12;border:1px solid #2a2622;margin:0;transition:border-color .2s,box-shadow .2s}
+.egf .sheet.vh .vh-fld .fld:focus{border-color:rgba(255,210,63,.6);box-shadow:0 0 0 4px rgba(255,210,63,.08)}
+.vh-fld svg{position:absolute;left:17px;top:19px;width:20px;height:20px;stroke:#e9a23b;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.egf .sheet.vh .cta.vh-btn{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:10px;height:58px;margin-top:16px;border-radius:16px;background:linear-gradient(180deg,#ffe9a3 0%,#ffd23f 42%,#f0a830 100%);color:#2a1a04;font-family:'Montserrat',system-ui,sans-serif;font-weight:800;font-size:16.5px;letter-spacing:.2px;box-shadow:0 12px 30px rgba(255,180,50,.28),inset 0 1px 0 rgba(255,255,255,.65),inset 0 -2px 0 rgba(150,80,0,.25);opacity:1;filter:none;transition:transform .12s}
+.egf .sheet.vh .cta.vh-btn::before{content:"";position:absolute;top:0;bottom:0;width:60%;left:-70%;background:linear-gradient(100deg,rgba(255,255,255,0),rgba(255,255,255,.55),rgba(255,255,255,0));transform:skewX(-18deg);animation:vhSweep 3.4s ease-in-out 1.2s infinite}
+@keyframes vhSweep{0%{left:-70%}45%,100%{left:130%}}
+.egf .sheet.vh .cta.vh-btn:active{transform:scale(.985)}
+.vh-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.vh-btn .sp{display:none;width:18px;height:18px;border-radius:50%;border:2.5px solid rgba(42,26,4,.25);border-top-color:#2a1a04;animation:vhRot .7s linear infinite}
+.vh-btn:disabled .sp{display:block}.vh-btn:disabled svg{display:none}
+@keyframes vhRot{to{transform:rotate(360deg)}}
+.egf .sheet.vh .prog,.egf #cdo.vh #cBtn{display:none!important}
+.vh-cells{position:relative;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px;margin:26px auto 0;max-width:340px}
+.vh-cells i{position:relative;display:flex;align-items:center;justify-content:center;aspect-ratio:5/6;border-radius:14px;background:#141217;border:1px solid #2a2622;font:800 26px 'Montserrat',system-ui,sans-serif;font-style:normal;color:#ffe08a;font-variant-numeric:tabular-nums;transition:border-color .2s,background .2s,transform .2s,box-shadow .2s}
+.vh-cells i.f{border-color:rgba(255,210,63,.55);background:linear-gradient(180deg,#1f1a12,#141217);animation:vhPop .22s ease-out}
+@keyframes vhPop{50%{transform:scale(1.08)}}
+.vh-cells i.cur::after{content:"";width:2px;height:28px;border-radius:2px;background:#ffd23f;animation:vhBlink 1s steps(2) infinite}
+@keyframes vhBlink{50%{opacity:0}}
+.egf .sheet.vh .vh-cells .fld{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;opacity:0;border:0;background:transparent;color:transparent;caret-color:transparent;font-size:16px;letter-spacing:0}
+.vh-cells.chk i{border-color:rgba(255,210,63,.7);animation:vhWave 1s ease-in-out infinite}
+.vh-cells.chk i:nth-child(2){animation-delay:.08s}.vh-cells.chk i:nth-child(3){animation-delay:.16s}.vh-cells.chk i:nth-child(4){animation-delay:.24s}.vh-cells.chk i:nth-child(5){animation-delay:.32s}.vh-cells.chk i:nth-child(6){animation-delay:.4s}
+@keyframes vhWave{50%{transform:translateY(-5px);box-shadow:0 8px 20px rgba(255,190,60,.25)}}
+.vh-cells.bad{animation:vhShake .42s}
+.vh-cells.bad i{border-color:rgba(255,107,90,.8);color:#ff6b5a}
+@keyframes vhShake{20%{transform:translateX(-9px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(3px)}}
+.vh-cells.good i{border-color:#3ecf6c;color:#bff5cf;background:linear-gradient(180deg,#123222,#101a14)}
+.vh-cells.lock i{opacity:.35}
+.egf .sheet.vh .st{font-size:13.5px;font-weight:600;margin-top:12px;min-height:22px}
+.egf .sheet.vh .st.ok{color:#3ecf6c}
+.vh-lock{display:flex;gap:12px;align-items:center;margin-top:14px;padding:14px 16px;border-radius:16px;background:linear-gradient(180deg,#1f1410,#160f0d);border:1px solid rgba(255,107,90,.35);text-align:left}
+.vh-lock[hidden]{display:none}
+.vh-lock svg{flex:none;width:28px;height:28px;stroke:#ff6b5a;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.vh-lock b{display:block;font-weight:800;font-size:14.5px;color:#ffd9d3}
+.vh-lock span{font-weight:600;font-size:13px;color:#c9a49d}
+.vh-lock em{font-style:normal;color:#fff;font-variant-numeric:tabular-nums}
+.egf .sheet.vh .lnk{justify-content:space-between;margin-top:20px}
+.egf .sheet.vh .lnk button{color:#ffd23f;text-decoration:none;font-weight:700;font-size:13.5px;padding:6px 0}
+.egf .sheet.vh .lnk button:disabled{color:#6f6a64;cursor:default}
+.egf .sheet.vh .small{font-size:12.5px;margin-top:22px;color:#6f6a64}
+@media (prefers-reduced-motion:reduce){.vh-glow,.vh-lg::after,.egf .sheet.vh .cta.vh-btn::before,.vh-cells i,.vh-cells.bad{animation:none!important}}
