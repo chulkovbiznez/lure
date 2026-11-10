@@ -970,6 +970,7 @@ let LIM=null;const LIMT='В FREE — 1 карта и 3 острова. Боль�
 const islN=d=>(d.kids||[]).filter(k=>Array.isArray(k.kids)).length;
 function limMap(){if(LIM&&MAPS.length>=LIM.maps){toast(LIMT);return true}return false}
 function limIsl(d){if(LIM&&islN(d)>=LIM.isl){toast(LIMT);return true}return false}
+let srvAt=null;
 let READY=false,noSave=false,lastJson='',busy=false,again=false,retryT=0;const badImg=new Set();
 function toLogin(){noSave=true;location.replace('/index.html')}
 function api(q,data){const b=new URLSearchParams();b.append('data',data||'');
@@ -983,7 +984,12 @@ function applySaved(o){if(!o||!Array.isArray(o.maps)||!o.maps.length)return fals
   MYIC.length=0;(Array.isArray(o.ics)?o.ics:[]).forEach(c=>{if(c&&c.id&&/^(https?:|data:image\/)/.test(c.img||'')){MYIC.push(c);addMy(c)}});
   curMap=Math.max(0,Math.min(o.cur||0,MAPS.length-1));(o.mtrash||[]).forEach(t=>{if(t&&t.m&&t.m.data&&Date.now()-t.at<30*DAY)MTRASH.push(t)});return true}
 function saveNow(){if(noSave||!READY)return;let js;try{js=JSON.stringify(serial())}catch(e){return}
-  if(js===lastJson)return;LS(LOCAL,js);LS(DIRTY,'1');push()}
+  if(js===lastJson)return;LS(LOCAL,js);if(!LS(DIRTY))LS(DIRTY,(srvAt==null?'?':String(srvAt))+'|'+Date.now());push()}
+// карты изменили в другом месте (другая вкладка или телефон): берём свежие с сервера, свои старые не записываем
+function conflict(g){srvAt=g.at||0;if(!applySaved(g.data)){return}lastJson=JSON.stringify(serial());LS(LOCAL,lastJson);LS(DIRTY,null);
+  if(typeof lens!=='undefined'&&lens)closeLens(false);if(cardOpen)closeCard();if(sheetOpen)closeSheet();
+  if(root){removeTree(root);root=null}TRASH.length=0;loadMap(curMap,false);mtCount();if(mpOn){renderMaps();placeCards()}
+  st('Обновлено ✓',0);toast('Карты изменили на другом устройстве — показываю свежие')}
 // картинки (обложки карт и фото в делах) уходят в хранилище сайта, в карте остаётся только ссылка
 function shrink(src){return new Promise(res=>{const im=new Image();im.onload=()=>{let q=.8,sc=Math.min(1,900/Math.max(im.width,im.height)),out=src;
     for(let k=0;k<6;k++){const c=document.createElement('canvas');c.width=Math.round(im.width*sc);c.height=Math.round(im.height*sc);c.getContext('2d').drawImage(im,0,0,c.width,c.height);out=c.toDataURL('image/jpeg',q);if(out.length<150000)break;sc*=.8;q=Math.max(.5,q-.08)}res(out)};im.onerror=()=>res(null);im.src=src})}
@@ -1002,8 +1008,9 @@ async function upImgs(){const tree=async d=>{if(!d||typeof d!=='object')return;a
   for(const t of TRASH)await tree(t.d);for(const t of MTRASH){await upOne(t.m,'cover');await tree(t.m.data)}}
 async function push(){if(busy){again=true;return}busy=true;clearTimeout(retryT);
   try{do{again=false;st('Сохраняю…');await upImgs();const js=JSON.stringify(serial());if(js===lastJson){st('Сохранено ✓',0);break}
+      if(srvAt!=null){const g=await api('karty=get','');if(g&&g.ok&&'data' in g&&(g.at||0)!==srvAt){LS(DIRTY,null);conflict(g);break}}
       const r=await api('karty=save',js);
-      if(r&&r.ok){lastJson=js;LS(LOCAL,js);if(!again)LS(DIRTY,null);st('Сохранено ✓',0)}
+      if(r&&r.ok){lastJson=js;srvAt=r.at||srvAt;LS(LOCAL,js);if(!again)LS(DIRTY,null);else LS(DIRTY,String(srvAt)+'|'+Date.now());st('Сохранено ✓',0)}
       else if(r&&r.error==='auth'){toLogin();return}
       else if(r&&r.error==='limit'){st('FREE: 1 карта и 3 острова',1);toast(LIMT);break}
       else{st(r&&r.error==='too_big'?'Слишком много всего: удали лишнее':'Не сохранилось, попробую ещё',1);retryT=setTimeout(push,20000);break}
@@ -1167,8 +1174,11 @@ resize();
   if(r&&r.ok&&!('data' in r)){fail('Карты ещё не включены на сервере EAGLES.');return}
   if(r&&r.ok&&r.lim)LIM=r.lim;TMAX=(r&&r.ok&&r.tmax)||2000;
   let local=null;try{local=JSON.parse(LS(LOCAL)||'null')}catch(e){}
-  let migrated=false,offline=!(r&&r.ok);
-  if(LS(DIRTY)&&local&&applySaved(local)){}                       // на телефоне есть несохранённое — оно новее
+  let migrated=false,offline=!(r&&r.ok);if(!offline)srvAt=r.at||0;
+  // несохранённая копия на устройстве — только если сервер с тех пор не менялся (иначе она старая)
+  const dm=String(LS(DIRTY)||'').split('|'),dOk=!!LS(DIRTY)&&(offline||dm[0]===String(srvAt)||(dm[0]==='?'&&+dm[1]>srvAt));
+  if(LS(DIRTY)&&!dOk)LS(DIRTY,null);
+  if(dOk&&local&&applySaved(local)){}                       // на телефоне есть несохранённое — оно новее
   else if(r&&r.ok&&r.data&&applySaved(r.data)){lastJson=JSON.stringify(serial())}
   else if(offline&&local&&applySaved(local)){}
   else if(offline){fail('Нет связи с сервером EAGLES.<br>Проверь интернет и обнови страницу.');return}
