@@ -1,0 +1,16 @@
+const {chromium}=require('playwright');const fs=require('fs');
+(async()=>{const b=await chromium.launch();const FILE=process.argv[2];const out=process.argv[3];fs.rmSync(out,{recursive:true,force:true});fs.mkdirSync(out,{recursive:true});
+const ctx=await b.newContext({viewport:{width:360,height:640},isMobile:true,hasTouch:true});
+await ctx.addInitScript(()=>{localStorage.setItem('eaglesfree_id','23456');localStorage.setItem('eaglesfree_session','S');localStorage.setItem('eaglesfree_name','Андрей Чулков');localStorage.setItem('eaglesfree_last_activity',String(Date.now()));localStorage.setItem('eaglesfree_plan','pro');sessionStorage.setItem('eg_pin_ok','23456');});
+const p=await ctx.newPage();
+await p.route(/app\.eaglesteam\.ru\/profile\.html/,r=>r.fulfill({body:fs.readFileSync(FILE),contentType:'text/html',headers:{'cache-control':'no-cache'}}));
+await p.route(/functions\.yandexcloud\.net/,async r=>{const a=new URL(r.request().url()).searchParams.get('action');await new Promise(z=>setTimeout(z,400));
+ const R={me:{ok:true,name:'Андрей Чулков',plan:'pro',paidUntil:Date.UTC(2026,11,31)},partners_list:{ok:true,partners:[{n:1,name:'Пётр',at:Date.now(),touches:2}]},pin_state:{ok:true,has:true},chat_unread:{ok:true,n:1},candidates_load:{ok:true,data:null}};
+ r.fulfill({contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify(R[a]||{ok:false})})});
+const errs=[];p.on('pageerror',e=>errs.push(e.message));
+const c=await ctx.newCDPSession(p);await c.send('Emulation.setCPUThrottlingRate',{rate:6});
+let i=0;c.on('Page.screencastFrame',async f=>{fs.writeFileSync(out+'/'+String(i++).padStart(3,'0')+'.jpg',Buffer.from(f.data,'base64'));await c.send('Page.screencastFrameAck',{sessionId:f.sessionId}).catch(()=>{})});
+await p.goto('https://app.eaglesteam.ru/profile.html',{waitUntil:'load'});await p.waitForTimeout(2500);
+await c.send('Page.startScreencast',{format:'jpeg',quality:60,everyNthFrame:1});
+await p.reload({waitUntil:'load'});await p.waitForTimeout(3000);
+await c.send('Page.stopScreencast');console.log(i,errs);await b.close()})();
