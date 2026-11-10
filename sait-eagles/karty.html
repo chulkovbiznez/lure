@@ -234,6 +234,7 @@ textarea.inp:focus{border-color:rgba(79,155,255,.45);background:#22262d}
 .toast{z-index:60}
 .maps{position:fixed;inset:0;z-index:32;background:radial-gradient(120% 70% at 50% 45%,#1a140c 0%,#080706 60%,#050505 100%);display:flex;flex-direction:column;overflow:hidden;transition:opacity .32s,transform .32s;touch-action:none;user-select:none;-webkit-user-select:none}
 .maps.off{opacity:0;pointer-events:none;transform:scale(1.08)}
+.maps.off *{pointer-events:none!important}
 .mp-top{padding:calc(14px + env(safe-area-inset-top,0px)) 16px 0;position:relative}
 .mp-h{font:900 24px/1.1 var(--f);margin-top:6px}.mp-h span{color:var(--gold)}
 .mp-sub{font:600 12px/1.3 var(--f);color:var(--mut);margin-top:6px}
