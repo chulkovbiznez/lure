@@ -1,0 +1,22 @@
+<!-- glavFixV1: скрипт к стилю в head --><script>(function(){
+var g=document.getElementById('gl');if(!g)return;var $=function(i){return document.getElementById(i)};
+function setLogo(){var u=(window.EG_IMGS&&EG_IMGS.logo)||(($('egLogo')||{}).src||'');if(u.indexOf('data:')!==0)return false;g.style.setProperty('--logo','url("'+u+'")');var im=new Image();im.onload=im.onerror=function(){g.classList.add('lgok')};im.src=u;if(im.decode)im.decode().then(function(){g.classList.add('lgok')},function(){});return true}
+if(!setLogo()){var n=0,t=setInterval(function(){if(setLogo()||++n>40){clearInterval(t);g.classList.add('lgok')}},100)}
+setTimeout(function(){g.classList.add('lgok')},1500);
+var m=g.querySelector('.hero .mentor');if(!m)return;
+var K='glMentor:'+((location.search.match(/[?&]ref=([^&]*)/)||[])[1]||'-');
+function ok(){m.classList.add('mok')}
+function fin(nm){return nm&&nm!=='…'&&nm!=='Проверяю…'}
+var C=null;try{C=JSON.parse(sessionStorage.getItem(K)||'null')}catch(e){}
+function put(c){m.querySelector('b').textContent=c.nm;m.querySelector('small').textContent='Тебя пригласил';m.querySelector('.id').textContent=c.id;var av=m.querySelector('.av');if(c.bg){av.textContent='';av.style.background=c.bg}else{av.style.background='';av.textContent=c.lt||''}}
+if(C){put(C);ok()}
+var wait=null;
+function chk(){var nm=(($('mName')||{}).textContent||'').trim();
+ if(!fin(nm)){if(C)put(C);return}
+ var av=m.querySelector('.av'),bg=av.style.background||'',has=bg.indexOf('url(')>=0;
+ var c={nm:m.querySelector('b').textContent,id:m.querySelector('.id').textContent,bg:has?bg:'',lt:has?'':av.textContent};
+ if(has||!C){C=c;try{sessionStorage.setItem(K,JSON.stringify(c))}catch(e){}}
+ if(has)ok();else if(!wait)wait=setTimeout(ok,1500)}
+try{new MutationObserver(chk).observe($('mBox'),{childList:true,subtree:true,characterData:true,attributes:true})}catch(e){}
+chk();setTimeout(chk,60);setTimeout(chk,200);setTimeout(ok,5000);
+})();</script>
