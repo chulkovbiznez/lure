@@ -38,12 +38,12 @@ module.exports = function media(ctx) {
       { k: 'veo', eta: 200, id: 'google/veo3', n: 'Veo 3.1', d: 'Google · лучшее кино-качество со звуком и речью', refs: 2,
         ar: ['16:9', '9:16'], dur: [4, 6, 8], res: ['720p', '1080p', '4k'],
         tiers: [{ c: ['resolution=720p'], r: 187.5 }, { c: ['resolution=1080p'], r: 197.5 }, { c: ['resolution=4k'], r: 277.5 }] },
-      { k: 'sd25', eta: 240, id: 'bytedance/seedance-2-5', n: 'Seedance 2.5', d: 'ByteDance · новейшая, длинные ролики до 30 сек', refs: 2,
+      { k: 'sd25', eta: 240, id: 'bytedance/seedance-2-5', n: 'Seedance 2.5', d: 'ByteDance · новейшая, длинные ролики до 30 сек', refs: 2, arefs: 3,
         ar: ['9:16', '16:9', '1:1', '4:3', '3:4', '21:9'], dur: [5, 10, 15, 20, 30], res: ['480p', '720p'], audio: true, perSec: true,
         tiers: [{ c: ['resolution=480p', 'has_video=false'], r: 18.9 }, { c: ['resolution=720p', 'has_video=false'], r: 42.525 }] },
-      { k: 'sd2', eta: 180, id: 'bytedance/seedance-2', n: 'Seedance 2', d: 'ByteDance · живые движения людей', refs: 2,
+      { k: 'sd2', eta: 180, id: 'bytedance/seedance-2', n: 'Seedance 2', d: 'ByteDance · живые движения людей', refs: 2, vrefs: 1, vmax: 15, arefs: 3,
         ar: ['9:16', '16:9', '1:1', '4:3', '3:4', '21:9'], dur: [5, 10, 15], res: ['480p', '720p', '1080p'], audio: true, perSec: true,
-        tiers: [{ c: ['resolution=480p', 'has_video=false'], r: 12.825 }, { c: ['resolution=720p', 'has_video=false'], r: 27.675 }, { c: ['resolution=1080p', 'has_video=false'], r: 68.85 }] },
+        tiers: [{ c: ['resolution=480p', 'has_video=false'], r: 12.825 }, { c: ['resolution=480p', 'has_video=true'], r: 15.39 }, { c: ['resolution=720p', 'has_video=false'], r: 27.675 }, { c: ['resolution=720p', 'has_video=true'], r: 33.75 }, { c: ['resolution=1080p', 'has_video=false'], r: 68.85 }, { c: ['resolution=1080p', 'has_video=true'], r: 83.7 }] },
       { k: 'kl3', eta: 200, id: 'kling/v3', n: 'Kling 3.0', d: 'Kuaishou · лучшая для движения и кино, до 15 сек', refs: 2,
         ar: ['16:9', '9:16', '1:1'], dur: [5, 10, 15], res: ['std', 'pro', '4K'], resKey: 'mode', audio: true, audioKey: 'sound', audioDef: false, perSec: true,
         tiers: [{ c: [], r: 45 }, { c: ['mode=std', 'sound=false'], r: 10 }, { c: ['mode=std', 'sound=true'], r: 14 }, { c: ['mode=pro', 'sound=false'], r: 12 }, { c: ['mode=pro', 'sound=true'], r: 18 }, { c: ['mode=4K'], r: 45 }] },
@@ -56,10 +56,10 @@ module.exports = function media(ctx) {
       { k: 'mc26', eta: 240, id: 'kling/v2.6-motion-control', n: 'Kling 2.6 Motion Control', d: 'Движения из видео, дешевле', mc: true, refs: 1,
         ar: ['auto'], res: ['720p', '1080p'], resKey: 'mode', perSec: true,
         tiers: [{ c: [], r: 13.5 }, { c: ['mode=720p'], r: 8.25 }, { c: ['mode=1080p'], r: 13.5 }] },
-      { k: 'omni', eta: 120, id: 'google/gemini-omni-1.1-flash', n: 'Gemini Omni Flash', d: 'Google · быстро и недорого', refs: 7,
+      { k: 'omni', eta: 120, id: 'google/gemini-omni-1.1-flash', n: 'Gemini Omni Flash', d: 'Google · быстро и недорого', refs: 7, vrefs: 1, vmax: 10, refsV: 5,
         ar: ['16:9', '9:16'], dur: [4, 6, 8, 10], res: ['720p', '1080p', '4k'], durStr: true,
         tiers: [{ c: ['duration=4', 'has_video=false'], r: 48 }, { c: ['duration=6', 'has_video=false'], r: 63 }, { c: ['duration=8', 'has_video=false'], r: 79 }, { c: ['duration=10', 'has_video=false'], r: 95 },
-          { c: ['resolution=4k', 'duration=4', 'has_video=false'], r: 111 }, { c: ['resolution=4k', 'duration=6', 'has_video=false'], r: 126 }, { c: ['resolution=4k', 'duration=8', 'has_video=false'], r: 142 }, { c: ['resolution=4k', 'duration=10', 'has_video=false'], r: 158 }] }
+          { c: ['resolution=4k', 'duration=4', 'has_video=false'], r: 111 }, { c: ['resolution=4k', 'duration=6', 'has_video=false'], r: 126 }, { c: ['resolution=4k', 'duration=8', 'has_video=false'], r: 142 }, { c: ['resolution=4k', 'duration=10', 'has_video=false'], r: 158 }, { c: ['has_video=true'], r: 126 }, { c: ['has_video=true', 'resolution=4k'], r: 189 }] }
     ]
   };
   const BY = {};
@@ -101,6 +101,8 @@ module.exports = function media(ctx) {
       if (m.dur.length > 1 || !m.fixed) inp.duration = m.durStr ? String(o.dur) : Number(o.dur);
       if (m.res && m.res.includes(o.res)) inp[m.resKey || 'resolution'] = o.res;
       if (m.audio) inp[m.audioKey || 'generate_audio'] = o.audio !== false;
+      if (o.vrefs && o.vrefs.length) inp.videos = o.vrefs.map(u => ({ type: 'url', data: u }));
+      if (o.arefs && o.arefs.length) inp.audios = o.arefs.map(u => ({ type: 'url', data: u }));
     }
     return inp;
   }
@@ -109,7 +111,7 @@ module.exports = function media(ctx) {
     if (m.tok) return m.est[o.q] || m.est.high;
     if (m.fixed && !m.tiers) return m.fixed;
     const r0 = o.res || (m.res && m.res[0]), snd = String(o.audio !== false && !!m.audio);
-    const vals = { image_resolution: r0, resolution: r0, mode: r0, duration: String(o.dur), has_video: 'false', sound: snd, generate_audio: snd, audio: snd };
+    const vals = { image_resolution: r0, resolution: r0, mode: r0, duration: String(o.dur), has_video: String(!!(o.vrefs && o.vrefs.length)), sound: snd, generate_audio: snd, audio: snd };
     if (m.k === 'omni' && !o.res) vals.resolution = '720p';
     let best = null, bestN = -1;
     for (const t of m.tiers || []) {
@@ -124,6 +126,9 @@ module.exports = function media(ctx) {
   const markup = m => Number(ENV['MARKUP_' + m.k.toUpperCase()] || MK[m.k] || 1.3);
   function price(m, o) { return Math.max(1, Math.ceil(baseCost(m, o) * markup(m))); }
 
+  // свои файлы человека в нашем хранилище (загружены по подписанной ссылке); uid проверяем в create
+  const UP_V = /^https:\/\/storage\.yandexcloud\.net\/[a-z0-9.-]+\/up\/[\w-]{1,40}\/[a-f0-9]{16}\.(mp4|mov|webm)$/;
+  const UP_A = /^https:\/\/storage\.yandexcloud\.net\/[a-z0-9.-]+\/up\/[\w-]{1,40}\/[a-f0-9]{16}\.(mp3|wav|m4a|flac)$/;
   function clean(m, b) {
     const o = { prompt: String(b.prompt || '').trim().slice(0, 4000) };
     o.ar = m.ar.includes(b.ar) ? b.ar : m.ar[0];
@@ -131,6 +136,9 @@ module.exports = function media(ctx) {
     if (m.q) o.q = m.q.includes(b.q) ? b.q : m.q[0];
     if (m.dur) o.dur = m.dur.includes(Number(b.dur)) ? Number(b.dur) : m.dur[0];
     if (m.audio) o.audio = b.audio === undefined ? m.audioDef !== false : b.audio !== false;
+    const ups = (a, n, re) => (Array.isArray(a) ? a : []).map(String).filter(x => re.test(x)).slice(0, n || 0);
+    if (m.vrefs) o.vrefs = ups(b.vrefs, m.vrefs, UP_V);
+    if (m.arefs) o.arefs = ups(b.arefs, m.arefs, UP_A);
     if (m.mc) {
       o.orient = b.orient === 'image' ? 'image' : 'video';
       o.dur = Math.min(o.orient === 'image' ? 10 : 30, Math.max(1, Math.ceil(Number(b.vdur) || 0)));
@@ -218,7 +226,8 @@ module.exports = function media(ctx) {
       await refreshPrices().catch(() => {});
       const out = {};
       for (const kind of ['img', 'video']) out[kind] = CAT[kind].map(x => ({ k: x.k, n: x.n, d: x.d, refs: x.refs, ar: x.ar, res: x.res || null, q: x.q || null, dur: x.dur || null, audio: !!x.audio, eta: x.eta || 60, mc: !!x.mc, ps: x.mc ? perSecTable(x) : null, audioDef: x.audioDef !== false,
-        table: priceTable(x) }));
+        vrefs: x.vrefs || 0, vmax: x.vmax || 0, arefs: x.arefs || 0, refsV: x.refsV || 0,
+        table: priceTable(x), tableV: x.vrefs ? priceTable(x, true) : null }));
       return send(res, 200, { ok: true, cat: out, ready: !!POLZA_KEY });
     }
     if (p === '/api/media/list') {
@@ -237,7 +246,7 @@ module.exports = function media(ctx) {
       if (!SAVER) return send(res, 200, { ok: false, error: 'media_off' });
       const b = await readBody(req);
       const ext = String(b.ext || '').toLowerCase();
-      if (!['mp4', 'mov', 'webm'].includes(ext)) return send(res, 200, { ok: false, error: 'bad_video' });
+      if (!['mp4', 'mov', 'webm', 'mp3', 'wav', 'm4a', 'flac'].includes(ext)) return send(res, 200, { ok: false, error: 'bad_video' });
       if (!(Number(b.size) > 0 && Number(b.size) <= 100e6)) return send(res, 200, { ok: false, error: 'video_big' });
       const key = 'up/' + safeId(u.id) + '/' + crypto.randomBytes(8).toString('hex') + '.' + ext;
       try {
@@ -261,7 +270,9 @@ module.exports = function media(ctx) {
         if (!o.vurl.startsWith(pre) || !/^[a-f0-9]{16}\.(mp4|mov|webm)$/.test(o.vurl.slice(pre.length))) return send(res, 200, { ok: false, error: 'need_video' });
         if (!(Array.isArray(b.refs) && b.refs.length)) return send(res, 200, { ok: false, error: 'need_photo' });
       }
-      const refs = (Array.isArray(b.refs) ? b.refs : []).slice(0, mod.refs).filter(x => typeof x === 'string' && /^data:image\/(jpeg|png|webp);base64,/.test(x));
+      const mine = 'https://storage.yandexcloud.net/' + MEDIA_BUCKET + '/up/' + safeId(u.id) + '/';
+      if ((o.vrefs || []).concat(o.arefs || []).some(x => !x.startsWith(mine))) return send(res, 200, { ok: false, error: 'need_video' });
+      const refs = (Array.isArray(b.refs) ? b.refs : []).slice(0, o.vrefs && o.vrefs.length && mod.refsV ? mod.refsV : mod.refs).filter(x => typeof x === 'string' && /^data:image\/(jpeg|png|webp);base64,/.test(x));
       if (refs.reduce((s, x) => s + x.length, 0) > REF_CHARS) return send(res, 200, { ok: false, error: 'refs_big' });
       if (Object.values(db.jobs).filter(j => j.uid === u.id).length >= MAX_JOBS) return send(res, 200, { ok: false, error: 'jobs_busy' });
       await refreshPrices().catch(() => {});
@@ -304,11 +315,11 @@ module.exports = function media(ctx) {
 
   function perSecTable(m) { const t = {}; for (const res of m.res) t[res] = baseCost(m, { res, dur: 1 }) * markup(m); return t; }
   // таблица цен для витрины: человек видит цену до нажатия
-  function priceTable(m) {
-    const t = {};
+  function priceTable(m, hv) {
+    const t = {}, vr = hv ? ['x'] : [];
     const rs = m.res || [null], qs = m.q || [null], ds = m.dur || [null], as = m.audio ? [true, false] : [null];
     for (const res of rs) for (const q of qs) for (const dur of ds) for (const audio of as) {
-      const o = { res, q, dur, audio: audio !== false };
+      const o = { res, q, dur, audio: audio !== false, vrefs: vr };
       t[[res || '', q || '', dur || '', audio === null ? '' : audio ? 1 : 0].join('|')] = price(m, o);
     }
     return t;

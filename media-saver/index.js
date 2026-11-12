@@ -31,9 +31,9 @@ module.exports.handler = async (event, context) => {
   if (!SECRET || h['x-saver-key'] !== SECRET) return json(403, { error: 'forbidden' });
   let b = {};
   try { b = JSON.parse(event.isBase64Encoded ? Buffer.from(event.body || '', 'base64').toString('utf8') : (event.body || '{}')); } catch (e) { return json(400, { error: 'bad_json' }); }
-  if (b.presign) {   // ссылка, по которой браузер сам загрузит своё видео (15 минут)
+  if (b.presign) {   // ссылка, по которой браузер сам загрузит своё видео или аудио (15 минут)
     const key = String(b.key || '');
-    if (!/^up\/[A-Za-z0-9_-]{1,40}\/[a-f0-9]{16}\.(mp4|mov|webm)$/.test(key)) return json(400, { error: 'bad_key' });
+    if (!/^up\/[A-Za-z0-9_-]{1,40}\/[a-f0-9]{16}\.(mp4|mov|webm|mp3|wav|m4a|flac)$/.test(key)) return json(400, { error: 'bad_key' });
     if (!AK || !SK) return json(500, { error: 'no_static_key' });
     const put = presign({ method: 'PUT', host: 'storage.yandexcloud.net', path: '/' + BUCKET + '/' + key, region: 'ru-central1', ak: AK, sk: SK, expires: 900 });
     return json(200, { put, url: 'https://storage.yandexcloud.net/' + BUCKET + '/' + key });

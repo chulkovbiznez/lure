@@ -353,6 +353,7 @@ body[data-tab=img] #dNew2,body[data-tab=video] #dNew2{visibility:hidden}
       <div class="gal" id="videoG"><p class="muted" style="grid-column:1/-1;margin:0">Здесь будут твои ролики.</p></div>
     </div></section>
     <input type="file" id="mvFile" accept="video/mp4,video/quicktime,video/webm,video/*" hidden>
+    <input type="file" id="xrFile" hidden>
     <input type="file" id="refFile" accept="image/jpeg,image/png,image/webp" multiple hidden>
     <div class="viewer" id="viewer" hidden><div class="vbox"><div id="vMedia"></div><p id="vInfo" class="muted"></p>
       <div class="flex"><a class="btn" id="vDl" target="_blank" rel="noopener" download>Скачать</a><button class="btn2" id="vRef" type="button">✏️ Изменить</button><button class="btn2" id="vRefV" type="button">🎬 В видео</button><button class="btn2" id="vDel" type="button">Удалить</button></div>
@@ -555,14 +556,35 @@ function drawOpts(t){var m=mModel(t),o=MOPT[t];if(!m){$(t+'O').innerHTML='';retu
   if(m.audio)h+=chipRow(t,'audio',[true,false],'Звук',function(v){return v===true||v==='true'?'Со звуком':'Без звука'});
   if(m.mc){if(!o.orient)o.orient='video';h+=chipRow(t,'orient',['video','image'],'Поворот персонажа',function(v){return v==='video'?'Как в видео (до 30 сек)':'Как на фото (до 10 сек)'});
     h+='<b class="ttl" style="display:block;margin:12px 0 6px;font-size:13px">Видео с движением</b><button class="refb" type="button" id="mvBtn" style="margin-top:0">'+(MV?'🎬 '+esc(MV.name)+' · '+MV.dur+' сек · заменить':'＋ Выбрать видео (танец, жест, движение)')+'</button>'}
+  if(t==='video'&&(m.vrefs||m.arefs)){
+    var xr=function(kind,max,lbl,add){if(!max)return '';var L=XR[kind].slice(0,max);return '<b class="ttl" style="display:block;margin:12px 0 6px;font-size:13px">'+lbl+'</b>'+L.map(function(x,i){return '<div class="refb" style="margin-top:0;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:8px"><span>'+(kind==='v'?'🎬 ':'🎵 ')+esc(x.name)+' · '+x.dur+' сек</span><button type="button" data-xx="'+kind+i+'" aria-label="Убрать" style="background:none;border:0;color:inherit;font-size:18px;padding:0 4px;cursor:pointer">×</button></div>'}).join('')+(L.length<max?'<button class="refb" type="button" data-xa="'+kind+'" style="margin-top:0">'+add+'</button>':'')};
+    h+=xr('v',m.vrefs,'Видео-референс','＋ Добавить видео (до '+m.vmax+' сек)'+(m.tableV?' · с видео дороже':''))+xr('a',m.arefs,'Аудио-референс','＋ Добавить аудио (голос, музыка) · можно до '+m.arefs)}
   $(t+'O').innerHTML=h;
+  [].forEach.call($(t+'O').querySelectorAll('[data-xa]'),function(b){b.onclick=function(){XRKIND=b.dataset.xa;var f=$('xrFile');f.accept=XRKIND==='v'?'video/mp4,video/quicktime,video/webm,video/*':'audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/x-m4a,audio/flac,audio/*';f.value='';f.click()}});
+  [].forEach.call($(t+'O').querySelectorAll('[data-xx]'),function(b){b.onclick=function(){XR[b.dataset.xx[0]].splice(+b.dataset.xx.slice(1),1);drawOpts(t)}});
   if(t==='video'){var vp=$('videoP');if(!vp.dataset.ph)vp.dataset.ph=vp.placeholder;vp.placeholder=m.mc?'Необязательно: что поменять в сцене (фон, одежда, стиль)':vp.dataset.ph}
   if(m.mc)$('mvBtn').onclick=function(){$('mvFile').value='';$('mvFile').click()};
   [].forEach.call($(t+'O').querySelectorAll('[data-o]'),function(b){b.onclick=function(){var v=b.dataset.v;o[b.dataset.o]=b.dataset.o==='audio'?v==='true':b.dataset.o==='dur'?+v:v;drawOpts(t)}});
-  var p=m.table[[m.res?o.res:'',m.q?o.q:'',m.dur?o.dur:'',m.audio?(o.audio?1:0):''].join('|')];
+  var p=(t==='video'&&m.tableV&&m.vrefs&&XR.v.length?m.tableV:m.table)[[m.res?o.res:'',m.q?o.q:'',m.dur?o.dur:'',m.audio?(o.audio?1:0):''].join('|')];
   if(m.mc){var lim=o.orient==='image'?10:30;p=MV?Math.max(1,Math.ceil(m.ps[o.res]*Math.min(lim,Math.ceil(MV.dur)))):0;$(t+'Price').textContent=p?rub(p):rub(Math.ceil(m.ps[o.res]))+'/сек';if(MV&&MV.dur>lim)toast('Видео длиннее '+lim+' сек, возьмём первые '+lim+' сек')}
   else $(t+'Price').textContent=p?(m.q?'≈ ':'')+rub(p):'—';drawRefs(t)}
-var MV=null;
+var MV=null,XR={v:[],a:[]},XRKIND='v';
+$('xrFile').onchange=function(){var f=this.files&&this.files[0],kind=XRKIND,m=mModel('video');if(!f||!m)return;var ext=(f.name.split('.').pop()||'').toLowerCase();if(ext==='qt')ext='mov';
+  var okx=kind==='v'?['mp4','mov','webm']:['mp3','wav','m4a','flac'];
+  if(okx.indexOf(ext)<0){ext=kind==='v'?(/webm/.test(f.type)?'webm':/quicktime/.test(f.type)?'mov':/mp4/.test(f.type)?'mp4':''):(/mpeg|mp3/.test(f.type)?'mp3':/wav/.test(f.type)?'wav':/mp4|m4a|aac/.test(f.type)?'m4a':/flac/.test(f.type)?'flac':'')}
+  if(!ext){toast(kind==='v'?ERR.bad_video:'Нужен файл MP3, WAV, M4A или FLAC');return}if(f.size>100e6){toast(ERR.video_big);return}
+  var v=document.createElement(kind==='v'?'video':'audio');v.preload='metadata';v.muted=true;var u=URL.createObjectURL(f);
+  v.onloadedmetadata=function(){var d=Math.round(v.duration*10)/10;v.onerror=null;v.onloadedmetadata=null;v.removeAttribute('src');URL.revokeObjectURL(u);
+    if(!(d>0)){toast('Не получилось прочитать файл');return}
+    if(kind==='v'&&m.vmax&&d>m.vmax+0.5){toast('Видео длиннее '+m.vmax+' сек. Обрежь его и загрузи снова.');return}
+    XR[kind].push({file:f,ext:ext,dur:d,name:f.name.length>22?f.name.slice(0,20)+'…':f.name});drawOpts('video')};
+  v.onerror=function(){URL.revokeObjectURL(u);toast('Не получилось прочитать файл')};v.src=u};
+function upFile(it,btn,lbl){if(it.url)return Promise.resolve(it.url);return post('/api/media/upload',{ext:it.ext,size:it.file.size}).then(function(r){if(!r.ok)throw r;
+  return new Promise(function(ok,no){var x=new XMLHttpRequest();x.open('PUT',r.put);x.upload.onprogress=function(e){if(e.lengthComputable)btn.textContent=lbl+' '+Math.round(e.loaded/e.total*100)+'%'};
+    x.onload=function(){if(x.status>=200&&x.status<300){it.url=r.url;ok(r.url)}else no({error:'upload_failed',code:x.status})};x.onerror=function(){no({error:'upload_failed',code:0})};x.send(it.file)})})}
+function upAll(t,btn){if(t!=='video')return Promise.resolve({v:[],a:[]});var m=mModel(t),V=XR.v.slice(0,m.vrefs||0),A=XR.a.slice(0,m.arefs||0),L=V.concat(A),i=0;
+  function next(){if(i>=L.length)return Promise.resolve();var it=L[i++];return upFile(it,btn,(V.indexOf(it)>=0?'Загружаю видео':'Загружаю аудио')+(L.length>1?' '+i+'/'+L.length:'')).then(next)}
+  return next().then(function(){return {v:V.map(function(x){return x.url}),a:A.map(function(x){return x.url})}})}
 $('mvFile').onchange=function(){var f=this.files&&this.files[0];if(!f)return;var ext=(f.name.split('.').pop()||'').toLowerCase();if(ext==='qt')ext='mov';
   if(['mp4','mov','webm'].indexOf(ext)<0){ext=/webm/.test(f.type)?'webm':/quicktime/.test(f.type)?'mov':/mp4/.test(f.type)?'mp4':''}
   if(!ext){toast(ERR.bad_video);return}if(f.size>100e6){toast(ERR.video_big);return}
@@ -572,12 +594,13 @@ $('mvFile').onchange=function(){var f=this.files&&this.files[0];if(!f)return;var
 function upVideo(btn){return post('/api/media/upload',{ext:MV.ext,size:MV.file.size}).then(function(r){if(!r.ok)throw r;
   return new Promise(function(ok,no){var x=new XMLHttpRequest();x.open('PUT',r.put);x.upload.onprogress=function(e){if(e.lengthComputable)btn.textContent='Загружаю видео '+Math.round(e.loaded/e.total*100)+'%'};
     x.onload=function(){x.status>=200&&x.status<300?ok(r.url):no({error:'upload_failed',code:x.status})};x.onerror=function(){no({error:'upload_failed',code:0})};x.send(MV.file)})})}
+function maxRefs(t){var m=mModel(t);return !m?0:(t==='video'&&m.refsV&&m.vrefs&&XR.v.length?m.refsV:m.refs)}
 function drawRefs(t){var m=mModel(t),L=REFS[t];$(t+'R').innerHTML=L.map(function(s,i){return '<span><img src="'+s+'" alt=""><button type="button" data-rx="'+i+'" aria-label="Убрать">×</button></span>'}).join('');
   [].forEach.call($(t+'R').querySelectorAll('[data-rx]'),function(b){b.onclick=function(){L.splice(+b.dataset.rx,1);drawRefs(t)}});
-  var rb=document.querySelector('.refb[data-ref="'+t+'"]');if(rb){rb.hidden=!m||L.length>=m.refs;rb.textContent=(m&&m.mc?'＋ Фото персонажа':'＋ Добавить фото'+(t==='video'?' (первый кадр или референс)':'-референс'))+(m?' · можно до '+m.refs+(L.length?', добавлено '+L.length:''):'')}}
+  var rb=document.querySelector('.refb[data-ref="'+t+'"]');if(rb){rb.hidden=!m||L.length>=maxRefs(t);rb.textContent=(m&&m.mc?'＋ Фото персонажа':'＋ Добавить фото'+(t==='video'?' (первый кадр или референс)':'-референс'))+(m?' · можно до '+maxRefs(t)+(L.length?', добавлено '+L.length:''):'')}}
 function shrink(file){return new Promise(function(ok,no){var fr=new FileReader();fr.onerror=no;fr.onload=function(){var im=new Image();im.onerror=no;im.onload=function(){var k=Math.min(1,1600/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);ok(c.toDataURL('image/jpeg',.85))};im.src=fr.result};fr.readAsDataURL(file)})}
 [].forEach.call(document.querySelectorAll('.refb[data-ref]'),function(b){b.onclick=function(){REFKIND=b.dataset.ref;$('refFile').value='';$('refFile').click()}});
-$('refFile').onchange=function(){var t=REFKIND,m=mModel(t),fs=[].slice.call(this.files||[]).slice(0,m?m.refs-REFS[t].length:0);
+$('refFile').onchange=function(){var t=REFKIND,m=mModel(t),fs=[].slice.call(this.files||[]).slice(0,m?Math.max(0,maxRefs(t)-REFS[t].length):0);
   Promise.all(fs.map(shrink)).then(function(L){REFS[t]=REFS[t].concat(L);drawRefs(t)},function(){toast('Не получилось открыть фото')})};
 function etaOf(x){var m=MC&&(MC.img.concat(MC.video)).filter(function(z){return z.k===x.k})[0];var e=(m&&m.eta)||(x.kind==='img'?40:150);if(x.dur&&x.kind!=='img')e=Math.round(e*Math.max(1,x.dur/8));return e}
 function runPct(at,eta){var s=(Date.now()-at)/1000;return Math.min(97,Math.round(100*(1-Math.exp(-1.6*s/eta))/(1-Math.exp(-1.6))))}
@@ -609,11 +632,12 @@ function create(t){var m=mModel(t),o=MOPT[t],b=$(t+'Go'),pr=$(t+'P').value.trim(
   if(m.mc){if(!REFS[t].length){toast(ERR.need_photo);return}if(!MV){toast(ERR.need_video);return}}
   else if(pr.length<2){toast(ERR.no_prompt);$(t+'P').focus();return}
   var bt=b.textContent;b.disabled=true;
-  (m.mc?(MV.url?Promise.resolve(MV.url):upVideo(b).then(function(u){MV.url=u;return u})):Promise.resolve(''))
-  .then(function(vurl){b.textContent=bt;return post('/api/media/create',{k:m.k,prompt:pr,ar:o.ar,res:o.res,q:o.q,dur:o.dur,audio:o.audio,refs:REFS[t],vurl:vurl,vdur:MV&&MV.dur,orient:o.orient})},function(e){b.textContent=bt;throw e})
+  var X={v:[],a:[]};
+  (m.mc?(MV.url?Promise.resolve(MV.url):upVideo(b).then(function(u){MV.url=u;return u})):upAll(t,b).then(function(r){X=r;return ''}))
+  .then(function(vurl){b.textContent=bt;return post('/api/media/create',{k:m.k,prompt:pr,ar:o.ar,res:o.res,q:o.q,dur:o.dur,audio:o.audio,refs:REFS[t].slice(0,maxRefs(t)),vurl:vurl,vdur:MV&&MV.dur,orient:o.orient,vrefs:X.v,arefs:X.a})},function(e){b.textContent=bt;throw e})
   .then(function(r){b.disabled=false;
     if(!r.ok){if(r.error==='auth'){showLogin();return}if(r.error==='no_money'){toast(ERR.no_money);go('wallet');return}toast(err(r.error,r));return}
-    GAL[t].unshift(r.job);drawGal(t);poll();toast(t==='img'?'Рисую. Картинка появится ниже.':'Снимаю. Видео появится ниже через несколько минут.')}).catch(function(e){b.disabled=false;if(e&&e.error){toast(e.error==='upload_failed'?'Видео не загрузилось (код '+(e.code||'нет ответа')+'). Попробуй ещё раз.':err(e.error,e));return}toast('Нет связи. Если включён VPN, выключи его.')})}
+    GAL[t].unshift(r.job);drawGal(t);poll();toast(t==='img'?'Рисую. Картинка появится ниже.':'Снимаю. Видео появится ниже через несколько минут.')}).catch(function(e){b.disabled=false;if(e&&e.error){toast(e.error==='upload_failed'?'Файл не загрузился (код '+(e.code||'нет ответа')+'). Попробуй ещё раз.':err(e.error,e));return}toast('Нет связи. Если включён VPN, выключи его.')})}
 $('imgGo').onclick=function(){create('img')};$('videoGo').onclick=function(){create('video')};
 function mediaTab(t){setTimeout(function(){mgrow($(t+'P'))},0);loadCat(function(){if(curTab()!==t)return;mediaName();drawOpts(t);if(MC&&!MC.ready)$(t+'Price').textContent='скоро'});loadGal()}
 
