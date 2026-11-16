@@ -739,6 +739,7 @@ $('refFile').onchange=function(){var t=REFKIND,m=mModel(t),fs=[].slice.call(this
 var VSEX={george:'М',sarah:'Ж',adam:'М',alice:'Ж',bella:'Ж',bill:'М',brian:'М',callum:'М',charlie:'М',chris:'М',daniel:'М',eric:'М',harry:'М',jessica:'Ж',laura:'Ж',liam:'М',lily:'Ж',matilda:'Ж',river:'нейтр.',roger:'М',will:'М'};
 function sndPrice(m){var o=MOPT.sound,n=$('soundP').value.trim().length,mx=m.song&&!o.custom?3000:m.max;$('soundP').maxLength=mx||2000;$('soundN').textContent=mx?n+' / '+mx+' символов':'';
   var p=m.perChar?(n?Math.max(1,Math.ceil(n*m.perChar)):0):m.table['|||'];$('soundPrice').textContent=p?(m.perChar?'≈ ':'')+rub(p):(m.perChar?rub(Math.ceil(1000*m.perChar))+' / 1000 симв.':'—')}
+var GEN=['Поп','Рок','Рэп','Хип-хоп','Электроника','Танцевальная','Лоу-фай','R&B','Джаз','Акустика','Баллада','Эпик, кино','Шансон','Детская','Весёлая','Грустная','Мотивация'];
 var SPH={tts:'Например: Привет! Я Андрей, и сегодня покажу, как ИИ экономит час каждый день.',sfx:'Например: дождь по крыше и далёкий гром / энергичный электронный бит 128 BPM',song:'Например: весёлая поп-песня на русском про команду, которая вместе взлетает к успеху, припев легко запомнить',lyr:'[Куплет]\nМы начинали с нуля, но верили в мечту…\n\n[Припев]\nВыше, выше, как орлы…'};
 function drawSnd(m,o){var P=$('soundP'),inp=function(id,lbl,ph,val,mx){return '<b class="ttl" style="display:block;margin:12px 0 6px;font-size:13px">'+lbl+'</b><input class="inp" id="'+id+'" maxlength="'+mx+'" placeholder="'+esc(ph)+'" value="'+esc(val||'')+'">'};
   $('soundT').textContent=m.voices?'Текст для озвучки':m.song?(o.instr?'Опиши мелодию':o.custom?'Текст песни':'Опиши песню'):'Опиши звук';$('soundGo').textContent=m.voices?'Озвучить':m.song?'Создать песню':'Создать звук';
@@ -748,11 +749,13 @@ function drawSnd(m,o){var P=$('soundP'),inp=function(id,lbl,ph,val,mx){return '<
     h+=chipRow('sound','custom',[false,true],'Как писать',function(v){return v===true||v==='true'?'Свой текст песни':'Только описание'});
     h+=chipRow('sound','instr',[false,true],'Вокал',function(v){return v===true||v==='true'?'Без слов (мелодия)':'С голосом'});
     if(!o.instr)h+=chipRow('sound','gender',['','m','f'],'Голос певца',function(v){return {'':'Любой',m:'Мужской',f:'Женский'}[v]});
-    if(o.custom)h+=inp('sStyle','Стиль музыки','Например: поп, синти-поп, бодро, 120 BPM',o.style,1000)+inp('sTitle','Название','Например: Взлёт',o.title,80);
+    h+='<b class="ttl" style="display:block;margin:12px 0 6px;font-size:13px">Стиль музыки'+(o.custom?'':' (необязательно)')+'</b><div class="ochips">'+GEN.map(function(g){var on=(o.style||'').toLowerCase().split(/\s*,\s*/).indexOf(g.toLowerCase())>=0;return '<button type="button" class="'+(on?'on':'')+'" data-gen="'+esc(g)+'">'+esc(g)+'</button>'}).join('')+'</div><input class="inp" id="sStyle" maxlength="1000" style="margin-top:8px" placeholder="Или впиши свой: например, бодрый поп с гитарой, 120 BPM" value="'+esc(o.style||'')+'">';
+    if(o.custom)h+=inp('sTitle','Название','Например: Взлёт',o.title,80);
     h+='<p class="muted" style="font-size:12px;margin:8px 2px 0">'+(o.custom?'В тексте можно отмечать части: [Куплет], [Припев], [Бридж].':'Suno сам напишет слова и музыку по описанию.')+' Песня обычно длится 2–4 минуты и готова за 2–4 минуты.</p>'}
   if(m.loop){if(o.loop===undefined)o.loop=false;h+=chipRow('sound','loop',[false,true],'Как звучит',function(v){return v===true||v==='true'?'Повтор по кругу (луп)':'Один раз'})}
   $('soundO').innerHTML=h;
-  if($('sStyle'))$('sStyle').oninput=function(){o.style=this.value};if($('sTitle'))$('sTitle').oninput=function(){o.title=this.value};
+  if($('sStyle'))$('sStyle').oninput=function(){o.style=this.value;[].forEach.call($('soundO').querySelectorAll('[data-gen]'),function(b){b.classList.toggle('on',o.style.toLowerCase().split(/\s*,\s*/).indexOf(b.dataset.gen.toLowerCase())>=0)})};
+  [].forEach.call($('soundO').querySelectorAll('[data-gen]'),function(b){b.onclick=function(){var L=(o.style||'').split(/\s*,\s*/).filter(Boolean),g=b.dataset.gen,i=L.map(function(x){return x.toLowerCase()}).indexOf(g.toLowerCase());if(i>=0)L.splice(i,1);else L.push(g);o.style=L.join(', ');drawSnd(m,o)}});if($('sTitle'))$('sTitle').oninput=function(){o.title=this.value};
   [].forEach.call($('soundO').querySelectorAll('[data-o]'),function(b){b.onclick=function(){var v=b.dataset.v,k=b.dataset.o;o[k]=/^(loop|custom|instr)$/.test(k)?v==='true':v;drawSnd(m,o)}});
   sndPrice(m)}
 $('soundP').addEventListener('input',function(){var m=mModel('sound');if(m)sndPrice(m)});

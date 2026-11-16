@@ -159,7 +159,7 @@ module.exports = function media(ctx) {
         o.custom = b.custom === true; o.instr = b.instr === true;
         o.gender = ['m', 'f'].includes(b.gender) ? b.gender : '';
         o.style = String(b.style || '').trim().slice(0, 1000); o.title = String(b.title || '').trim().slice(0, 80);
-        if (!o.custom) o.prompt = o.prompt.slice(0, 3000);
+        if (!o.custom) o.prompt = (o.style && !o.instr ? o.prompt.slice(0, 2900) + '\nСтиль музыки: ' + o.style.slice(0, 90) : o.prompt).slice(0, 3000);
       }
       return o;
     }
