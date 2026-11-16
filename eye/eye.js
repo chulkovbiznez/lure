@@ -1,4 +1,5 @@
-/* EYE v3.1 (16.11.2026) — камера выключена: аватарка или серый «ноунейм», имя и фамилия, аудиоволны.
+/* EYE v3.2 (16.11.2026) — главный экран (у каждого свой выбор, нажатием), демонстрация экрана с компьютера, значки микрофона/камеры.
+   EYE v3.1 (16.11.2026) — камера выключена: аватарка или серый «ноунейм», имя и фамилия, аудиоволны.
    EYE v3 (16.11.2026) — аудио или видео, звонок до 4 человек (кнопка «+» в звонке зовёт своего друга).
    Было: EYE v2.3 (16.11.2026) — видеозвонки EAGLES. Подключается на страницах сайта одной строкой:
    <script src="/eye.js?v=2" defer></script>   (файл лежит в бакете сайта app.eaglesteam.ru)
@@ -106,6 +107,14 @@
     '.eye-tile .eye-av{transition:box-shadow .08s linear}.eye-wv{display:flex;align-items:center;gap:4px;height:34px;margin-top:14px}.eye-wv i{display:block;width:5px;height:34px;border-radius:3px;background:linear-gradient(180deg,#fff1b8,#ffd23f 50%,#d98d16);transform:scaleY(.15);transform-origin:50% 50%}' +
     '.eye-grid.g .eye-wv{height:22px;margin-top:10px}.eye-grid.g .eye-wv i{height:22px;width:4px}.eye-tile.inv .eye-wv,.eye-tile.moff .eye-wv{opacity:.25}.eye-lv.off{display:none}' +
     '.eye-tile .eye-nm{padding:0 10px}' +
+    '.eye-grid{display:block!important;top:0!important;bottom:0!important;padding:0!important}.eye-grid .eye-tile{position:absolute;inset:0;border:0!important;border-radius:0!important}.eye-grid .eye-tile .tn{display:none!important}' +
+    '.eye-strip{position:absolute;left:10px;right:10px;bottom:calc(104px + env(safe-area-inset-bottom,0px));z-index:2;display:flex;gap:8px;justify-content:flex-end;overflow-x:auto;scrollbar-width:none;padding:4px 2px}.eye-strip::-webkit-scrollbar{display:none}' +
+    '.eye-strip .eye-tile{flex:none;width:84px;height:112px;border-radius:14px;border:2px solid rgba(255,210,63,.55);box-shadow:0 6px 18px rgba(0,0,0,.55);cursor:pointer}.eye-strip .eye-tile.me{border-color:rgba(255,255,255,.35)}' +
+    '.eye-strip .ta{padding:4px 4px 16px}.eye-strip .eye-av{width:46px;height:46px;padding:2px}.eye-strip .eye-av div{font-size:16px}.eye-strip .eye-nm,.eye-strip .eye-st{display:none}' +
+    '.eye-strip .eye-wv{height:12px;margin-top:6px;gap:2px}.eye-strip .eye-wv i{height:12px;width:3px}' +
+    '.eye-strip .tn{display:block!important;position:absolute;left:0;right:0;bottom:4px;text-align:center;font:800 10px/1 Montserrat,sans-serif;text-shadow:0 1px 4px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px}' +
+    '.eye-tile.me video{transform:scaleX(-1)}.eye-tile.scr video{object-fit:contain;background:#000;transform:none}' +
+    '.eye-who{bottom:auto!important;top:calc(66px + env(safe-area-inset-top,0px))}.eye-c.on{background:linear-gradient(180deg,#fff1b8,#ffd23f 40%,#d98d16);color:#2a1702;border:0}' +
     '@media (prefers-reduced-motion:reduce){.eye-av::before,.eye-av::after,.eye-yes i,.eye-card{animation:none}}';
   function addCss() { if (document.getElementById('eye-css')) return; var s = document.createElement('style'); s.id = 'eye-css'; s.textContent = css; document.head.appendChild(s); }
 
@@ -113,6 +122,9 @@
     cam: '<svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="13" height="12" rx="3"/><path d="M15.5 10.5l6-3.5v10l-6-3.5z"/></svg>',
     end: '<svg viewBox="0 0 24 24"><path d="M3 14.5c5-4.6 13-4.6 18 0l-2.4 3-3.6-1.6v-2.6a10 10 0 00-6 0v2.6L5.4 17.5z"/></svg>',
     mic: '<svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg>',
+    micx: '<svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3M3.5 3.5l17 17"/></svg>',
+    camx: '<svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="13" height="12" rx="3"/><path d="M15.5 10.5l6-3.5v10l-6-3.5zM2 3l19 19"/></svg>',
+    scr: '<svg viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="13" rx="2"/><path d="M8 21h8M12 17v4M12 13.5V7.5M9 10l3-3 3 3"/></svg>',
     flip: '<svg viewBox="0 0 24 24"><path d="M4 9a8 8 0 0114-4l2 2M20 15a8 8 0 01-14 4l-2-2M20 4v4h-4M4 20v-4h4"/></svg>',
     add: '<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6.5 7-6.5s7 2.5 7 6.5M19 8v6M16 11h6"/></svg>',
     ok: '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
@@ -142,19 +154,19 @@
   function liveScreen() {
     clearOv(); addCss();
     ov = document.createElement('div'); ov.className = 'eye-ov eye-live' + (call.video === false ? ' eye-audio' : '');
-    ov.innerHTML = '<div class="eye-grid n1" id="eyeGrid"></div><video class="eye-lv" id="eyeLv" autoplay playsinline muted></video>' +
+    ov.innerHTML = '<div class="eye-grid" id="eyeGrid"></div><div class="eye-strip" id="eyeStrip"></div>' +
       '<div class="eye-top"><span class="eye-pill" id="eyeQ">● соединяю…</span><span class="eye-pill g" id="eyeT">00:00</span></div>' +
       '<div class="eye-who" id="eyeWho"></div>' +
       '<div class="eye-ctl"><button class="eye-c" id="eyeMic" aria-label="Микрофон">' + IC.mic + '</button><button class="eye-c" id="eyeCam" aria-label="Камера">' + IC.cam + '</button>' +
       '<button class="eye-c end" id="eyeEnd" aria-label="Завершить">' + IC.end + '</button><button class="eye-c" id="eyeAdd" aria-label="Добавить в звонок">' + IC.add + '</button>' +
-      '<button class="eye-c" id="eyeFlip" aria-label="Сменить камеру">' + IC.flip + '</button></div>';
+      (CANSHARE ? '<button class="eye-c" id="eyeScr" aria-label="Демонстрация экрана">' + IC.scr + '</button>' : '<button class="eye-c" id="eyeFlip" aria-label="Сменить камеру">' + IC.flip + '</button>') + '</div>';
     document.body.appendChild(ov);
-    if (call.local) ov.querySelector('#eyeLv').srcObject = call.local;
     ov.querySelector('#eyeEnd').onclick = function () { send({ t: 'hangup', cid: call.cid }); finish('Звонок завершён'); };
     ov.querySelector('#eyeMic').onclick = function () { toggle('audio', this); };
     ov.querySelector('#eyeCam').onclick = function () { toggle('video', this); };
     ov.querySelector('#eyeAdd').onclick = addPick;
-    ov.querySelector('#eyeFlip').onclick = flip;
+    if (CANSHARE) ov.querySelector('#eyeScr').onclick = shareScreen; else ov.querySelector('#eyeFlip').onclick = flip;
+    var st0 = myState(); ov.querySelector('#eyeMic').innerHTML = st0.mic ? IC.mic : IC.micx; ov.querySelector('#eyeMic').classList.toggle('off', !st0.mic);
     if (!wvRaf) wvRaf = requestAnimationFrame(waves);
     call.t0 = Date.now();
     clearInterval(call.timer);
@@ -171,32 +183,42 @@
   function hasVideo(st) { return !!st && st.getVideoTracks().some(function (t) { return t.readyState === 'live' && !t.muted; }); }
   function layout() {
     if (!call || !ov) return;
-    var g = ov.querySelector('#eyeGrid'); if (!g) return;
-    var list = vals(call.peers).concat(vals(call.inv)), keep = [], vis = true;
-    list.forEach(function (x) {
+    var g = ov.querySelector('#eyeGrid'), sp = ov.querySelector('#eyeStrip'); if (!g || !sp) return;
+    var others = vals(call.peers).concat(vals(call.inv)), M = meX(), all = others.concat([M]), keep = [];
+    var ids = all.map(function (x) { return x.id; });
+    // кто на большом экране: каждый выбирает сам у себя (нажал на маленькую плитку — она стала большой)
+    if (call.pinned && ids.indexOf(call.main) < 0) call.pinned = false;
+    if (!call.pinned) call.main = defMain();
+    var mainX = null;
+    all.forEach(function (x) {
       if (!x.tile) {
-        x.tile = document.createElement('div'); x.tile.className = 'eye-tile';
-        x.tile.innerHTML = '<video autoplay playsinline></video><div class="ta"><div class="eye-av"><div>' + faceHtml(x) + '</div></div>' +
+        x.tile = document.createElement('div'); x.tile.className = 'eye-tile' + (x.isMe ? ' me' : '');
+        x.tile.innerHTML = '<video autoplay playsinline' + (x.isMe ? ' muted' : '') + '></video><div class="ta"><div class="eye-av"><div>' + faceHtml(x) + '</div></div>' +
           '<div class="eye-nm">' + esc(x.name || ('ID ' + x.id)) + '</div><div class="eye-st"></div>' +
-          '<div class="eye-wv" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div><div class="tn">' + esc(first(x.name) || ('ID ' + x.id)) + '</div>';
+          '<div class="eye-wv" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div><div class="tn">' + (x.isMe ? 'Ты' : esc(first(x.name) || ('ID ' + x.id))) + '</div>';
+        x.tile.onclick = function () { if (call && !x.inv && call.main !== x.id) { call.main = x.id; call.pinned = true; layout(); } };
       }
-      var v = x.tile.querySelector('video');
-      if (x.stream && v.srcObject !== x.stream) v.srcObject = x.stream;
-      var hv = hasVideo(x.stream) && !x.camOff; vis = vis && !hv;
+      var v = x.tile.querySelector('video'), stream = x.isMe ? (call.screen ? call.scrStream : call.local) : x.stream;
+      if (stream && v.srcObject !== stream) v.srcObject = stream;
+      var hv = x.isMe ? (!!call.screen || myState().camOn) : (hasVideo(x.stream) && !x.camOff);
       x.tile.classList.toggle('hasv', hv);
-      x.tile.classList.toggle('moff', !!x.micOff);
-      if (!x.faceOk && !x.inv) { var f = x.tile.querySelector('.eye-av>div'); if (f && avOf(x.id) !== null) { f.innerHTML = faceHtml(x); x.faceOk = true; } }
+      x.tile.classList.toggle('scr', x.isMe ? !!call.screen : !!x.scr);
+      x.tile.classList.toggle('moff', x.isMe ? !myState().mic : !!x.micOff);
+      if (!x.faceOk && !x.inv && !x.isMe) { var f = x.tile.querySelector('.eye-av>div'); if (f && avOf(x.id) !== null) { f.innerHTML = faceHtml(x); x.faceOk = true; } }
       x.tile.classList.toggle('inv', !!x.inv);
-      x.tile.querySelector('.eye-st').textContent = x.inv ? 'Звоним…' : x.micOff && x.cs === 'connected' ? 'микрофон выключен' : x.camOff && x.cs === 'connected' && call.video !== false ? 'камера выключена' : x.cs === 'connected' ? (list.length > 1 ? '' : (call.video === false ? 'Аудиозвонок EYE' : '')) : 'соединяю…';
-      if (x.tile.parentNode !== g) g.appendChild(x.tile);
+      x.tile.querySelector('.eye-st').textContent = x.isMe ? (myState().mic ? 'Ты' : 'Ты · микрофон выключен') : x.inv ? 'Звоним…' : x.micOff && x.cs === 'connected' ? 'микрофон выключен' : x.camOff && x.cs === 'connected' && call.video !== false ? 'камера выключена' : x.cs === 'connected' ? (others.length > 1 ? '' : (call.video === false ? 'Аудиозвонок EYE' : '')) : 'соединяю…';
+      var isMain = x.id === call.main, box = isMain ? g : sp;
+      x.tile.classList.toggle('main', isMain);
+      if (isMain) mainX = x;
+      if (x.tile.parentNode !== box) box.appendChild(x.tile);
       keep.push(x.tile);
     });
-    Array.prototype.slice.call(g.children).forEach(function (t) { if (keep.indexOf(t) < 0) t.remove(); });
-    var n = Math.max(1, Math.min(list.length, 3));
-    g.className = 'eye-grid n' + n + (list.length > 1 ? ' g' : '');
-    var who = ov.querySelector('#eyeWho'); if (who) who.textContent = list.length === 1 && !vis ? (list[0].name || '') : '';
-    var lv = ov.querySelector('#eyeLv'); if (lv) lv.classList.toggle('off', !(call.local && call.local.getVideoTracks().some(function (t) { return t.enabled; })));
-    var add = ov.querySelector('#eyeAdd'); if (add) add.classList.toggle('off', list.length >= MAXP - 1);
+    // порядок маленьких плиток: собеседники, потом я
+    all.forEach(function (x) { if (x.id !== call.main && x.tile.parentNode === sp) sp.appendChild(x.tile); });
+    [g, sp].forEach(function (box) { Array.prototype.slice.call(box.children).forEach(function (t) { if (keep.indexOf(t) < 0) t.remove(); }); });
+    var who = ov.querySelector('#eyeWho'); if (who) who.textContent = mainX && !mainX.isMe && mainX.tile.classList.contains('hasv') ? (mainX.name || '') + (mainX.scr ? ' · показывает экран' : '') : '';
+    var add = ov.querySelector('#eyeAdd'); if (add) add.classList.toggle('off', others.length >= MAXP - 1);
+    var sb = ov.querySelector('#eyeScr'); if (sb) sb.classList.toggle('on', !!call.screen);
     var ps = vals(call.peers), q = ov.querySelector('#eyeQ');
     if (q) {
       if (ps.length > 1) q.textContent = '● в звонке: ' + (ps.filter(function (x) { return x.cs === 'connected'; }).length + 1);
@@ -204,6 +226,18 @@
     }
     bitrate(ps.length);
   }
+  // v3.2 (Андрей 16.11): в групповом звонке у всех на большом экране тот, кто начал звонок; в звонке на двоих — собеседник
+  function defMain() {
+    var ps = vals(call.peers);
+    if (ps.length >= 2) {
+      if (call.host === 'me') return 'me';
+      if (call.host && call.peers[call.host]) return call.host;
+      return ps[0].id;
+    }
+    var o = vals(call.peers).concat(vals(call.inv));
+    return o.length ? o[0].id : 'me';
+  }
+  function meX() { if (!call.meX) call.meX = { id: 'me', isMe: true, name: (me && me.name) || 'Я', cs: 'connected' }; return call.meX; }
   // в групповом звонке каждый шлёт видео всем — ужимаем качество, чтобы хватило мобильного интернета
   function bitrate(n) {
     var want = n > 1 ? (n > 2 ? 300000 : 450000) : 0;
@@ -244,13 +278,50 @@
     if (!call || !call.local) return;
     var tr = kind === 'audio' ? call.local.getAudioTracks() : call.local.getVideoTracks();
     tr.forEach(function (x) { x.enabled = !x.enabled; });
-    btn.classList.toggle('off', tr.length && !tr[0].enabled);
+    var on = tr.length && tr[0].enabled;
+    btn.classList.toggle('off', !on);
+    btn.innerHTML = kind === 'audio' ? (on ? IC.mic : IC.micx) : (on ? IC.cam : IC.camx);
+    if (kind === 'video' && !call.screen) vals(call.peers).forEach(function (P) { setVideoSend(P, camTrack()); });
     vals(call.peers).forEach(sendState); layout();
   }
   /* v3.1: по каналу данных сообщаем собеседникам, включены ли у меня камера и микрофон (иначе у них чёрный экран) */
   function myState() {
     var v = call && call.local ? call.local.getVideoTracks() : [], a = call && call.local ? call.local.getAudioTracks() : [];
-    return { cam: v.some(function (t) { return t.enabled; }), mic: a.some(function (t) { return t.enabled; }) };
+    var camOn = v.some(function (t) { return t.enabled && t.readyState === 'live'; });
+    return { cam: camOn || !!(call && call.screen), camOn: camOn, mic: a.some(function (t) { return t.enabled; }), scr: !!(call && call.screen) };
+  }
+  /* v3.2: демонстрация экрана (браузер на компьютере; телефонные браузеры экран отдавать не умеют) */
+  var CANSHARE = !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) && !/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  function camTrack() { var v = call && call.local ? call.local.getVideoTracks() : []; return v[0] || null; }
+  function vTr(P) {
+    var ts = P.pc && P.pc.getTransceivers ? P.pc.getTransceivers() : [];
+    for (var i = 0; i < ts.length; i++) {
+      var t = ts[i];
+      if (!t.stopped && t.receiver && t.receiver.track && t.receiver.track.kind === 'video' && (t.direction === 'sendrecv' || t.direction === 'sendonly')) return t;
+    }
+    return null;
+  }
+  function setVideoSend(P, track) { var t = vTr(P); if (t && t.sender.track !== track) t.sender.replaceTrack(track).catch(function () {}); }
+  function shareScreen() {
+    if (!call) return;
+    if (call.screen) { stopShare(); return; }
+    navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 15 }, audio: false }).then(function (st) {
+      var t = st.getVideoTracks()[0];
+      if (!call || !t) { st.getTracks().forEach(function (x) { x.stop(); }); return; }
+      try { t.contentHint = 'detail'; } catch (e) {}
+      call.screen = t; call.scrStream = st;
+      t.onended = stopShare;
+      vals(call.peers).forEach(function (P) { setVideoSend(P, t); sendState(P); });
+      toast('Ты показываешь экран. Остановить — та же кнопка.');
+      layout();
+    }).catch(function () {});
+  }
+  function stopShare() {
+    if (!call || !call.screen) return;
+    try { call.screen.stop(); } catch (e) {}
+    call.screen = null; call.scrStream = null;
+    vals(call.peers).forEach(function (P) { setVideoSend(P, camTrack()); sendState(P); });
+    layout();
   }
   function sendState(P) { try { if (P.dc && P.dc.readyState === 'open') P.dc.send(JSON.stringify(myState())); } catch (e) {} }
   /* аватарка: фото из профиля EAGLES или серый «ноунейм» */
@@ -265,6 +336,7 @@
     return null;
   }
   function faceHtml(x) {
+    if (x.isMe) return NONAME;
     var a = avOf(x.id);
     return a && /^(data:image\/|https:\/\/)/.test(a) ? '<img alt="" src="' + esc(a) + '">' : NONAME;
   }
@@ -301,6 +373,10 @@
     var mic = ov.querySelector('#eyeMic'), ml = myState().mic ? level(call.mt && call.mt.an ? call.mt : null) : 0;
     call.mlv = (call.mlv || 0) * 0.6 + ml * 0.4;
     if (mic) mic.style.boxShadow = '0 0 0 ' + Math.round(call.mlv * 9) + 'px rgba(255,210,63,' + (call.mlv * 0.45).toFixed(2) + ')';
+    if (call.meX && call.meX.tile) {
+      var mb = call.meX.tile.querySelectorAll('.eye-wv i');
+      for (var j = 0; j < mb.length; j++) { var kk = 1 - Math.abs(j - 3) / 4; mb[j].style.transform = 'scaleY(' + (0.15 + call.mlv * kk * (0.7 + 0.3 * Math.sin(Date.now() / 90 + j * 1.7))).toFixed(3) + ')'; }
+    }
     wvRaf = requestAnimationFrame(waves);
   }
   var facing = 'user';
@@ -310,10 +386,7 @@
     navigator.mediaDevices.getUserMedia({ video: { facingMode: facing } }).then(function (s) {
       var nt = s.getVideoTracks()[0];
       if (!call) { nt.stop(); return; }
-      vals(call.peers).forEach(function (P) {
-        var sender = P.pc && P.pc.getSenders().find(function (x) { return x.track && x.track.kind === 'video'; });
-        if (sender) sender.replaceTrack(nt);
-      });
+      if (!call.screen) vals(call.peers).forEach(function (P) { setVideoSend(P, nt); });
       call.local.getVideoTracks().forEach(function (t) { t.stop(); call.local.removeTrack(t); });
       call.local.addTrack(nt);
     }).catch(function () {});
@@ -353,7 +426,13 @@
     try {
       P.dc = pc.createDataChannel('eye', { negotiated: true, id: 0 });
       P.dc.onopen = function () { sendState(P); };
-      P.dc.onmessage = function (e) { try { var d = JSON.parse(e.data); P.camOff = d.cam === false; P.micOff = d.mic === false; layout(); } catch (x) {} };
+      P.dc.onmessage = function (e) {
+        try {
+          var d = JSON.parse(e.data); P.camOff = d.cam === false; P.micOff = d.mic === false;
+          if (d.scr && !P.scr && call) { call.main = P.id; call.pinned = true; }   // кто показывает экран — на большой экран
+          P.scr = !!d.scr; layout();
+        } catch (x) {}
+      };
     } catch (e) {}
     pc.onicecandidate = function (e) { if (e.candidate && call) send({ t: 'ice', cid: call.cid, to: id, c: e.candidate }); };
     pc.ontrack = function (e) {
@@ -374,7 +453,8 @@
     call.local.getTracks().forEach(function (t) { pc.addTrack(t, call.local); });
     if (offer) {
       // у кого нет камеры, всё равно может видеть собеседника
-      if (!call.local.getVideoTracks().length) try { pc.addTransceiver('video', { direction: 'recvonly' }); } catch (e) {}
+      if (!call.local.getVideoTracks().length) try { pc.addTransceiver('video', { direction: 'sendrecv' }); } catch (e) {}
+      if (call.screen) setVideoSend(P, call.screen);
       pc.createOffer().then(function (o) { return pc.setLocalDescription(o); })
         .then(function () { if (call) send({ t: 'sdp', cid: call.cid, to: id, sdp: pc.localDescription }); }).catch(function () {});
     }
@@ -406,6 +486,7 @@
       clearInterval(call.timer);
       vals(call.peers).forEach(function (P) { try { P.pc.close(); } catch (e) {} });
       if (wvRaf) { cancelAnimationFrame(wvRaf); wvRaf = 0; }
+      if (call.screen) try { call.screen.stop(); } catch (e) {}
       if (actx) { try { actx.close(); } catch (e) {} actx = null; }
       if (call.local) call.local.getTracks().forEach(function (t) { t.stop(); });
     }
@@ -446,7 +527,7 @@
     }
     if (m.t === 'ring') {
       if (call) { send({ t: 'decline', cid: m.cid }); return; }
-      call = { cid: m.cid, role: 'callee', peer: m.from, video: m.video !== false, peers: {}, inv: {} };
+      call = { cid: m.cid, role: 'callee', peer: m.from, video: m.video !== false, peers: {}, inv: {}, host: m.from && m.from.id };
       var grp = (m.group || []).map(first).filter(Boolean);
       ringScreen(m.from, grp.length ? 'зовёт тебя в звонок с: ' + grp.join(', ') : 'звонит тебе в EAGLES…', true); startTone();
       if (document.hidden && window.Notification && Notification.permission === 'granted') {
@@ -462,7 +543,7 @@
       if (!call.peers[x.id]) makePeer(x, true);
       return;
     }
-    if (m.t === 'joined') { (m.peers || []).forEach(function (p) { if (!call.peers[p.id]) makePeer(p, false); }); return; }
+    if (m.t === 'joined') { if (m.peers && m.peers[0]) call.host = m.peers[0].id; (m.peers || []).forEach(function (p) { if (!call.peers[p.id]) makePeer(p, false); }); return; }
     if (m.t === 'adding') { if (m.peer && !call.peers[m.peer.id]) { call.inv[m.peer.id] = { id: m.peer.id, name: m.peer.name || '', inv: true }; layout(); } return; }
     if (m.t === 'invite_end') {
       var iv = call.inv[m.id]; delete call.inv[m.id]; layout();
@@ -475,6 +556,10 @@
       var d = m.sdp;
       P.pc.setRemoteDescription(d).then(function () {
         P.iceQ.forEach(function (c) { P.pc.addIceCandidate(c).catch(function () {}); }); P.iceQ = [];
+        if (d.type === 'offer' && P.pc.getTransceivers) {
+          P.pc.getTransceivers().forEach(function (t) { if (t.receiver && t.receiver.track && t.receiver.track.kind === 'video' && t.direction === 'recvonly' && !t.sender.track) t.direction = 'sendrecv'; });
+          if (call && call.screen) setVideoSend(P, call.screen);
+        }
         if (d.type === 'offer') return P.pc.createAnswer().then(function (a) { return P.pc.setLocalDescription(a); })
           .then(function () { if (call) send({ t: 'sdp', cid: call.cid, to: P.id, sdp: P.pc.localDescription }); });
       }).catch(function () {});
@@ -511,7 +596,7 @@
     if (call) return;
     if (!ws || ws.readyState !== 1) { toast('EYE сейчас недоступен. Проверь интернет и попробуй ещё раз.'); return; }
     try { if (window.Notification && Notification.permission === 'default') Notification.requestPermission(); } catch (e) {}
-    call = { cid: '', role: 'caller', peer: { id: String(id), name: name || '' }, video: video, peers: {}, inv: {} };
+    call = { cid: '', role: 'caller', peer: { id: String(id), name: name || '' }, video: video, peers: {}, inv: {}, host: 'me' };
     audioCtx();
     ringScreen(call.peer, video ? 'Включаю камеру…' : 'Включаю микрофон…', false);
     media(video).then(function (s) {
