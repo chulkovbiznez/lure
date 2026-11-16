@@ -342,4 +342,30 @@
 })();
 </script>
 
-<script src="/eye.js?v=2" defer></script></body></html>
+<script src="/eye.js?v=2" defer></script>
+<script>
+/* EAGLES 16.11.2026: мягкий звук нажатий, как на всех страницах (ссылка открывается через 0,16 с, чтобы звук успел) */
+(function(){
+  var actx = null;
+  function getCtx(){ if(!actx) actx = new (window.AudioContext || window.webkitAudioContext)(); return actx; }
+  /* EAGLES 16.11.2026: один мягкий звук нажатий на всех страницах — тёплый короткий «тук» без щелчка */
+  function egSoftTap(c){
+    var t = c.currentTime + .005, o = c.createOscillator(), o2 = c.createOscillator(), g2 = c.createGain(), f = c.createBiquadFilter(), g = c.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(660, t); o.frequency.exponentialRampToValueAtTime(440, t + .09);
+    o2.type = 'sine'; o2.frequency.setValueAtTime(990, t); o2.frequency.exponentialRampToValueAtTime(660, t + .09); g2.gain.value = .25;
+    f.type = 'lowpass'; f.frequency.value = 2200;
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.09, t + .012); g.gain.exponentialRampToValueAtTime(.0001, t + .16);
+    o.connect(f); o2.connect(g2); g2.connect(f); f.connect(g); g.connect(c.destination);
+    o.start(t); o2.start(t); o.stop(t + .18); o2.stop(t + .18);
+  }
+  document.addEventListener('click', function(ev){
+    var el = ev.target.closest('a, button'); if(!el) return;
+    try{ var c = getCtx(); if(c.state === 'running') egSoftTap(c); else c.resume().then(function(){ egSoftTap(c); }).catch(function(){}); }catch(e){}
+    if(el.tagName === 'A' && !ev.defaultPrevented && !ev.ctrlKey && !ev.metaKey){
+      var h = el.getAttribute('href');
+      if(h && h.charAt(0) !== '#' && el.target !== '_blank' && !/^(javascript|mailto|tel):/i.test(h)){ ev.preventDefault(); var u = el.href; setTimeout(function(){ location.href = u; }, 160); }
+    }
+  });
+})();
+</script>
+</body></html>
