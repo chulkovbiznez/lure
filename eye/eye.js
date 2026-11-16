@@ -1,4 +1,4 @@
-/* EYE v2.1 (16.11.2026) — видеозвонки EAGLES. Подключается на страницах сайта одной строкой:
+/* EYE v2.2 (16.11.2026) — видеозвонки EAGLES. Подключается на страницах сайта одной строкой:
    <script src="/eye.js?v=2" defer></script>   (файл лежит в бакете сайта app.eaglesteam.ru)
    Сам находит ключ входа EAGLES, держит связь с сервером EYE, показывает входящий звонок на любой странице.
    Правило Андрея 16.11.2026: звонить можно только взаимным ДРУЗЬЯМ (запрос + подтверждение).
@@ -97,7 +97,7 @@
 
   var ov = null;
   function clearOv() { if (ov) { ov.remove(); ov = null; } stopTone(); }
-  function toast(t) { addCss(); var d = document.createElement('div'); d.className = 'eye-toast'; d.textContent = t; document.body.appendChild(d); setTimeout(function () { d.remove(); }, 4200); }
+  function toast(t) { addCss(); var d = document.createElement('div'); d.className = 'eye-toast'; d.textContent = t; document.body.appendChild(d); setTimeout(function () { d.remove(); }, t.length > 80 ? 9000 : 4200); }
 
   function ringScreen(peer, status, incoming) {
     clearOv(); addCss();
@@ -202,7 +202,7 @@
     stopTone(); setSt('Включаю камеру…');
     media().then(function (s) {
       call.local = s; makePc(); liveScreen(); send({ t: 'accept', cid: call.cid });
-    }).catch(function () { send({ t: 'decline', cid: call.cid }); finish('Нужен доступ к камере и микрофону'); });
+    }).catch(function () { send({ t: 'decline', cid: call.cid }); finish(CAMHELP); });
   }
 
   function finish(msg) {
@@ -214,6 +214,8 @@
     call = null; clearOv(); if (msg) toast(msg);
   }
 
+  // v2.2: Chrome на Android сам запрещает камеру после нескольких отказов — подсказываем, где разрешить
+  var CAMHELP = 'Нет доступа к камере и микрофону. Нажми на значок слева от адреса сайта → Разрешения → Камера и Микрофон → Разрешить, потом обнови страницу.';
   var WHY = {
     offline: 'Человек сейчас не в EAGLES. Напиши ему в чат, пусть откроет EAGLES.',
     busy: 'Сейчас занят другим звонком.',
@@ -300,7 +302,7 @@
       if (!call) { s.getTracks().forEach(function (t) { t.stop(); }); return; }
       call.local = s; setSt('Соединяю…');
       send({ t: 'call', to: String(id), video: true });
-    }).catch(function () { finish('Нужен доступ к камере и микрофону'); });
+    }).catch(function () { finish(CAMHELP); });
   }
 
   /* ---------- друзья (сервер сайта EAGLES: fr_list, fr_add, fr_del, fr_state) ---------- */
