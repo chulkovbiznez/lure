@@ -16,6 +16,6 @@ CSS = ('<style>/* EAGLES 17.11.2026: логотип EYE вверху стран�
        '</style>\n')
 s = once(s, '</head>', CSS + '</head>', 'head')
 s = once(s, '<div id="chHome" style="display:none">\n    <div class="ch-top">',
-         '<div id="chHome" style="display:none">\n    <div class="eye-logo"><img src="data:image/webp;base64,' + b64 + '" alt="EYE" width="230" height="61"><small>чаты и звонки EAGLES</small></div>\n    <div class="ch-top">', 'logo')
+         '<div id="chHome" style="display:none">\n    <div class="eye-logo"><img src="data:image/webp;base64,' + b64 + '" alt="EYE" width="230" height="61"><small>Мессенджер</small></div>\n    <div class="ch-top">', 'logo')
 open(dst, 'w', encoding='utf-8', newline='').write(s)
 print('ok', len(s))
