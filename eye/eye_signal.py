@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # EYE — сервер-соединитель видеозвонков EAGLES.
-# Знакомит два браузера (WebRTC): передаёт приглашение, ответ и сетевые данные. Видео через него не идёт.
+# v3 (16.11.2026): звонок до 4 человек (каждый с каждым), аудио или видео.
+# Знакомит браузеры (WebRTC): передаёт приглашение, ответ и сетевые данные. Видео через него не идёт.
 # Вход: ?sess=<ключ входа EAGLES>. Проверка ключа и права звонить — через сервер сайта EAGLES (action=me, action=eye_check:
 # только взаимные друзья, без блокировки).
 # Секретов в коде нет: TURN-секрет читается из /opt/eye/turn.secret.
@@ -22,10 +23,11 @@ OWNER_ID = '11111'
 RING_SEC = 40
 MAX_CONN_PER_USER = 4
 CALLS_PER_MIN = 8
+MAX_ROOM = 4          # решение Андрея 16.11.2026: до 4 человек в звонке
 
 USERS = {}     # id -> set(ws)
 INFO = {}      # ws -> {'id','name','sess'}
-CALLS = {}     # cid -> {'a':ws,'b':ws or None,'aid','bid','state','t'}
+ROOMS = {}     # cid -> {'members':{id:ws}, 'invited':{id:t0}, 'video', 't'}  (v3: звонок до 4 человек)
 RATE = {}      # id -> [timestamps]
 ME_CACHE = {}  # sess -> (until, data)
 
@@ -99,30 +101,79 @@ def rate_ok(uid):
 
 
 def busy(uid):
-    return any(c['state'] in ('ring', 'live') and uid in (c['aid'], c['bid']) for c in CALLS.values())
+    return any(uid in r['members'] or uid in r['invited'] for r in ROOMS.values())
 
 
-async def end_call(cid, why, by=None):
-    c = CALLS.pop(cid, None)
-    if not c:
+def peer_of(r, uid):
+    w = r['members'].get(uid)
+    return {'id': uid, 'name': INFO[w]['name'] if w in INFO else ''}
+
+
+async def end_room(cid, why, by=None):
+    r = ROOMS.pop(cid, None)
+    if not r:
         return
     msg = {'t': 'hangup', 'cid': cid, 'why': why}
-    if c['state'] == 'ring':
-        await to_user(c['bid'], msg)          # перестать звонить на всех устройствах
-        if by is not c['a']:
-            await send(c['a'], msg)
-    else:
-        for w in (c['a'], c['b']):
-            if w is not None and w is not by:
-                await send(w, msg)
-    log('call end', cid[:6], why)
+    for uid in list(r['invited']):
+        await to_user(uid, msg)               # перестать звонить на всех устройствах
+    for w in r['members'].values():
+        if w is not by:
+            await send(w, msg)
+    log('room end', cid[:6], why)
 
 
-async def ring_timeout(cid):
+async def check_room(cid, why, by=None):
+    # Звонок живёт, пока в нём двое, или один и кому-то ещё звоним.
+    r = ROOMS.get(cid)
+    if r and (not r['members'] or (len(r['members']) == 1 and not r['invited'])):
+        await end_room(cid, why, by)
+        return True
+    return False
+
+
+async def leave(cid, uid, why, by=None):
+    r = ROOMS.get(cid)
+    if not r or uid not in r['members']:
+        return
+    r['members'].pop(uid)
+    if await check_room(cid, why, by):
+        return
+    for w in r['members'].values():
+        await send(w, {'t': 'peer_left', 'cid': cid, 'id': uid})
+    log('room leave', cid[:6], uid, len(r['members']))
+
+
+async def drop_invite(cid, uid, why):
+    r = ROOMS.get(cid)
+    if not r or uid not in r['invited']:
+        return
+    r['invited'].pop(uid)
+    await to_user(uid, {'t': 'hangup', 'cid': cid, 'why': why})
+    if await check_room(cid, why):
+        return
+    for w in r['members'].values():
+        await send(w, {'t': 'invite_end', 'cid': cid, 'id': uid, 'why': why})
+
+
+async def ring_timeout(cid, uid, t0):
     await asyncio.sleep(RING_SEC)
-    c = CALLS.get(cid)
-    if c and c['state'] == 'ring':
-        await end_call(cid, 'noanswer')
+    r = ROOMS.get(cid)
+    if r and r['invited'].get(uid) == t0:
+        await drop_invite(cid, uid, 'noanswer')
+
+
+async def invite(ws, me, r, to, first):
+    # Правило Андрея 16.11.2026: звать можно только взаимных друзей EAGLES. Решает сервер сайта (eye_check).
+    rr = await bk({'action': 'eye_check', 'with': to, 'sess': INFO[ws]['sess']})
+    if not rr or not rr.get('ok'):
+        return (rr or {}).get('error', 'not_allowed'), None
+    if not rr.get('can'):
+        return rr.get('why') or 'not_friends', None
+    if not USERS.get(to):
+        return 'offline', None
+    if busy(to):
+        return 'busy', None
+    return '', (rr.get('peer') or {}).get('name', '')
 
 
 async def on_msg(ws, me, m):
@@ -135,52 +186,86 @@ async def on_msg(ws, me, m):
             return await send(ws, {'t': 'error', 'why': 'bad_id'})
         if not rate_ok(me['id']):
             return await send(ws, {'t': 'error', 'why': 'too_often'})
-        # Правило Андрея 16.11.2026: звонить можно только взаимным друзьям EAGLES. Решает сервер сайта (eye_check).
-        r = await bk({'action': 'eye_check', 'with': to, 'sess': INFO[ws]['sess']})
-        if not r or not r.get('ok'):
-            return await send(ws, {'t': 'error', 'why': (r or {}).get('error', 'not_allowed')})
-        if not r.get('can'):
-            return await send(ws, {'t': 'error', 'why': r.get('why') or 'not_friends'})
-        if not USERS.get(to):
-            return await send(ws, {'t': 'error', 'why': 'offline'})
-        if busy(to):
-            return await send(ws, {'t': 'error', 'why': 'busy'})
+        if busy(me['id']):
+            return await send(ws, {'t': 'error', 'why': 'self_busy'})
+        why, name = await invite(ws, me, None, to, True)
+        if why:
+            return await send(ws, {'t': 'error', 'why': why})
         cid = uuid.uuid4().hex
-        CALLS[cid] = {'a': ws, 'b': None, 'aid': me['id'], 'bid': to, 'state': 'ring', 't': time.time()}
-        await to_user(to, {'t': 'ring', 'cid': cid, 'from': {'id': me['id'], 'name': me['name']}, 'video': bool(m.get('video', True))})
-        await send(ws, {'t': 'ringing', 'cid': cid, 'peer': {'id': to, 'name': (r.get('peer') or {}).get('name', '')}})
-        asyncio.ensure_future(ring_timeout(cid))
+        t0 = time.time()
+        video = bool(m.get('video', True))
+        ROOMS[cid] = {'members': {me['id']: ws}, 'invited': {to: t0}, 'video': video, 't': t0}
+        await to_user(to, {'t': 'ring', 'cid': cid, 'from': {'id': me['id'], 'name': me['name']}, 'video': video, 'group': []})
+        await send(ws, {'t': 'ringing', 'cid': cid, 'peer': {'id': to, 'name': name}})
+        asyncio.ensure_future(ring_timeout(cid, to, t0))
         log('call ring', cid[:6], me['id'], '->', to)
         return
     cid = str(m.get('cid') or '')
-    c = CALLS.get(cid)
-    if not c:
-        return await send(ws, {'t': 'hangup', 'cid': cid, 'why': 'gone'})
-    mine_a = ws is c['a']
-    mine_b = INFO[ws]['id'] == c['bid'] and (c['b'] is None or ws is c['b'])
-    if not (mine_a or mine_b):
+    r = ROOMS.get(cid)
+    if not r:
+        if t in ('accept', 'hangup', 'add'):
+            await send(ws, {'t': 'hangup', 'cid': cid, 'why': 'gone'})
         return
-    if t == 'accept' and mine_b and c['state'] == 'ring':
-        c['b'] = ws
-        c['state'] = 'live'
-        await send(c['a'], {'t': 'accepted', 'cid': cid})
-        for w in list(USERS.get(c['bid'], ())):        # другие устройства перестают звонить
+    uid = me['id']
+    member = r['members'].get(uid) is ws
+    if t == 'accept':
+        if uid not in r['invited'] or uid in r['members']:
+            return
+        if len(r['members']) >= 2 and INFO[ws].get('v', 2) < 3:
+            return await drop_invite(cid, uid, 'old_app')
+        r['invited'].pop(uid)
+        peers = [peer_of(r, x) for x in r['members']]
+        for w in r['members'].values():           # каждый, кто уже в звонке, сам шлёт приглашение новенькому
+            await send(w, {'t': 'accepted', 'cid': cid, 'peer': {'id': uid, 'name': me['name']}})
+        r['members'][uid] = ws
+        await send(ws, {'t': 'joined', 'cid': cid, 'peers': peers})
+        for w in list(USERS.get(uid, ())):        # другие устройства перестают звонить
             if w is not ws:
                 await send(w, {'t': 'hangup', 'cid': cid, 'why': 'elsewhere'})
-        log('call live', cid[:6])
-    elif t == 'decline' and mine_b:
-        await end_call(cid, 'declined', by=ws)
+        log('room join', cid[:6], uid, len(r['members']))
+    elif t == 'decline':
+        if uid in r['invited']:
+            await drop_invite(cid, uid, 'declined')
     elif t == 'hangup':
-        await end_call(cid, 'hangup', by=ws)
-    elif t in ('sdp', 'ice') and c['state'] == 'live':
-        other = c['b'] if mine_a else c['a']
-        if other is not None:
-            out = {'t': t, 'cid': cid}
-            if t == 'sdp':
-                out['sdp'] = m.get('sdp')
-            else:
-                out['c'] = m.get('c')
-            await send(other, out)
+        if member:
+            await leave(cid, uid, 'hangup', by=ws)
+    elif t == 'add' and member:
+        to = str(m.get('to') or '').strip()
+        if not to.isdigit() or to == uid or to in r['members'] or to in r['invited']:
+            return await send(ws, {'t': 'error', 'why': 'bad_id', 'cid': cid})
+        if len(r['members']) + len(r['invited']) >= MAX_ROOM:
+            return await send(ws, {'t': 'error', 'why': 'full', 'cid': cid})
+        if any(INFO.get(w, {}).get('v', 2) < 3 for w in r['members'].values()):
+            return await send(ws, {'t': 'error', 'why': 'old_app', 'cid': cid})
+        if not rate_ok(uid):
+            return await send(ws, {'t': 'error', 'why': 'too_often', 'cid': cid})
+        why, name = await invite(ws, me, r, to, False)
+        if why:
+            return await send(ws, {'t': 'error', 'why': why, 'cid': cid})
+        if ROOMS.get(cid) is not r or r['members'].get(uid) is not ws:
+            return
+        t0 = time.time()
+        r['invited'][to] = t0
+        group = [peer_of(r, x)['name'] for x in r['members'] if x != uid]
+        await to_user(to, {'t': 'ring', 'cid': cid, 'from': {'id': uid, 'name': me['name']}, 'video': r['video'], 'group': group})
+        for w in r['members'].values():
+            await send(w, {'t': 'adding', 'cid': cid, 'peer': {'id': to, 'name': name}, 'by': uid})
+        asyncio.ensure_future(ring_timeout(cid, to, t0))
+        log('room add', cid[:6], uid, '->', to)
+    elif t in ('sdp', 'ice') and member:
+        to = str(m.get('to') or '')
+        if not to:
+            others = [x for x in r['members'] if x != uid]
+            to = others[0] if len(others) == 1 else ''
+        w = r['members'].get(to)
+        if w is None or to == uid:
+            return
+        out = {'t': t, 'cid': cid, 'from': uid}
+        if t == 'sdp':
+            out['sdp'] = m.get('sdp')
+        else:
+            out['c'] = m.get('c')
+        await send(w, out)
 
 
 async def handler(ws, path=None):
@@ -195,7 +280,11 @@ async def handler(ws, path=None):
         await send(ws, {'t': 'error', 'why': 'too_many'})
         return await ws.close()
     USERS.setdefault(me['id'], set()).add(ws)
-    INFO[ws] = {'id': me['id'], 'name': me['name'], 'sess': sess}
+    try:
+        ver = int((q.get('v') or ['2'])[0])
+    except ValueError:
+        ver = 2
+    INFO[ws] = {'id': me['id'], 'name': me['name'], 'sess': sess, 'v': ver}
     await send(ws, {'t': 'hello', 'me': {'id': me['id'], 'name': me['name']}, 'ice': turn_ice(me['id'])})
     try:
         async for raw in ws:
@@ -213,10 +302,10 @@ async def handler(ws, path=None):
         USERS.get(me['id'], set()).discard(ws)
         if not USERS.get(me['id']):
             USERS.pop(me['id'], None)
+        for cid, r in list(ROOMS.items()):
+            if r['members'].get(me['id']) is ws:
+                await leave(cid, me['id'], 'gone', by=ws)
         INFO.pop(ws, None)
-        for cid, c in list(CALLS.items()):
-            if ws is c['a'] or ws is c['b']:
-                await end_call(cid, 'gone', by=ws)
 
 
 def process_request(path, headers):
@@ -227,7 +316,7 @@ def process_request(path, headers):
             return (HTTPStatus.FORBIDDEN, [], b'origin\n')
         return None
     if p == '/health':
-        body = json.dumps({'ok': True, 'online': len(USERS), 'calls': len(CALLS)}).encode()
+        body = json.dumps({'ok': True, 'online': len(USERS), 'calls': len(ROOMS)}).encode()
         return (HTTPStatus.OK, [('Content-Type', 'application/json'), ('Access-Control-Allow-Origin', '*')], body)
     if p == '/eye.js':
         try:
