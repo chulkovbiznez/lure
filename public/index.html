@@ -664,7 +664,7 @@ function drawPrices(all){$('priceList').innerHTML=all.length?all.map(function(m)
 
 /* ---------- картинки и видео ---------- */
 var MC=null, MSEL={}, MOPT={img:{},video:{},sound:{}}, REFS={img:[],video:[],sound:[]}, GAL={img:[],video:[],sound:[]}, POLL=null, REFKIND='img';
-ERR.media_off='Картинки и видео ещё подключаются. Скоро заработают.';ERR.no_prompt='Опиши, что нужно создать.';ERR.refs_big='Фото слишком тяжёлые. Убери одно или два.';ERR.jobs_busy='Уже идут 3 задания. Дождись, пока одно закончится.';ERR.engine_error='Нейросеть не приняла задание. Попробуй изменить описание.';ERR.need_video='Добавь видео с движением.';ERR.need_photo='Добавь фото персонажа.';ERR.bad_video='Нужно видео mp4, mov или webm.';ERR.video_big='Видео больше 100 МБ, возьми покороче.';
+ERR.no_style='Напиши стиль музыки.';ERR.media_off='Картинки и видео ещё подключаются. Скоро заработают.';ERR.no_prompt='Опиши, что нужно создать.';ERR.refs_big='Фото слишком тяжёлые. Убери одно или два.';ERR.jobs_busy='Уже идут 3 задания. Дождись, пока одно закончится.';ERR.engine_error='Нейросеть не приняла задание. Попробуй изменить описание.';ERR.need_video='Добавь видео с движением.';ERR.need_photo='Добавь фото персонажа.';ERR.bad_video='Нужно видео mp4, mov или webm.';ERR.video_big='Видео больше 100 МБ, возьми покороче.';
 function isMedia(t){return t==='img'||t==='video'||t==='sound'}
 function curTab(){return document.body.dataset.tab}
 function mModel(t){if(!MC)return null;var L=MC[t]||[];var k=MSEL[t]||ls(key('mk_'+t));return L.filter(function(x){return x.k===k})[0]||L[0]||null}
@@ -737,20 +737,30 @@ function shrink(file){return new Promise(function(ok,no){var fr=new FileReader()
 $('refFile').onchange=function(){var t=REFKIND,m=mModel(t),fs=[].slice.call(this.files||[]).slice(0,m?Math.max(0,maxRefs(t)-REFS[t].length):0);
   Promise.all(fs.map(shrink)).then(function(L){REFS[t]=REFS[t].concat(L);drawRefs(t)},function(){toast('Не получилось открыть фото')})};
 var VSEX={george:'М',sarah:'Ж',adam:'М',alice:'Ж',bella:'Ж',bill:'М',brian:'М',callum:'М',charlie:'М',chris:'М',daniel:'М',eric:'М',harry:'М',jessica:'Ж',laura:'Ж',liam:'М',lily:'Ж',matilda:'Ж',river:'нейтр.',roger:'М',will:'М'};
-function sndPrice(m){var n=$('soundP').value.trim().length;$('soundN').textContent=m.max?n+' / '+m.max+' символов':'';
+function sndPrice(m){var o=MOPT.sound,n=$('soundP').value.trim().length,mx=m.song&&!o.custom?3000:m.max;$('soundP').maxLength=mx||2000;$('soundN').textContent=mx?n+' / '+mx+' символов':'';
   var p=m.perChar?(n?Math.max(1,Math.ceil(n*m.perChar)):0):m.table['|||'];$('soundPrice').textContent=p?(m.perChar?'≈ ':'')+rub(p):(m.perChar?rub(Math.ceil(1000*m.perChar))+' / 1000 симв.':'—')}
-function drawSnd(m,o){var P=$('soundP');P.maxLength=m.max||2000;$('soundT').textContent=m.voices?'Текст для озвучки':'Опиши звук';$('soundGo').textContent=m.voices?'Озвучить':'Создать звук';
-  if(!P.dataset.ph)P.dataset.ph=P.placeholder;P.placeholder=m.voices?P.dataset.ph:'Например: дождь по крыше и далёкий гром / энергичный электронный бит 128 BPM';
+var SPH={tts:'Например: Привет! Я Андрей, и сегодня покажу, как ИИ экономит час каждый день.',sfx:'Например: дождь по крыше и далёкий гром / энергичный электронный бит 128 BPM',song:'Например: весёлая поп-песня на русском про команду, которая вместе взлетает к успеху, припев легко запомнить',lyr:'[Куплет]\nМы начинали с нуля, но верили в мечту…\n\n[Припев]\nВыше, выше, как орлы…'};
+function drawSnd(m,o){var P=$('soundP'),inp=function(id,lbl,ph,val,mx){return '<b class="ttl" style="display:block;margin:12px 0 6px;font-size:13px">'+lbl+'</b><input class="inp" id="'+id+'" maxlength="'+mx+'" placeholder="'+esc(ph)+'" value="'+esc(val||'')+'">'};
+  $('soundT').textContent=m.voices?'Текст для озвучки':m.song?(o.instr?'Опиши мелодию':o.custom?'Текст песни':'Опиши песню'):'Опиши звук';$('soundGo').textContent=m.voices?'Озвучить':m.song?'Создать песню':'Создать звук';
+  P.placeholder=m.voices?SPH.tts:m.song?(o.custom&&!o.instr?SPH.lyr:SPH.song):SPH.sfx;
   var h='';if(m.voices){if(m.voices.indexOf(o.voice)<0)o.voice=m.voices[0];h+=chipRow('sound','voice',m.voices,'Голос',function(v){return v[0].toUpperCase()+v.slice(1)+' <small style="opacity:.6">'+(VSEX[v]||'')+'</small>'})+'<p class="muted" style="font-size:12px;margin:8px 2px 0">Голоса говорят на русском и других языках. Чтобы послушать голос, озвучь короткую фразу: это около 1 ₽.</p>'}
+  if(m.song){if(o.custom===undefined){o.custom=false;o.instr=false;o.gender=''}
+    h+=chipRow('sound','custom',[false,true],'Как писать',function(v){return v===true||v==='true'?'Свой текст песни':'Только описание'});
+    h+=chipRow('sound','instr',[false,true],'Вокал',function(v){return v===true||v==='true'?'Без слов (мелодия)':'С голосом'});
+    if(!o.instr)h+=chipRow('sound','gender',['','m','f'],'Голос певца',function(v){return {'':'Любой',m:'Мужской',f:'Женский'}[v]});
+    if(o.custom)h+=inp('sStyle','Стиль музыки','Например: поп, синти-поп, бодро, 120 BPM',o.style,1000)+inp('sTitle','Название','Например: Взлёт',o.title,80);
+    h+='<p class="muted" style="font-size:12px;margin:8px 2px 0">'+(o.custom?'В тексте можно отмечать части: [Куплет], [Припев], [Бридж].':'Suno сам напишет слова и музыку по описанию.')+' Песня обычно длится 2–4 минуты и готова за 2–4 минуты.</p>'}
   if(m.loop){if(o.loop===undefined)o.loop=false;h+=chipRow('sound','loop',[false,true],'Как звучит',function(v){return v===true||v==='true'?'Повтор по кругу (луп)':'Один раз'})}
   $('soundO').innerHTML=h;
-  [].forEach.call($('soundO').querySelectorAll('[data-o]'),function(b){b.onclick=function(){var v=b.dataset.v;o[b.dataset.o]=b.dataset.o==='loop'?v==='true':v;drawSnd(m,o)}});
+  if($('sStyle'))$('sStyle').oninput=function(){o.style=this.value};if($('sTitle'))$('sTitle').oninput=function(){o.title=this.value};
+  [].forEach.call($('soundO').querySelectorAll('[data-o]'),function(b){b.onclick=function(){var v=b.dataset.v,k=b.dataset.o;o[k]=/^(loop|custom|instr)$/.test(k)?v==='true':v;drawSnd(m,o)}});
   sndPrice(m)}
 $('soundP').addEventListener('input',function(){var m=mModel('sound');if(m)sndPrice(m)});
-function createSnd(){var m=mModel('sound'),o=MOPT.sound,b=$('soundGo'),pr=$('soundP').value.trim();if(!m)return;if(pr.length<2){toast(m.voices?'Напиши текст для озвучки.':ERR.no_prompt);$('soundP').focus();return}
-  b.disabled=true;post('/api/media/create',{k:m.k,prompt:pr,voice:o.voice,loop:o.loop}).then(function(r){b.disabled=false;
+function createSnd(){var m=mModel('sound'),o=MOPT.sound,b=$('soundGo'),pr=$('soundP').value.trim();if(!m)return;if(pr.length<2){toast(m.voices?'Напиши текст для озвучки.':m.song&&o.custom?'Напиши текст песни.':ERR.no_prompt);$('soundP').focus();return}
+  if(m.song&&o.custom&&!(o.style||'').trim()){toast('Напиши стиль музыки, например: поп, рок, рэп.');$('sStyle').focus();return}
+  b.disabled=true;post('/api/media/create',{k:m.k,prompt:pr,voice:o.voice,loop:o.loop,custom:o.custom,instr:o.instr,gender:o.gender,style:o.style,title:o.title}).then(function(r){b.disabled=false;
     if(!r.ok){if(r.error==='auth'){showLogin();return}if(r.error==='no_money'){toast(ERR.no_money);go('wallet');return}toast(err(r.error,r));return}
-    GAL.sound.unshift(r.job);drawGal('sound');poll();toast(m.voices?'Озвучиваю. Звук появится ниже.':'Создаю звук. Он появится ниже.')}).catch(function(){b.disabled=false;toast('Нет связи. Если включён VPN, выключи его.')})}
+    GAL.sound.unshift(r.job);drawGal('sound');poll();toast(m.voices?'Озвучиваю. Звук появится ниже.':m.song?'Пишу песню. Она появится ниже через 2–4 минуты.':'Создаю звук. Он появится ниже.')}).catch(function(){b.disabled=false;toast('Нет связи. Если включён VPN, выключи его.')})}
 function etaOf(x){var m=MC&&(MC.img.concat(MC.video,MC.sound||[])).filter(function(z){return z.k===x.k})[0];var e=(m&&m.eta)||(x.kind==='img'?40:150);if(x.dur&&x.kind==='video')e=Math.round(e*Math.max(1,x.dur/8));return e}
 function runPct(at,eta){var s=(Date.now()-at)/1000;return Math.min(97,Math.round(100*(1-Math.exp(-1.6*s/eta))/(1-Math.exp(-1.6))))}
 function runTxt(t,at,eta){var s=Math.max(0,Math.round((Date.now()-at)/1000)),left=eta-s,p=runPct(at,eta);
@@ -758,7 +768,7 @@ function runTxt(t,at,eta){var s=Math.max(0,Math.round((Date.now()-at)/1000)),lef
 setInterval(function(){[].forEach.call(document.querySelectorAll('[data-run]'),function(d){var at=+d.dataset.at,eta=+d.dataset.eta;d.innerHTML=runTxt(d.dataset.kind,at,eta);var b=d.parentNode.querySelector('.bar i');if(b)b.style.width=runPct(at,eta)+'%'})},1000);
 function gItem(x,i){var t=x.kind==='img'?'img':x.kind==='snd'?'sound':'video',run=x.status==='run';
   if(t==='sound')return '<div class="gi" data-gi="'+i+'" style="cursor:default">'+(run?'<div class="ph" data-run="'+esc(x.id)+'" data-at="'+(x.at||Date.now())+'" data-eta="'+etaOf(x)+'" data-kind="sound" style="min-height:74px">'+runTxt('sound',x.at||Date.now(),etaOf(x))+'</div><div class="bar"><i style="width:'+runPct(x.at||Date.now(),etaOf(x))+'%"></i></div>'
-    :'<audio src="'+esc(x.url)+'" controls preload="none" style="display:block;width:calc(100% - 16px);margin:10px 8px 0"></audio>')+'<small data-gv="1" style="cursor:pointer">'+esc(x.model||'')+(x.voice?' · '+esc(x.voice[0].toUpperCase()+x.voice.slice(1)):'')+(x.cost||x.price?' · '+rub(x.cost||x.price):'')+' · '+esc(x.prompt||'')+'</small></div>';
+    :'<audio src="'+esc(x.url)+'" controls preload="none" style="display:block;width:calc(100% - 16px);margin:10px 8px 0"></audio>')+'<small data-gv="1" style="cursor:pointer">'+esc(x.model||'')+(x.voice?' · '+esc(x.voice[0].toUpperCase()+x.voice.slice(1)):'')+(x.title?' · «'+esc(x.title)+'»':'')+(x.cost||x.price?' · '+rub(x.cost||x.price):'')+' · '+esc(x.prompt||'')+'</small></div>';
   var body=run?'<div class="ph" data-run="'+esc(x.id)+'" data-at="'+(x.at||Date.now())+'" data-eta="'+etaOf(x)+'" data-kind="'+t+'" style="aspect-ratio:'+(x.ar&&x.ar!=='auto'?x.ar.replace(':','/'):'1/1')+'">'+runTxt(t,x.at||Date.now(),etaOf(x))+'</div><div class="bar"><i style="width:'+runPct(x.at||Date.now(),etaOf(x))+'%"></i></div>'
     :t==='img'?'<img src="'+esc(x.url)+'" alt="" loading="lazy">':'<video src="'+esc(x.url)+'#t=0.1" preload="metadata" muted playsinline></video><span class="play">▶</span>';
   return '<div class="gi" data-gi="'+i+'">'+body+'<small>'+esc(x.model||'')+(x.cost||x.price?' · '+rub(x.cost||x.price):'')+'</small></div>'}

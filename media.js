@@ -14,7 +14,7 @@ module.exports = function media(ctx) {
   const SAVER = ENV.SAVER_URL || '';             // функция media-saver
   const SAVER_KEY = ENV.SAVER_KEY || '';
   // наценка своя у каждой модели (так LURE не дороже Syntx и Higgsfield); можно поменять в lure.env: MARKUP_NB21=1.8
-  const MK = { nb21: 1.66, nbpro: 1.5, gpt26: 1.5, veof: 1.5, veo: 1.5, sd25: 1.5, sd2: 1.5, omni: 1.5, kl3: 1.5, kl26: 1.5, mc3: 1.5, mc26: 1.5, el4: 1.5, sfx: 1.5 };
+  const MK = { nb21: 1.66, nbpro: 1.5, gpt26: 1.5, veof: 1.5, veo: 1.5, sd25: 1.5, sd2: 1.5, omni: 1.5, kl3: 1.5, kl26: 1.5, mc3: 1.5, mc26: 1.5, el4: 1.5, sfx: 1.5, song: 1.5 };
   const MAX_JOBS = 3;                            // одновременно у одного человека
   const REF_CHARS = 2.7e6;                       // все фото-референсы вместе, символов base64 (лимит шлюзов Яндекса ~3,5 МБ)
 
@@ -66,6 +66,7 @@ module.exports = function media(ctx) {
       { k: 'el4', eta: 25, id: 'elevenlabs/eleven-v4', n: 'ElevenLabs v4', d: 'Озвучка текста живыми голосами, 21 голос', tts: true, max: 2000,
         perChar: 9507.456 / 1e6,
         voices: ['george', 'sarah', 'adam', 'alice', 'bella', 'bill', 'brian', 'callum', 'charlie', 'chris', 'daniel', 'eric', 'harry', 'jessica', 'laura', 'liam', 'lily', 'matilda', 'river', 'roger', 'will'] },
+      { k: 'song', eta: 150, id: 'suno/generate', n: 'Suno Песни', d: 'Песни с голосом и мелодии по описанию или твоему тексту', max: 5000, song: true, fixed: 15 },
       { k: 'sfx', eta: 60, id: 'suno/sounds', n: 'Suno Sounds', d: 'Звуковые эффекты, шумы и лупы по описанию', max: 500, loop: true, fixed: 2 }
     ]
   };
@@ -99,7 +100,16 @@ module.exports = function media(ctx) {
       if (o.prompt) inp.prompt = o.prompt;
       return inp;
     }
-    if (m.kind === 'snd') { const inp = { prompt: o.prompt }; if (m.loop) inp.soundLoop = !!o.loop; return inp; }
+    if (m.kind === 'snd') {
+      const inp = { prompt: o.prompt };
+      if (m.loop) inp.soundLoop = !!o.loop;
+      if (m.song) {
+        if (o.custom || o.instr) { inp.customMode = true; inp.style = o.style || o.prompt.slice(0, 1000); inp.title = o.title || 'LURE'; }
+        if (o.instr) inp.instrumental = true;
+        else if (o.gender) inp.vocalGender = o.gender;
+      }
+      return inp;
+    }
     const inp = { prompt: o.prompt };
     if (o.ar && m.ar.includes(o.ar) && o.ar !== 'auto') inp.aspect_ratio = o.ar;
     if (m.kind === 'img') {
@@ -145,6 +155,12 @@ module.exports = function media(ctx) {
     if (m.kind === 'snd') {
       if (m.voices) o.voice = m.voices.includes(b.voice) ? b.voice : m.voices[0];
       if (m.loop) o.loop = b.loop === true;
+      if (m.song) {
+        o.custom = b.custom === true; o.instr = b.instr === true;
+        o.gender = ['m', 'f'].includes(b.gender) ? b.gender : '';
+        o.style = String(b.style || '').trim().slice(0, 1000); o.title = String(b.title || '').trim().slice(0, 80);
+        if (!o.custom) o.prompt = o.prompt.slice(0, 3000);
+      }
       return o;
     }
     o.ar = m.ar.includes(b.ar) ? b.ar : m.ar[0];
@@ -174,7 +190,7 @@ module.exports = function media(ctx) {
   const heldOf = u => r2(u.held || 0);
   const safeId = id => String(id).replace(/[^\w-]/g, '_');
   const MEDIA_BUCKET = ENV.MEDIA_BUCKET || 'lure-media';
-  const pubJob = j => ({ id: j.id, kind: j.kind, model: j.n, k: j.k, prompt: j.o.prompt, ar: j.o.ar, dur: j.o.dur, res: j.o.res, voice: j.o.voice, status: j.status, price: j.price, cost: j.cost, url: j.url, at: j.at, err: j.err });
+  const pubJob = j => ({ id: j.id, kind: j.kind, model: j.n, k: j.k, prompt: j.o.prompt, ar: j.o.ar, dur: j.o.dur, res: j.o.res, voice: j.o.voice, title: j.o.title, status: j.status, price: j.price, cost: j.cost, url: j.url, at: j.at, err: j.err });
 
   async function polza(method, p, body) {
     const r = await fetch(POLZA + p, { method, headers: { Authorization: 'Bearer ' + POLZA_KEY, 'Content-Type': 'application/json' },
@@ -198,7 +214,7 @@ module.exports = function media(ctx) {
     j.status = status; Object.assign(j, extra || {});
     if (status === 'done') {
       addSpent(u, j.cost);
-      op(u, 'spend', -j.cost, j.n + ' · ' + (j.kind === 'img' ? 'картинка' : j.kind === 'snd' ? (BY[j.k] && BY[j.k].tts ? 'озвучка ' + j.o.prompt.length + ' симв.' : 'звук') : 'видео ' + j.o.dur + ' сек'));
+      op(u, 'spend', -j.cost, j.n + ' · ' + (j.kind === 'img' ? 'картинка' : j.kind === 'snd' ? (BY[j.k] && BY[j.k].tts ? 'озвучка ' + j.o.prompt.length + ' симв.' : BY[j.k] && BY[j.k].song ? 'песня' : 'звук') : 'видео ' + j.o.dur + ' сек'));
     }
     const list = gal(u.id); const i = list.findIndex(x => x.id === j.id);
     if (status === 'failed') { if (i >= 0) list.splice(i, 1); } else if (i >= 0) list[i] = pubJob(j); else list.unshift(pubJob(j));
@@ -269,7 +285,7 @@ module.exports = function media(ctx) {
     if (p === '/api/media/catalog') {
       await refreshPrices().catch(() => {});
       const out = {};
-      for (const kind of ['img', 'video', 'sound']) out[kind] = CAT[kind].map(x => ({ voices: x.voices || null, max: x.max || 0, loop: !!x.loop,
+      for (const kind of ['img', 'video', 'sound']) out[kind] = CAT[kind].map(x => ({ voices: x.voices || null, max: x.max || 0, loop: !!x.loop, song: !!x.song,
         perChar: x.tts ? (Number(ENV.TTS_RUB_PER_CHAR) || x.perChar) * markup(x) : 0, k: x.k, n: x.n, d: x.d, refs: x.refs, ar: x.ar, res: x.res || null, q: x.q || null, dur: x.dur || null, audio: !!x.audio, eta: x.eta || 60, mc: !!x.mc, ps: x.mc ? perSecTable(x) : null, audioDef: x.audioDef !== false,
         vrefs: x.vrefs || 0, vmax: x.vmax || 0, vsum: x.vsum || 0, arefs: x.arefs || 0, rrefs: x.rrefs || 0, refsV: x.refsV || 0,
         table: priceTable(x), tableV: x.vrefs ? priceTable(x, true) : null }));
@@ -310,6 +326,7 @@ module.exports = function media(ctx) {
       if (!mod) return send(res, 200, { ok: false, error: 'bad_model' });
       const o = clean(mod, b);
       if (mod.tts && !SAVER) return send(res, 200, { ok: false, error: 'media_off' });
+      if (mod.song && o.custom && o.style.length < 2) return send(res, 200, { ok: false, error: 'no_style' });
       if (o.prompt.length < 2 && !mod.mc) return send(res, 200, { ok: false, error: 'no_prompt' });
       if (mod.mc) {
         const pre = 'https://storage.yandexcloud.net/' + MEDIA_BUCKET + '/up/' + safeId(u.id) + '/';
