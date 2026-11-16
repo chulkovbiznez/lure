@@ -141,6 +141,7 @@ function dlgClean(d) {
   const msgs = (Array.isArray(d.msgs) ? d.msgs : []).filter(x => x && (x.role === 'user' || x.role === 'assistant') && typeof x.content === 'string').map(x => {
     const o = { role: x.role, content: x.content };
     if (x.role === 'user' && x.web) o.web = 1;
+    if (x.role === 'user' && x.video && typeof x.video === 'object') o.video = { name: String(x.video.name || 'видео').slice(0, 120), dur: Number(x.video.dur) || 0, frames: Number(x.video.frames) || 0 };
     if (x.role === 'user') {   // вложения: фото (ссылки на наше хранилище) и текст файлов
       if (Array.isArray(x.imgs)) { const a = x.imgs.filter(z => typeof z === 'string' && UP_IMG.test(z)).slice(0, 4); if (a.length) o.imgs = a; }
       if (Array.isArray(x.files)) { const f = x.files.filter(z => z && typeof z.name === 'string' && typeof z.text === 'string').slice(0, 3).map(z => ({ name: z.name.slice(0, 120), text: z.text.slice(0, 60000) })); if (f.length) o.files = f; }
@@ -371,6 +372,7 @@ async function chat(req, res, u) {
     const role = x.role === 'assistant' ? 'assistant' : x.role === 'system' ? 'system' : 'user';
     let text = String(x.content || '');
     if (role === 'user' && Array.isArray(x.files)) for (const f of x.files.slice(0, 3)) if (f && typeof f.text === 'string') text += '\n\n[Файл: ' + String(f.name || 'файл').slice(0, 120) + ']\n' + f.text.slice(0, 60000);
+    if (role === 'user' && x.video && typeof x.video === 'object') { const d = Math.round(Number(x.video.dur) || 0); text = '[Видео «' + String(x.video.name || 'видео').slice(0, 120) + '», длина ' + Math.floor(d / 60) + ':' + String(d % 60).padStart(2, '0') + '. Приложена раскадровка: ' + (Number(x.video.frames) || 0) + ' кадров на листах по 3×3, слева направо и сверху вниз, на каждом кадре время.]\n' + text; }
     const imgs = role === 'user' && Array.isArray(x.imgs) ? x.imgs.filter(z => keepImg.has(i + '|' + z)) : [];
     const old = role === 'user' && Array.isArray(x.imgs) ? x.imgs.length - imgs.length : 0;
     if (old > 0) text = '[было фото: ' + old + ' шт.]\n' + text;
