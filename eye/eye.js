@@ -1,4 +1,5 @@
-/* EYE v3 (16.11.2026) — аудио или видео, звонок до 4 человек (кнопка «+» в звонке зовёт своего друга).
+/* EYE v3.1 (16.11.2026) — камера выключена: аватарка или серый «ноунейм», имя и фамилия, аудиоволны.
+   EYE v3 (16.11.2026) — аудио или видео, звонок до 4 человек (кнопка «+» в звонке зовёт своего друга).
    Было: EYE v2.3 (16.11.2026) — видеозвонки EAGLES. Подключается на страницах сайта одной строкой:
    <script src="/eye.js?v=2" defer></script>   (файл лежит в бакете сайта app.eaglesteam.ru)
    Сам находит ключ входа EAGLES, держит связь с сервером EYE, показывает входящий звонок на любой странице.
@@ -101,6 +102,10 @@
     '.eye-tile.inv{opacity:.8}.eye-tile:not(.inv) .eye-av::before,.eye-tile:not(.inv) .eye-av::after{animation:none;opacity:0}' +
     '.eye-tile .tn{display:none}.eye-grid.g .eye-tile.hasv .tn{display:block;position:absolute;left:10px;bottom:8px;font:800 13px/1 Montserrat,sans-serif;text-shadow:0 1px 6px rgba(0,0,0,.9)}' +
     '.eye-c.off#eyeAdd{opacity:.4}.eye-pick.top{z-index:2147483002}.eye-pick .eye-chips{justify-content:center;flex-wrap:wrap}.eye-pick .s{margin-top:10px;font:700 11px/1.4 Montserrat,sans-serif;color:#6d675f;text-align:center}' +
+    '.eye-av div img{width:100%;height:100%;object-fit:cover;border-radius:50%}.eye-av div .eye-nn{width:62%;height:62%;fill:#6f6a64;margin-top:12%}.eye-tile .eye-av div{background:radial-gradient(circle at 50% 30%,#3a3631,#1c1a18)}' +
+    '.eye-tile .eye-av{transition:box-shadow .08s linear}.eye-wv{display:flex;align-items:center;gap:4px;height:34px;margin-top:14px}.eye-wv i{display:block;width:5px;height:34px;border-radius:3px;background:linear-gradient(180deg,#fff1b8,#ffd23f 50%,#d98d16);transform:scaleY(.15);transform-origin:50% 50%}' +
+    '.eye-grid.g .eye-wv{height:22px;margin-top:10px}.eye-grid.g .eye-wv i{height:22px;width:4px}.eye-tile.inv .eye-wv,.eye-tile.moff .eye-wv{opacity:.25}.eye-lv.off{display:none}' +
+    '.eye-tile .eye-nm{padding:0 10px}' +
     '@media (prefers-reduced-motion:reduce){.eye-av::before,.eye-av::after,.eye-yes i,.eye-card{animation:none}}';
   function addCss() { if (document.getElementById('eye-css')) return; var s = document.createElement('style'); s.id = 'eye-css'; s.textContent = css; document.head.appendChild(s); }
 
@@ -122,7 +127,7 @@
     clearOv(); addCss();
     ov = document.createElement('div'); ov.className = 'eye-ov eye-ring-bg'; ov.setAttribute('role', 'dialog');
     ov.innerHTML = '<div class="eye-brand">EYE</div><div class="eye-kind">' + (call && call.video === false ? 'Аудиозвонок' : 'Видеозвонок') + ' EAGLES</div>' +
-      '<div class="eye-av"><div>' + esc(initials(peer.name)) + '</div></div>' +
+      '<div class="eye-av"><div>' + faceHtml(peer) + '</div></div>' +
       '<div class="eye-nm">' + esc(peer.name || ('ID ' + peer.id)) + '</div><div class="eye-st" id="eyeSt">' + esc(status) + '</div>' +
       '<div class="eye-acts">' +
       (incoming ? '<button class="eye-b eye-no" id="eyeNo"><i>' + IC.end + '</i>Отклонить</button><button class="eye-b eye-yes" id="eyeYes"><i>' + (call && call.video === false ? IC.tel : IC.cam) + '</i>Принять</button>'
@@ -150,6 +155,7 @@
     ov.querySelector('#eyeCam').onclick = function () { toggle('video', this); };
     ov.querySelector('#eyeAdd').onclick = addPick;
     ov.querySelector('#eyeFlip').onclick = flip;
+    if (!wvRaf) wvRaf = requestAnimationFrame(waves);
     call.t0 = Date.now();
     clearInterval(call.timer);
     call.timer = setInterval(function () {
@@ -166,25 +172,30 @@
   function layout() {
     if (!call || !ov) return;
     var g = ov.querySelector('#eyeGrid'); if (!g) return;
-    var list = vals(call.peers).concat(vals(call.inv)), keep = [];
+    var list = vals(call.peers).concat(vals(call.inv)), keep = [], vis = true;
     list.forEach(function (x) {
       if (!x.tile) {
         x.tile = document.createElement('div'); x.tile.className = 'eye-tile';
-        x.tile.innerHTML = '<video autoplay playsinline></video><div class="ta"><div class="eye-av"><div>' + esc(initials(x.name)) + '</div></div>' +
-          '<div class="eye-nm">' + esc(x.name || ('ID ' + x.id)) + '</div><div class="eye-st"></div></div><div class="tn">' + esc(first(x.name) || ('ID ' + x.id)) + '</div>';
+        x.tile.innerHTML = '<video autoplay playsinline></video><div class="ta"><div class="eye-av"><div>' + faceHtml(x) + '</div></div>' +
+          '<div class="eye-nm">' + esc(x.name || ('ID ' + x.id)) + '</div><div class="eye-st"></div>' +
+          '<div class="eye-wv" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div><div class="tn">' + esc(first(x.name) || ('ID ' + x.id)) + '</div>';
       }
       var v = x.tile.querySelector('video');
       if (x.stream && v.srcObject !== x.stream) v.srcObject = x.stream;
-      x.tile.classList.toggle('hasv', hasVideo(x.stream));
+      var hv = hasVideo(x.stream) && !x.camOff; vis = vis && !hv;
+      x.tile.classList.toggle('hasv', hv);
+      x.tile.classList.toggle('moff', !!x.micOff);
+      if (!x.faceOk && !x.inv) { var f = x.tile.querySelector('.eye-av>div'); if (f && avOf(x.id) !== null) { f.innerHTML = faceHtml(x); x.faceOk = true; } }
       x.tile.classList.toggle('inv', !!x.inv);
-      x.tile.querySelector('.eye-st').textContent = x.inv ? 'Звоним…' : x.cs === 'connected' ? (list.length > 1 ? '' : (call.video === false ? 'Аудиозвонок EYE' : '')) : 'соединяю…';
+      x.tile.querySelector('.eye-st').textContent = x.inv ? 'Звоним…' : x.micOff && x.cs === 'connected' ? 'микрофон выключен' : x.camOff && x.cs === 'connected' && call.video !== false ? 'камера выключена' : x.cs === 'connected' ? (list.length > 1 ? '' : (call.video === false ? 'Аудиозвонок EYE' : '')) : 'соединяю…';
       if (x.tile.parentNode !== g) g.appendChild(x.tile);
       keep.push(x.tile);
     });
     Array.prototype.slice.call(g.children).forEach(function (t) { if (keep.indexOf(t) < 0) t.remove(); });
     var n = Math.max(1, Math.min(list.length, 3));
     g.className = 'eye-grid n' + n + (list.length > 1 ? ' g' : '');
-    var who = ov.querySelector('#eyeWho'); if (who) who.textContent = list.length === 1 ? (list[0].name || '') : '';
+    var who = ov.querySelector('#eyeWho'); if (who) who.textContent = list.length === 1 && !vis ? (list[0].name || '') : '';
+    var lv = ov.querySelector('#eyeLv'); if (lv) lv.classList.toggle('off', !(call.local && call.local.getVideoTracks().some(function (t) { return t.enabled; })));
     var add = ov.querySelector('#eyeAdd'); if (add) add.classList.toggle('off', list.length >= MAXP - 1);
     var ps = vals(call.peers), q = ov.querySelector('#eyeQ');
     if (q) {
@@ -234,6 +245,63 @@
     var tr = kind === 'audio' ? call.local.getAudioTracks() : call.local.getVideoTracks();
     tr.forEach(function (x) { x.enabled = !x.enabled; });
     btn.classList.toggle('off', tr.length && !tr[0].enabled);
+    vals(call.peers).forEach(sendState); layout();
+  }
+  /* v3.1: по каналу данных сообщаем собеседникам, включены ли у меня камера и микрофон (иначе у них чёрный экран) */
+  function myState() {
+    var v = call && call.local ? call.local.getVideoTracks() : [], a = call && call.local ? call.local.getAudioTracks() : [];
+    return { cam: v.some(function (t) { return t.enabled; }), mic: a.some(function (t) { return t.enabled; }) };
+  }
+  function sendState(P) { try { if (P.dc && P.dc.readyState === 'open') P.dc.send(JSON.stringify(myState())); } catch (e) {} }
+  /* аватарка: фото из профиля EAGLES или серый «ноунейм» */
+  var AV = {};
+  var NONAME = '<svg class="eye-nn" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="24" r="12"/><path d="M10 58c0-13 10-20 22-20s22 7 22 20z"/></svg>';
+  function avOf(id) {
+    if (AV[id] !== undefined) return AV[id];
+    var f = byId(id); if (f) return (AV[id] = f.av || '');
+    if (FRON !== true) return (AV[id] = '');
+    AV[id] = null;   // спрашиваем у сервера EAGLES один раз
+    api({ action: 'fr_state', 'with': id }).then(function (r) { AV[id] = (r && r.peer && r.peer.av) || ''; layout(); }).catch(function () { AV[id] = ''; });
+    return null;
+  }
+  function faceHtml(x) {
+    var a = avOf(x.id);
+    return a && /^(data:image\/|https:\/\/)/.test(a) ? '<img alt="" src="' + esc(a) + '">' : NONAME;
+  }
+  /* аудиоволны: громкость голоса каждого собеседника (и моя — на кнопке микрофона) */
+  var actx = null, wvRaf = 0;
+  function audioCtx() {
+    try { if (!actx) { var A = window.AudioContext || window.webkitAudioContext; if (A) actx = new A(); } if (actx && actx.state === 'suspended') actx.resume(); } catch (e) {}
+    return actx;
+  }
+  function meter(st) {
+    var c = audioCtx(); if (!c || !st || !st.getAudioTracks().length) return null;
+    try { var an = c.createAnalyser(); an.fftSize = 256; c.createMediaStreamSource(st).connect(an); return { an: an, buf: new Uint8Array(an.fftSize), st: st }; } catch (e) { return null; }
+  }
+  function level(m) {
+    if (!m) return 0;
+    m.an.getByteTimeDomainData(m.buf);
+    var sum = 0; for (var i = 0; i < m.buf.length; i++) { var d = (m.buf[i] - 128) / 128; sum += d * d; }
+    var rms = Math.sqrt(sum / m.buf.length);
+    return rms < 0.004 ? 0 : Math.min(1, Math.sqrt(rms * 6));
+  }
+  function waves() {
+    wvRaf = 0;
+    if (!call || !ov) return;
+    vals(call.peers).forEach(function (P) {
+      if (!P.tile) return;
+      if (P.stream && (!P.mt || P.mt.st !== P.stream || (!P.mt.an && P.stream.getAudioTracks().length))) P.mt = meter(P.stream) || { st: P.stream };
+      var l = P.micOff ? 0 : level(P.mt && P.mt.an ? P.mt : null);
+      P.lv = (P.lv || 0) * 0.6 + l * 0.4;
+      var bars = P.tile.querySelectorAll('.eye-wv i');
+      for (var i = 0; i < bars.length; i++) { var k = 1 - Math.abs(i - 3) / 4; bars[i].style.transform = 'scaleY(' + (0.15 + P.lv * k * (0.7 + 0.3 * Math.sin(Date.now() / 90 + i * 1.7))).toFixed(3) + ')'; }
+      var av = P.tile.querySelector('.eye-av'); if (av) av.style.boxShadow = '0 0 ' + Math.round(6 + P.lv * 40) + 'px ' + Math.round(P.lv * 14) + 'px rgba(255,210,63,' + (0.15 + P.lv * 0.55).toFixed(2) + ')';
+    });
+    if (call.local && (!call.mt || call.mt.st !== call.local)) call.mt = meter(call.local) || { st: call.local };
+    var mic = ov.querySelector('#eyeMic'), ml = myState().mic ? level(call.mt && call.mt.an ? call.mt : null) : 0;
+    call.mlv = (call.mlv || 0) * 0.6 + ml * 0.4;
+    if (mic) mic.style.boxShadow = '0 0 0 ' + Math.round(call.mlv * 9) + 'px rgba(255,210,63,' + (call.mlv * 0.45).toFixed(2) + ')';
+    wvRaf = requestAnimationFrame(waves);
   }
   var facing = 'user';
   function flip() {
@@ -282,6 +350,11 @@
     delete call.inv[id];
     var P = call.peers[id] = { id: id, name: x.name || '', iceQ: [], stream: null, cs: 'new' };
     var pc = P.pc = new RTCPeerConnection({ iceServers: ICE });
+    try {
+      P.dc = pc.createDataChannel('eye', { negotiated: true, id: 0 });
+      P.dc.onopen = function () { sendState(P); };
+      P.dc.onmessage = function (e) { try { var d = JSON.parse(e.data); P.camOff = d.cam === false; P.micOff = d.mic === false; layout(); } catch (x) {} };
+    } catch (e) {}
     pc.onicecandidate = function (e) { if (e.candidate && call) send({ t: 'ice', cid: call.cid, to: id, c: e.candidate }); };
     pc.ontrack = function (e) {
       if (e.streams && e.streams[0]) P.stream = e.streams[0];
@@ -324,7 +397,7 @@
     stopTone(); setSt(call.video === false ? 'Включаю микрофон…' : 'Включаю камеру…');
     media(call.video).then(function (s) {
       if (!call) { s.getTracks().forEach(function (t) { t.stop(); }); return; }
-      call.local = s; call.live = true; liveScreen(); makePeer(call.peer, false); send({ t: 'accept', cid: call.cid });
+      audioCtx(); call.local = s; call.live = true; liveScreen(); makePeer(call.peer, false); send({ t: 'accept', cid: call.cid });
     }).catch(function () { if (call) send({ t: 'decline', cid: call.cid }); finish(CAMHELP); });
   }
 
@@ -332,6 +405,8 @@
     if (call) {
       clearInterval(call.timer);
       vals(call.peers).forEach(function (P) { try { P.pc.close(); } catch (e) {} });
+      if (wvRaf) { cancelAnimationFrame(wvRaf); wvRaf = 0; }
+      if (actx) { try { actx.close(); } catch (e) {} actx = null; }
       if (call.local) call.local.getTracks().forEach(function (t) { t.stop(); });
     }
     call = null; clearOv(); if (msg) toast(msg);
@@ -437,6 +512,7 @@
     if (!ws || ws.readyState !== 1) { toast('EYE сейчас недоступен. Проверь интернет и попробуй ещё раз.'); return; }
     try { if (window.Notification && Notification.permission === 'default') Notification.requestPermission(); } catch (e) {}
     call = { cid: '', role: 'caller', peer: { id: String(id), name: name || '' }, video: video, peers: {}, inv: {} };
+    audioCtx();
     ringScreen(call.peer, video ? 'Включаю камеру…' : 'Включаю микрофон…', false);
     media(video).then(function (s) {
       if (!call) { s.getTracks().forEach(function (t) { t.stop(); }); return; }
