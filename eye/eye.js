@@ -1,4 +1,5 @@
-/* EYE v4 (16.11.2026) — EYE как продукт: золотая кнопка EYE на главной вместо «Чата с командой», пункт EYE в нижнем меню,
+/* EYE v4.1 (16.11.2026) — chat.html v2 сама рисует шапку EYE и три вкладки (без мелькания «Сообщений»); eye.js не дублирует вкладку «Звонки».
+   EYE v4 (16.11.2026) — EYE как продукт: золотая кнопка EYE на главной вместо «Чата с командой», пункт EYE в нижнем меню,
    красная цифра = непрочитанные сообщения + пропущенные звонки + запросы в друзья; в окне EYE вкладки «Чаты», «Звонки», «Объявления».
    «Звонки»: друзья с кнопками аудио/видео, недавние и пропущенные звонки (журнал хранится в этом телефоне/компьютере), добавить друга по ID.
    EYE v3.3 (16.11.2026) — кнопка «показать экран» есть и на телефоне: пробуем, иначе понятная подсказка.
@@ -842,11 +843,14 @@
         var dt = b.getAttribute('data-t');
         if (dt === 'chats' && b.firstChild && b.firstChild.nodeType === 3) b.firstChild.nodeValue = 'Чаты';
         if (dt === 'ann') ann = b;
-        b.addEventListener('click', function () { CALLS_ON = false; var v = document.getElementById('vCalls'); if (v) v.hidden = true; });
+        if (dt !== 'calls') b.addEventListener('click', function () { CALLS_ON = false; var v = document.getElementById('vCalls'); if (v) v.hidden = true; });
       });
-      var cb = document.createElement('button'); cb.type = 'button'; cb.setAttribute('data-t', 'calls'); cb.id = 'eyeTabCalls';
-      cb.innerHTML = 'Звонки<span class="ch-n" id="nCalls" hidden></span>';
-      tabs.insertBefore(cb, ann);
+      var cb = document.getElementById('eyeTabCalls');
+      if (!cb) {
+        cb = document.createElement('button'); cb.type = 'button'; cb.setAttribute('data-t', 'calls'); cb.id = 'eyeTabCalls';
+        cb.innerHTML = 'Звонки<span class="ch-n" id="nCalls" hidden></span>';
+        tabs.insertBefore(cb, ann);
+      }
       tabs.style.gridTemplateColumns = 'repeat(3,1fr)';
       var v = document.createElement('div'); v.id = 'vCalls'; v.className = 'eye-calls'; v.hidden = true;
       var va = document.getElementById('vAnn'); (va || document.getElementById('vChats')).insertAdjacentElement('afterend', v);

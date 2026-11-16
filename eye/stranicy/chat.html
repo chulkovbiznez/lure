@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>EYE · EAGLES</title>
+<meta name="theme-color" content="#070708">
+<style>html,body{margin:0;padding:0;background:#070708;}</style>
+</head><body>
+<!-- EYE (бывшие «Сообщения»), chat.html v2 16.11.2026: шапка EYE и вкладки Чаты/Звонки/Объявления прямо в странице (без мелькания). Было: EAGLES · Сообщения (страница chat) v1, 28.10.2026: личная переписка (только текст, писать может PRO) и «Объявление команде» для личной линии -->
+<script>
+/* EAGLES FREE: выход через 30 дней бездействия + ключ входа.
+   Свои ключи в телефоне (eaglesfree_*), командный вход EAGLES они не трогают.
+   Все запросы к серверу FREE сами получают ключ (обёртка fetch ниже). */
+(function(){
+  var TTL = 30 * 24 * 60 * 60 * 1000, KEY = 'eaglesfree_last_activity', SKEY = 'eaglesfree_session';
+  function has(){ try{ return !!localStorage.getItem('eaglesfree_id'); }catch(e){ return false; } }
+  function clearAll(){
+    try{
+      localStorage.removeItem('eaglesfree_id');
+      localStorage.removeItem('eaglesfree_name');
+      localStorage.removeItem(KEY);
+      localStorage.removeItem(SKEY);
+      localStorage.removeItem('eaglesfree_plan');
+    }catch(e){}
+  }
+  window.eaglesFreeClearLogin = clearAll;
+  function expired(){
+    var last = Number(localStorage.getItem(KEY) || 0);
+    return last > 0 && (Date.now() - last) > TTL;
+  }
+  try{
+    if(has() && !localStorage.getItem(SKEY)) clearAll();
+    if(has()){
+      if(expired()) clearAll();
+      else localStorage.setItem(KEY, String(Date.now()));
+    }
+  }catch(e){}
+
+  if(window.fetch && !window.__egFreeFetchWrapped){
+    window.__egFreeFetchWrapped = true;
+    var origFetch = window.fetch;
+    window.fetch = function(input, init){
+      var s = '';
+      try{
+        if(typeof input === 'string' && input.indexOf('functions.yandexcloud.net/') !== -1){
+          s = localStorage.getItem(SKEY) || '';
+          if(s){
+            if(init && init.body && window.FormData && init.body instanceof FormData){
+              init.body.append('sess', s);
+            } else {
+              input = input + (input.indexOf('?') === -1 ? '?' : '&') + 'sess=' + encodeURIComponent(s);
+            }
+          }
+        }
+      }catch(e){}
+      var p = origFetch.call(window, input, init);
+      if(s){
+        p.then(function(r){
+          if(!r || r.type === 'opaque') return;
+          r.clone().json().then(function(j){
+            if(j && j.ok === false && j.error === 'auth'){ clearAll(); location.reload(); }
+          }).catch(function(){});
+        }).catch(function(){});
+      }
+      return p;
+    };
+  }
+
+  var lastWrite = Date.now(), lastCheck = 0;
+  function touch(){
+    var now = Date.now();
+    if(now - lastCheck < 2000) return;
+    lastCheck = now;
+    try{
+      if(!has()) return;
+      if(expired()){ clearAll(); location.reload(); return; }
+      if(now - lastWrite > 15000){ localStorage.setItem(KEY, String(now)); lastWrite = now; }
+    }catch(e){}
+  }
+  ['pointerdown','touchstart','keydown','scroll','mousemove','wheel'].forEach(function(ev){
+    window.addEventListener(ev, touch, { passive:true, capture:true });
+  });
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden){ lastCheck = 0; touch(); } });
+  setInterval(function(){
+    try{ if(has() && expired()){ clearAll(); location.reload(); } }catch(e){}
+  }, 60000);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&display=swap">
+<div class="ch-page">
+<style>
+  .ch-page{ --bg:#070708; --card:#141217; --line:#2a2622; --gold:#ffd23f; --orange:#ff6a2b; --fg:#f4f4f2; --muted:#a29b90; --dim:#6d675f;
+    --f:"Montserrat",system-ui,-apple-system,"Segoe UI",sans-serif;
+    background:var(--bg); color:var(--fg); min-height:100vh; font-family:var(--f); padding:18px 16px 120px; box-sizing:border-box; -webkit-text-size-adjust:none; }
+  .ch-page *{ box-sizing:border-box; }
+  .ch-wrap{ max-width:520px; margin:0 auto; }
+  .ch-top{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .ch-back{ width:38px; height:38px; border-radius:11px; border:1px solid var(--line); background:var(--card); color:var(--gold); display:grid; place-items:center; text-decoration:none; font:900 18px var(--f); cursor:pointer; flex:none; }
+  .ch-h1{ font:900 24px var(--f); margin:0; letter-spacing:-.3px; }
+  .ch-tabs{ display:grid; grid-template-columns:repeat(3,1fr); gap:6px; padding:4px; border-radius:14px; background:var(--card); border:1px solid var(--line); margin-bottom:14px; }
+  .ch-tabs button{ position:relative; height:40px; border:0; border-radius:10px; background:none; color:var(--muted); font:800 14px var(--f); cursor:pointer; }
+  .ch-tabs button.on{ background:linear-gradient(180deg,#2a2016,#17110b); color:var(--gold); box-shadow:inset 0 0 0 1px rgba(255,210,63,.4); }
+  .ch-n{ display:inline-block; min-width:18px; height:18px; padding:0 5px; margin-left:6px; border-radius:9px; background:#e8321a; color:#fff; font:900 11px/18px var(--f); vertical-align:1px; }
+  .ch-n[hidden]{ display:none; }
+  .ch-item{ display:flex; align-items:center; gap:12px; width:100%; padding:12px; margin-bottom:8px; border-radius:16px; background:var(--card); border:1px solid var(--line); color:var(--fg); text-align:left; cursor:pointer; font-family:var(--f); }
+  .ch-item.un{ border-color:rgba(255,106,43,.6); }
+  .ch-av{ position:relative; width:46px; height:46px; flex:none; border-radius:50%; display:grid; place-items:center; background:#1d1a17; color:var(--gold); font:900 16px var(--f); border:2px solid #4a4a52; }
+  .ch-av img{ width:100%; height:100%; border-radius:50%; object-fit:cover; }
+  .ch-av.pro{ border-color:var(--gold); }
+  .ch-it{ flex:1; min-width:0; }
+  .ch-it b{ display:block; font:800 15px var(--f); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ch-it small{ display:block; color:var(--muted); font:600 12.5px/1.35 var(--f); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px; }
+  .ch-tm{ align-self:flex-start; color:var(--dim); font:700 11px var(--f); }
+  .ch-dot{ width:10px; height:10px; border-radius:50%; background:#e8321a; flex:none; }
+  .ch-empty{ padding:22px 16px; border-radius:16px; border:1px dashed var(--line); color:var(--muted); font:600 13.5px/1.5 var(--f); text-align:center; }
+  .ch-empty a{ color:var(--gold); }
+  .ch-room{ display:none; }
+  .ch-room.on{ display:block; }
+  .ch-peer{ display:flex; align-items:center; gap:10px; flex:1; min-width:0; }
+  .ch-peer b{ display:block; font:900 16px var(--f); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ch-peer small{ display:block; font:700 12px var(--f); color:var(--muted); }
+  .ch-pk{ display:inline-block; padding:1px 7px; border-radius:8px; font:900 10.5px/16px var(--f); margin-right:4px; }
+  .ch-pk.e12{ background:linear-gradient(135deg,#fff0a8,#ffd23f 45%,#ff9f1c); color:#3a2300; }
+  .ch-pk.e6{ background:linear-gradient(135deg,#c9ffd9,#7ee8a2); color:#0b3b1c; }
+  .ch-pk.e1{ background:#f2f2f4; color:#1a1a1f; }
+  .ch-pk.free{ background:#2a2a30; color:#9a9aa2; }
+  .ch-lv{ color:#ff8c28; font-weight:900; }
+  .ch-menu{ width:38px; height:38px; border-radius:11px; border:1px solid var(--line); background:var(--card); color:var(--muted); font:900 18px var(--f); cursor:pointer; flex:none; }
+  .ch-msgs{ display:flex; flex-direction:column; gap:6px; min-height:40vh; padding:6px 0 12px; }
+  .ch-b{ max-width:82%; padding:9px 12px 6px; border-radius:16px 16px 16px 4px; background:var(--card); border:1px solid var(--line); font:600 14.5px/1.42 var(--f); white-space:pre-wrap; word-wrap:break-word; }
+  .ch-b.me{ align-self:flex-end; border-radius:16px 16px 4px 16px; background:linear-gradient(135deg,#3a2614,#2a1b0e); border-color:rgba(255,140,40,.45); }
+  .ch-b a{ color:var(--gold); }
+  .ch-b i{ display:block; text-align:right; font:700 10.5px var(--f); font-style:normal; color:var(--dim); margin-top:2px; }
+  .ch-day{ align-self:center; padding:3px 10px; border-radius:10px; background:#141217; color:var(--dim); font:700 11px var(--f); margin:6px 0; }
+  .ch-form{ position:fixed; left:0; right:0; bottom:calc(64px + env(safe-area-inset-bottom,0px)); z-index:40; padding:8px 16px; background:rgba(7,7,8,.92); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); border-top:1px solid var(--line); }
+  .ch-form .in{ max-width:520px; margin:0 auto; display:flex; gap:8px; align-items:flex-end; }
+  .ch-form textarea{ flex:1; min-height:44px; max-height:140px; resize:none; padding:11px 14px; border-radius:14px; border:1px solid #3a3228; background:#141217; color:var(--fg); font:600 15px/1.35 var(--f); outline:none; }
+  .ch-form textarea:focus{ border-color:var(--gold); }
+  .ch-send{ width:46px; height:46px; flex:none; border:0; border-radius:14px; background:linear-gradient(135deg,#ffd23f,#ff8c28); color:#1a0d04; cursor:pointer; display:grid; place-items:center; }
+  .ch-send svg{ width:22px; height:22px; }
+  .ch-send:disabled{ opacity:.45; }
+  .ch-lock{ max-width:520px; margin:0 auto; display:flex; gap:10px; align-items:center; padding:10px 12px; border-radius:14px; background:#1d1712; border:1px solid rgba(255,210,63,.4); font:700 13px/1.35 var(--f); color:#ffe08a; }
+  .ch-lock a{ flex:none; padding:9px 12px; border-radius:11px; background:linear-gradient(135deg,#ffd23f,#ff8c28); color:#1a0d04; font:900 13px var(--f); text-decoration:none; }
+  .ch-note{ color:var(--muted); font:600 12.5px/1.45 var(--f); margin:8px 2px 0; }
+  .ch-ann{ padding:14px; margin-bottom:10px; border-radius:16px; background:var(--card); border:1px solid var(--line); }
+  .ch-ann .w{ display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .ch-ann .w .ch-av{ width:36px; height:36px; font-size:13px; }
+  .ch-ann .w b{ font:800 14px var(--f); }
+  .ch-ann .w small{ display:block; color:var(--dim); font:700 11.5px var(--f); }
+  .ch-ann p{ margin:0; font:600 14.5px/1.45 var(--f); white-space:pre-wrap; word-wrap:break-word; }
+  .ch-ann p a{ color:var(--gold); }
+  .ch-new{ padding:14px; margin-bottom:16px; border-radius:18px; background:linear-gradient(180deg,#1d1712,#100d0b); border:1px solid rgba(255,210,63,.4); }
+  .ch-new h3{ margin:0 0 4px; font:900 15px var(--f); color:var(--gold); }
+  .ch-new textarea{ width:100%; min-height:90px; margin-top:10px; padding:11px 13px; border-radius:14px; border:1px solid #3a3228; background:#141217; color:var(--fg); font:600 14.5px/1.4 var(--f); resize:vertical; outline:none; }
+  .ch-find{ display:flex; gap:8px; margin-bottom:12px; }
+  .ch-find input{ flex:1; min-width:0; height:46px; padding:0 14px; border-radius:14px; border:1px solid #3a3228; background:#141217; color:var(--fg); font:700 16px var(--f); outline:none; }
+  .ch-find input:focus{ border-color:var(--gold); }
+  .ch-find button{ flex:none; height:46px; padding:0 16px; border:0; border-radius:14px; background:linear-gradient(135deg,#ffd23f,#ff8c28); color:#1a0d04; font:900 14px var(--f) !important; cursor:pointer; }
+  .ch-find button:disabled{ opacity:.45; }
+  .ch-find[hidden]{ display:none; }
+  .ch-btn{ display:block; width:100%; margin-top:10px; height:48px; border:0; border-radius:14px; background:linear-gradient(135deg,#ffd23f,#ff8c28); color:#1a0d04; font:900 15px var(--f); cursor:pointer; }
+  .ch-btn:disabled{ opacity:.45; }
+  .ch-btn.sure{ background:#ff6a2b; color:#fff; }
+  .ch-sheet{ position:fixed; inset:0; z-index:90; background:rgba(0,0,0,.5); display:none; align-items:flex-end; }
+  .ch-sheet.on{ display:flex; }
+  .ch-sheet .in{ width:100%; max-width:520px; margin:0 auto; padding:14px 16px calc(18px + env(safe-area-inset-bottom)); border-radius:22px 22px 0 0; background:#141217; border:1px solid var(--line); }
+  .ch-sheet button{ display:block; width:100%; height:48px; margin-top:8px; border-radius:14px; border:1px solid var(--line); background:#1d1a17; color:var(--fg); font:800 15px var(--f); cursor:pointer; }
+  .ch-sheet button.red{ color:#ff8080; border-color:#5a2a2a; }
+  .ch-toast{ position:fixed; left:50%; bottom:calc(140px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%); z-index:99; padding:10px 16px; border-radius:12px; background:#22190e; border:1px solid #e9a23b; color:#ffe08a; font:700 13px var(--f); opacity:0; transition:opacity .2s; pointer-events:none; max-width:90%; text-align:center; }
+  .ch-toast.on{ opacity:1; }
+  .ch-page .tabbar{ position:fixed; left:0; right:0; bottom:0; z-index:50; display:grid; grid-template-columns:repeat(4,1fr); padding:8px max(8px,env(safe-area-inset-left,0px)) calc(8px + env(safe-area-inset-bottom,0px));
+    background:rgba(12,11,13,.86); -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); border-top:1px solid #2a2622; }
+  .ch-page .tab-item{ position:relative; display:grid; justify-items:center; gap:3px; padding:6px 0; color:#6d675f; font:700 11px var(--f); text-decoration:none; }
+  .ch-page .tab-item svg{ width:24px; height:24px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .ch-page .tab-item.active{ color:#ff6a2b; }
+  /* внутри окна в Профиле: без нижней панели, своя кнопка «закрыть» */
+  html.emb .ch-page{ padding:14px 14px 20px; min-height:100%; }
+  html.emb .ch-page .tabbar{ display:none; }
+  html.emb .ch-form{ bottom:0; padding-bottom:calc(10px + env(safe-area-inset-bottom,0px)); }
+  .ch-page .tab-item.active::before{ content:""; position:absolute; top:-8px; left:30%; right:30%; height:3px; border-radius:0 0 3px 3px; background:#ff6a2b; box-shadow:0 0 12px #ff6a2b; }
+</style>
+<div class="ch-wrap">
+  <div id="chNoLogin" class="ch-empty" style="display:none">Ты ещё не вошёл в систему. <a href="/">Войти</a></div>
+
+  <div id="chHome" style="display:none">
+    <div class="ch-top"><a class="ch-back" href="/profile.html" id="hBack" aria-label="Назад">←</a><h1 class="ch-h1"><span class="eye-h1" style="color:#ffd23f;letter-spacing:.16em">EYE</span><small class="eye-h1s" style="display:block;margin-top:2px;font:700 11px/1.2 Montserrat,sans-serif;letter-spacing:0;color:#a29b90">чаты и звонки EAGLES</small></h1></div>
+    <div class="ch-tabs"><button type="button" class="on" data-t="chats">Чаты<span class="ch-n" id="nChats" hidden></span></button><button type="button" data-t="calls" id="eyeTabCalls">Звонки<span class="ch-n" id="nCalls" hidden></span></button><button type="button" data-t="ann">Объявления<span class="ch-n" id="nAnn" hidden></span></button></div>
+    <form class="ch-find" id="chFind" autocomplete="off"><input id="fId" type="text" inputmode="numeric" maxlength="8" placeholder="Написать по ID" aria-label="ID человека"><button type="submit" id="fGo" disabled>Найти</button></form>
+    <div id="vChats"><div class="ch-empty">Загружаю…</div></div>
+    <div id="vAnn" hidden><div class="ch-empty">Загружаю…</div></div>
+  </div>
+
+  <div class="ch-room" id="chRoom">
+    <div class="ch-top"><button class="ch-back" type="button" id="rBack" aria-label="Назад">←</button><div class="ch-peer" id="rPeer"></div><button class="ch-menu" type="button" id="rMenu" aria-label="Ещё">⋯</button></div>
+    <div class="ch-msgs" id="rMsgs"></div>
+    <div style="height:90px"></div>
+  </div>
+</div>
+<div class="ch-form" id="rForm" hidden><div class="in"><textarea id="rText" rows="1" maxlength="1000" placeholder="Сообщение…"></textarea><button class="ch-send" type="button" id="rSend" aria-label="Отправить" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg></button></div></div>
+<div class="ch-sheet" id="rSheet"><div class="in"><button type="button" class="red" id="rBlock">Заблокировать</button><button type="button" id="rCancel">Отмена</button></div></div>
+<div class="ch-toast" id="chToast"></div>
+<div class="tabbar">
+  <a class="tab-item active" href="/profile.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.5 3.6-7 8-7s8 2.5 8 7"/></svg>Профиль</a>
+  <a class="tab-item" href="/contacts.html"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>Контакты</a>
+  <a class="tab-item" href="/obuchenie.html"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3.5 3 8.5 3 12 0v-5"/></svg>Обучение</a>
+  <a class="tab-item" href="/kanal.html"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="4"/><path d="M10 9l5 3-5 3z"/></svg>Канал</a>
+</div>
+</div>
+<script>
+(function(){
+  var BACKEND_URL = 'https://functions.yandexcloud.net/d4e7hbmkhkj14dq3e8ip';
+  var ID = ''; try{ ID = localStorage.getItem('eaglesfree_id') || ''; }catch(e){}
+  try{ document.body.style.background = '#070708'; }catch(e){}
+  var EMB = new URLSearchParams(location.search).get('embed') === '1';
+  if(EMB) document.documentElement.classList.add('emb');
+  function closeAll(){ try{ parent.postMessage({ eg:'chatClose' }, '*'); }catch(e){} }
+  function $(id){ return document.getElementById(id); }
+  if(!ID){ $('chNoLogin').style.display = 'block'; return; }
+  $('chHome').style.display = 'block';
+  if(EMB){ $('hBack').textContent = '✕'; $('hBack').onclick = function(e){ e.preventDefault(); closeAll(); }; }
+  var ERR = { need_pro:'Писать можно с PRO', blocked:'Человек ограничил переписку с тобой', limit:'На сегодня лимит исчерпан, попробуй завтра',
+    not_allowed:'Начать переписку можно с людьми своей структуры и с теми, кто выше тебя', empty:'Напиши текст', bad_id:'Такого человека нет' };
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function linkify(t){ return esc(t).replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?)\]"'])/g, '<a href="$1" target="_blank" rel="noopener nofollow ugc">$1</a>'); }
+  function api(p){ var q = Object.keys(p).map(function(k){ return k + '=' + encodeURIComponent(p[k]); }).join('&');
+    return fetch(BACKEND_URL + '?' + q + '&_=' + Date.now()).then(function(r){ return r.json(); }); }
+  function ini(n){ var p = String(n || '').trim().split(/\s+/); return ((p[0] || '?')[0] + (p[1] ? p[1][0] : '')).toUpperCase(); }
+  function av(x){ return '<span class="ch-av' + (x.pro ? ' pro' : '') + '">' + (x.av ? '<img alt="" src="' + esc(x.av) + '">' : esc(ini(x.name))) + '</span>'; }
+  function hm(ms){ var d = new Date(ms); return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
+  function day(ms){ var d = new Date(ms), n = new Date(); if(d.toDateString() === n.toDateString()) return 'Сегодня';
+    var y = new Date(n - 864e5); if(d.toDateString() === y.toDateString()) return 'Вчера'; return ('0' + d.getDate()).slice(-2) + '.' + ('0' + (d.getMonth() + 1)).slice(-2) + '.' + d.getFullYear(); }
+  function when(ms){ return day(ms) === 'Сегодня' ? hm(ms) : day(ms); }
+  var tt; function toast(t){ var e = $('chToast'); e.textContent = t; e.classList.add('on'); clearTimeout(tt); tt = setTimeout(function(){ e.classList.remove('on'); }, 2600); }
+  function badge(el, n){ el.hidden = !n; el.textContent = n > 9 ? '9+' : n; }
+
+  /* ---------- вкладки ---------- */
+  var TAB = 'chats';
+  Array.prototype.forEach.call(document.querySelectorAll('.ch-tabs button'), function(b){ b.onclick = function(){ setTab(b.getAttribute('data-t')); }; });
+  function setTab(t){ TAB = t; Array.prototype.forEach.call(document.querySelectorAll('.ch-tabs button'), function(b){ b.classList.toggle('on', b.getAttribute('data-t') === t); });
+    $('vChats').hidden = $('chFind').hidden = t !== 'chats'; $('vAnn').hidden = t !== 'ann'; if(t === 'ann') loadAnn(); else loadList(); }
+
+  /* ---------- личные ---------- */
+  var CAN = false;
+  function loadList(){
+    return api({ action:'chat_list' }).then(function(r){
+      if(!r || !r.ok) return;
+      CAN = r.canWrite; var n = 0;
+      $('vChats').innerHTML = r.list.length ? r.list.map(function(x){ if(x.unread) n++;
+        return '<button type="button" class="ch-item' + (x.unread ? ' un' : '') + '" data-id="' + esc(x.id) + '">' + av(x)
+          + '<span class="ch-it"><b>' + esc(x.name) + '</b><small>' + (x.mineLast ? 'Ты: ' : '') + esc(x.last) + '</small></span>'
+          + '<span class="ch-tm">' + when(x.at) + '</span>' + (x.unread ? '<span class="ch-dot"></span>' : '') + '</button>'; }).join('')
+        : '<div class="ch-empty">Пока нет переписки.<br>Открой <a href="/binar.html">Моя команда</a> → «Структура», нажми на человека и выбери «Познакомиться». Или впиши его ID выше.</div>';
+      badge($('nChats'), n);
+      Array.prototype.forEach.call($('vChats').querySelectorAll('[data-id]'), function(b){ b.onclick = function(){ openRoom(b.getAttribute('data-id')); }; });
+    }).catch(function(){ $('vChats').innerHTML = '<div class="ch-empty">Нет связи с сервером. Обнови страницу.</div>'; });
+  }
+  /* поиск по ID: сервер сам проверит, можно ли этому человеку писать */
+  $('fId').oninput = function(){ this.value = this.value.replace(/\D/g, ''); $('fGo').disabled = this.value.length < 5; };
+  $('chFind').onsubmit = function(e){ e.preventDefault(); var id = $('fId').value, b = $('fGo'); if(id.length < 5) return; b.disabled = true;
+    api({ action:'chat_open', 'with':id }).then(function(r){ b.disabled = false;
+      if(r && r.ok){ $('fId').value = ''; b.disabled = true; openRoom(id); } else toast(r && r.error === 'bad_id' ? 'Человека с ID ' + id + ' нет' : ERR[r && r.error] || 'Не получилось открыть'); })
+    .catch(function(){ b.disabled = false; toast('Нет связи с сервером'); }); };
+  function counts(){ api({ action:'chat_unread' }).then(function(r){ if(r && r.ok){ badge($('nAnn'), r.ann); } }).catch(function(){}); }
+
+  /* ---------- переписка ---------- */
+  var PEER = '', poll = null, lastN = -1;
+  function openRoom(id){
+    PEER = id; lastN = -1; $('chHome').style.display = 'none'; $('chRoom').classList.add('on'); $('rForm').hidden = true;
+    $('rPeer').innerHTML = ''; $('rMsgs').innerHTML = '<div class="ch-empty">Загружаю…</div>';
+    try{ history.replaceState(null, '', '?to=' + encodeURIComponent(id) + (EMB ? '&embed=1' : '')); }catch(e){}
+    room(true); clearInterval(poll); poll = setInterval(function(){ if(!document.hidden) room(false); }, 8000);
+  }
+  function closeRoom(){ PEER = ''; clearInterval(poll); $('chRoom').classList.remove('on'); $('rForm').hidden = true; $('chHome').style.display = 'block';
+    try{ history.replaceState(null, '', location.pathname + (EMB ? '?embed=1' : '')); }catch(e){} loadList(); counts();
+    try{ parent.postMessage({ eg:'chatSeen' }, '*'); }catch(e){} }
+  $('rBack').onclick = closeRoom;
+  var BLOCKED = false;
+  function room(first){
+    var id = PEER;
+    return api({ action:'chat_open', 'with':id }).then(function(r){
+      if(id !== PEER) return;
+      if(!r || !r.ok){ $('rMsgs').innerHTML = '<div class="ch-empty">' + esc(ERR[r && r.error] || 'Не получилось открыть') + '</div>'; return; }
+      var p = r.peer, pk = (p.pkg || 'free').toLowerCase();
+      $('rPeer').innerHTML = av(p) + '<span style="min-width:0"><b>' + esc(p.name) + '</b><small><span class="ch-pk ' + pk + '">' + esc(p.pkg || 'FREE') + '</span>'
+        + (p.lv ? '<span class="ch-lv">L' + p.lv + '</span>' : 'ID ' + esc(p.id)) + '</small></span>';
+      BLOCKED = r.iBlocked; $('rBlock').textContent = BLOCKED ? 'Разблокировать' : 'Заблокировать';
+      if(first || r.msgs.length !== lastN){
+        var html = '', d0 = '';
+        r.msgs.forEach(function(m){ var dd = day(m.at); if(dd !== d0){ html += '<div class="ch-day">' + dd + '</div>'; d0 = dd; }
+          html += '<div class="ch-b' + (m.me ? ' me' : '') + '">' + linkify(m.t) + '<i>' + hm(m.at) + '</i></div>'; });
+        $('rMsgs').innerHTML = html || '<div class="ch-empty">' + (r.canWrite ? 'Напиши первое сообщение: представься и расскажи, чем можешь помочь.' : 'Сообщений пока нет.') + '</div>';
+        lastN = r.msgs.length; window.scrollTo(0, document.body.scrollHeight);
+      }
+      var f = $('rForm'); f.hidden = false;
+      if(r.blockedMe) f.innerHTML = '<div class="ch-lock">Человек ограничил переписку с тобой.</div>';
+      else if(!r.canWrite) f.innerHTML = '<div class="ch-lock"><span>Читать можно всем. Отвечать и писать можно с PRO.</span><a href="/profile.html#planBox">Подключить PRO</a></div>';
+      else if(!$('rText')) location.reload();
+    }).catch(function(){ if(first) $('rMsgs').innerHTML = '<div class="ch-empty">Нет связи с сервером. Обнови страницу.</div>'; });
+  }
+  var ta = $('rText');
+  ta.oninput = function(){ ta.style.height = 'auto'; ta.style.height = Math.min(140, ta.scrollHeight) + 'px'; $('rSend').disabled = !ta.value.trim(); };
+  $('rSend').onclick = function(){
+    var t = ta.value.trim(); if(!t || !PEER) return; var b = $('rSend'); b.disabled = true;
+    api({ action:'chat_send', 'with':PEER, text:t }).then(function(r){
+      if(r && r.ok){ ta.value = ''; ta.oninput(); room(true); } else { toast(ERR[r && r.error] || 'Не отправилось'); b.disabled = false; }
+    }).catch(function(){ toast('Нет связи с сервером'); b.disabled = false; });
+  };
+  $('rMenu').onclick = function(){ $('rSheet').classList.add('on'); };
+  $('rCancel').onclick = $('rSheet').onclick = function(e){ if(e.target === this) $('rSheet').classList.remove('on'); };
+  $('rBlock').onclick = function(){ $('rSheet').classList.remove('on');
+    api({ action:'chat_block', 'with':PEER, on: BLOCKED ? 0 : 1 }).then(function(r){ if(r && r.ok){ BLOCKED = r.block; toast(BLOCKED ? 'Заблокирован: он больше не сможет тебе писать' : 'Разблокирован'); $('rBlock').textContent = BLOCKED ? 'Разблокировать' : 'Заблокировать'; } }); };
+
+  /* ---------- объявления ---------- */
+  function loadAnn(){
+    return api({ action:'ann_list' }).then(function(r){
+      if(!r || !r.ok) return;
+      var html = '';
+      if(r.team > 0){
+        html += '<div class="ch-new"><h3>Объявление команде</h3><div class="ch-note" style="margin:0">Одно сообщение сразу всей твоей личной линии: L1, L2, L3 и дальше, всего ' + r.team + ' чел. Перелив его не получит. Одно объявление в день.</div>'
+          + (r.canSend ? '<textarea id="aText" maxlength="1000" placeholder="Например: вебинар в четверг в 20:00, ссылка…"></textarea><button class="ch-btn" type="button" id="aSend" disabled>Отправить ' + r.team + ' чел.</button>'
+            : '<div class="ch-lock" style="margin-top:10px"><span>Объявления может отправлять PRO.</span><a href="/profile.html#planBox">Подключить PRO</a></div>') + '</div>';
+      }
+      html += r.list.length ? r.list.map(function(a){ return '<div class="ch-ann"><div class="w">' + av({ name:a.name, av:a.av, pro:true }) + '<div><b>' + esc(a.name) + '</b><small>' + when(a.at) + '</small></div></div><p>' + linkify(a.t) + '</p></div>'; }).join('')
+        : '<div class="ch-empty">Объявлений от твоих пригласивших пока нет.</div>';
+      if(r.mine.length) html += '<div class="ch-note" style="margin:18px 2px 8px">Твои объявления</div>' + r.mine.map(function(a){ return '<div class="ch-ann"><div class="w"><div><small>' + when(a.at) + '</small></div></div><p>' + linkify(a.t) + '</p></div>'; }).join('');
+      $('vAnn').innerHTML = html; badge($('nAnn'), 0);
+      var t = $('aText'), b = $('aSend'), sure = false;
+      if(t){ t.oninput = function(){ b.disabled = !t.value.trim(); sure = false; b.classList.remove('sure'); b.textContent = 'Отправить ' + r.team + ' чел.'; };
+        b.onclick = function(){
+          if(!sure){ sure = true; b.classList.add('sure'); b.textContent = 'Точно отправить всем ' + r.team + ' чел.?'; return; }
+          b.disabled = true;
+          api({ action:'ann_send', text:t.value.trim() }).then(function(x){ if(x && x.ok){ toast('Отправлено ' + x.team + ' чел.'); loadAnn(); } else { toast(ERR[x && x.error] || 'Не отправилось'); b.disabled = false; } })
+            .catch(function(){ toast('Нет связи с сервером'); b.disabled = false; });
+        }; }
+    }).catch(function(){ $('vAnn').innerHTML = '<div class="ch-empty">Нет связи с сервером. Обнови страницу.</div>'; });
+  }
+
+  var to = new URLSearchParams(location.search).get('to'), tab = new URLSearchParams(location.search).get('tab');
+  if(to) openRoom(to); else if(tab === 'ann') setTab('ann'); else { loadList(); counts(); }
+})();
+</script>
+
+<script src="/eye.js?v=2" defer></script></body></html>
