@@ -4,7 +4,35 @@
 <title>EYE · EAGLES</title>
 <meta name="theme-color" content="#070708">
 <style>html,body{margin:0;padding:0;background:#070708;}</style>
+<style>/* EAGLES 16.11.2026: золотая пыль сверху, как в Профиле (за содержимым страницы, под тёплым светом) */
+body{isolation:isolate}
+#egTopFx{position:absolute;left:0;right:0;top:0;height:340px;z-index:-1;pointer-events:none;overflow:hidden;
+  -webkit-mask-image:linear-gradient(180deg,#000 55%,transparent);mask-image:linear-gradient(180deg,#000 55%,transparent)}
+#egTopFx canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+html body{background:radial-gradient(120% 40% at 50% 0%,#1d1408 0%,#070708 60%) no-repeat,#070708!important}.ch-page{background:transparent!important}
+</style>
 </head><body>
+<div id="egTopFx" aria-hidden="true"><canvas></canvas></div>
+<script>
+/* EAGLES 16.11.2026: золотая пыль сверху (та же, что за логотипом в Профиле) */
+(function(){
+  var box = document.getElementById('egTopFx'), cv = box && box.firstChild; if(!cv || !cv.getContext) return;
+  var cx = cv.getContext('2d'); if(!cx) return;
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var P = [], W = 0, H = 0, dpr = Math.min(2, window.devicePixelRatio || 1);
+  function rs(){ W = cv.clientWidth || innerWidth; H = cv.clientHeight || 340; cv.width = W * dpr; cv.height = H * dpr; cx.setTransform(dpr, 0, 0, dpr, 0, 0); }
+  rs(); window.addEventListener('resize', rs);
+  for(var i = 0; i < 34; i++) P.push({ x:Math.random(), y:Math.random(), r:Math.random() * 1.6 + .4, s:Math.random() * .0012 + .0004, a:Math.random() * 6.28 });
+  function fr(){
+    cx.clearRect(0, 0, W, H);
+    for(var i = 0; i < P.length; i++){ var p = P[i]; p.y -= p.s; p.a += .02; if(p.y < 0){ p.y = 1; p.x = Math.random(); }
+      cx.beginPath(); cx.arc(p.x * W + Math.sin(p.a) * 6, p.y * H, p.r, 0, 7); cx.fillStyle = 'rgba(255,214,110,' + (.35 + .35 * Math.sin(p.a)) + ')'; cx.fill(); }
+    if(!reduce && !document.hidden) requestAnimationFrame(fr); else setTimeout(function(){ requestAnimationFrame(fr); }, 1000);
+  }
+  fr();
+})();
+</script>
+
 <!-- EYE (бывшие «Сообщения»), chat.html v2 16.11.2026: шапка EYE и вкладки Чаты/Звонки/Объявления прямо в странице (без мелькания). Было: EAGLES · Сообщения (страница chat) v1, 28.10.2026: личная переписка (только текст, писать может PRO) и «Объявление команде» для личной линии -->
 <script>
 /* EAGLES FREE: выход через 30 дней бездействия + ключ входа.
@@ -180,6 +208,13 @@
   html.emb .ch-page .tabbar{ display:none; }
   html.emb .ch-form{ bottom:0; padding-bottom:calc(10px + env(safe-area-inset-bottom,0px)); }
   .ch-page .tab-item.active::before{ content:""; position:absolute; top:-8px; left:30%; right:30%; height:3px; border-radius:0 0 3px 3px; background:#ff6a2b; box-shadow:0 0 12px #ff6a2b; }
+  /* 16.11.2026: EYE — обычная вкладка: золотое меню из 5 пунктов, как на остальных страницах, без стрелки «назад» */
+  .ch-page .tabbar{ grid-template-columns:repeat(5,1fr); background:rgba(10,8,6,.82); border-top:1px solid rgba(255,210,63,.18); }
+  .ch-page .tab-item.active{ color:#ffd23f; }
+  .ch-page .tab-item.active svg{ transform:translateY(-2px) scale(1.08); }
+  .ch-page .tab-item.active::before{ background:#ffd23f; box-shadow:0 0 12px #ffd23f; }
+  #hBack{ display:none; }
+  .ch-wrap{ position:relative; z-index:1; }
 </style>
 <div class="ch-wrap">
   <div id="chNoLogin" class="ch-empty" style="display:none">Ты ещё не вошёл в систему. <a href="/">Войти</a></div>
@@ -202,7 +237,8 @@
 <div class="ch-sheet" id="rSheet"><div class="in"><button type="button" class="red" id="rBlock">Заблокировать</button><button type="button" id="rCancel">Отмена</button></div></div>
 <div class="ch-toast" id="chToast"></div>
 <div class="tabbar">
-  <a class="tab-item active" href="/profile.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.5 3.6-7 8-7s8 2.5 8 7"/></svg>Профиль</a>
+  <a class="tab-item" href="/profile.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.5 3.6-7 8-7s8 2.5 8 7"/></svg>Профиль</a>
+  <a class="tab-item active" id="tabEye" href="/chat.html"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>EYE<i class="eye-tn" hidden></i></a>
   <a class="tab-item" href="/contacts.html"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>Контакты</a>
   <a class="tab-item" href="/obuchenie.html"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3.5 3 8.5 3 12 0v-5"/></svg>Обучение</a>
   <a class="tab-item" href="/kanal.html"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="4"/><path d="M10 9l5 3-5 3z"/></svg>Канал</a>
@@ -366,6 +402,28 @@
       if(h && h.charAt(0) !== '#' && el.target !== '_blank' && !/^(javascript|mailto|tel):/i.test(h)){ ev.preventDefault(); var u = el.href; setTimeout(function(){ location.href = u; }, 160); }
     }
   });
+})();
+</script>
+
+<style>.eg-tdot{position:absolute;top:2px;left:58%;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:#e8321a;color:#fff;font:900 10px/16px Montserrat,system-ui,sans-serif;font-style:normal;text-align:center;pointer-events:none}</style>
+<script>
+/* КС 27.10: красная цифра на «Контакты» — сколько контактов ждут касания сегодня или просрочены */
+(function(){
+  function run(){try{
+    var id=localStorage.getItem('eaglesfree_id');if(!id)return;
+    var raw=localStorage.getItem('eaglesfree_kandidaty_'+id)||localStorage.getItem('eaglesfree_moi_kandidaty_v2_'+id);if(!raw)return;
+    var st=JSON.parse(raw),c=(st&&st.candidates)||{},d=new Date(),p=function(v){return ('0'+v).slice(-2)},t=d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()),n=0;
+    for(var k in c){var x=c[k];if(!x||x.locked)continue;var s=String(x.nextTouch||'').trim(),m;
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(s)){m=/^(\d{1,2})[.\/-](\d{1,2})(?:[.\/-](\d{2,4}))?$/.exec(s);if(!m)continue;var y=m[3]?+m[3]:d.getFullYear();if(y<100)y+=2000;s=y+'-'+p(m[2])+'-'+p(m[1])}
+      if(s<=t)n++}
+    var el=null;[].forEach.call(document.querySelectorAll('nav a,nav button,.tabbar a,a.tab-item'),function(a){if(a.textContent.replace(/\d+\+?/g,'').trim()==='Контакты')el=a});
+    if(!el)return;var b=el.querySelector('.eg-tdot');
+    if(!n){if(b)b.remove();return}
+    if(!b){b=document.createElement('i');b.className='eg-tdot';el.appendChild(b);if(getComputedStyle(el).position==='static')el.style.position='relative'}
+    b.textContent=n>9?'9+':String(n);
+  }catch(e){}}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();
+  setInterval(run,4000);
 })();
 </script>
 </body></html>

@@ -1,4 +1,5 @@
-/* EYE v4.2 (16.11.2026) — пункт EYE в нижнем меню теперь стоит прямо в страницах (сразу 5 пунктов, без «подскока»); eye.js только оживляет его.
+/* EYE v5 (16.11.2026) — EYE открывается обычной страницей /chat.html с нижним меню (как Контакты, Обучение), без окна с золотой рамкой поверх Профиля.
+   EYE v4.2 (16.11.2026) — пункт EYE в нижнем меню теперь стоит прямо в страницах (сразу 5 пунктов, без «подскока»); eye.js только оживляет его.
    EYE v4.1 (16.11.2026) — chat.html v2 сама рисует шапку EYE и три вкладки (без мелькания «Сообщений»); eye.js не дублирует вкладку «Звонки».
    EYE v4 (16.11.2026) — EYE как продукт: золотая кнопка EYE на главной вместо «Чата с командой», пункт EYE в нижнем меню,
    красная цифра = непрочитанные сообщения + пропущенные звонки + запросы в друзья; в окне EYE вкладки «Чаты», «Звонки», «Объявления».
@@ -807,6 +808,7 @@
       var n0 = document.getElementById('chatN'); if (n0) n0.style.setProperty('display', 'none', 'important');
       var n = document.createElement('i'); n.className = 'cb-n'; n.id = 'eyeN'; n.style.display = 'none';
       (b.querySelector('.cb-vid') || b).appendChild(n);
+      b.onclick = function () { setTimeout(function () { location.href = '/chat.html'; }, 160); };   // v5: EYE открывается как обычная страница с нижним меню
     }
     setN(document.getElementById('eyeN'), total());
   }
@@ -820,17 +822,16 @@
     if (t && !t._eye) {               // пункт уже стоит в странице — только оживляем
       t._eye = 1; addCss();
       if (!t.querySelector('.eye-tn')) t.insertAdjacentHTML('beforeend', '<i class="eye-tn" hidden></i>');
-      t.addEventListener('click', function (e) { var oc = document.getElementById('openChat'); if (oc) { e.preventDefault(); if (typeof oc.onclick === 'function') oc.onclick(); else oc.click(); } });
+      if (/profile\.html\?chat=/.test(t.getAttribute('href') || '')) t.setAttribute('href', '/chat.html');   // v5: EYE — обычная страница
     }
     if (!t) {
       addCss();
       var ref = inner.children[0];
-      t = document.createElement('a'); t.id = 'tabEye'; t.href = '/profile.html?chat='; t._eye = 1;
+      t = document.createElement('a'); t.id = 'tabEye'; t.href = '/chat.html'; t._eye = 1;
       if (ref.classList.contains('tab-item')) t.className = 'tab-item';
       t.innerHTML = IC.eye + 'EYE<i class="eye-tn" hidden></i>';
       inner.insertBefore(t, ref.nextSibling);
       inner.style.setProperty('grid-template-columns', 'repeat(' + inner.children.length + ',1fr)', 'important');
-      t.onclick = function (e) { var oc = document.getElementById('openChat'); if (oc) { e.preventDefault(); if (typeof oc.onclick === 'function') oc.onclick(); else oc.click(); } };
     }
     setN(t.querySelector('.eye-tn'), total());
   }
