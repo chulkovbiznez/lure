@@ -17,7 +17,7 @@ const NEWAPI = (ENV.NEWAPI_URL || 'http://new-api:3000').replace(/\/$/, '');
 const NEWAPI_KEY = ENV.NEWAPI_KEY || '';
 const OWNERS = String(ENV.OWNER_IDS || '11111').split(',').map(s => s.trim()).filter(Boolean);
 const RUB_PER_UNIT = Number(ENV.RUB_PER_UNIT || 100);      // сколько рублей стоит 1 «$» движка New API
-const DAY_LIMIT = Number(ENV.DAY_LIMIT_RUB || 1500);       // не больше стольких рублей в сутки на человека
+const DAY_LIMIT = Number(ENV.DAY_LIMIT_RUB || 0);          // суточный лимит на человека, ₽; 0 — без лимита (решение Андрея 16.11). Владельца не ограничивает никогда
 const MAX_OUT = Number(ENV.MAX_OUTPUT_TOKENS || 4000);     // длина ответа
 const MAX_IN_CHARS = Number(ENV.MAX_INPUT_CHARS || 120000);
 const WELCOME = Number(ENV.WELCOME_RUB || 0);              // подарок новому человеку
@@ -158,6 +158,7 @@ function sessUser(req) {
   return u;
 }
 const isOwner = u => u && OWNERS.indexOf(u.id) !== -1;
+const dayCap = u => (isOwner(u) || !(DAY_LIMIT > 0)) ? Infinity : DAY_LIMIT;
 // Доступ к LURE только с подпиской EAGLES Pro (решение Андрея 03.11). Владелец — всегда.
 // Срок подписки берём из EAGLES при входе (me.paidUntil). Кончился — человек входит заново, и мы снова спрашиваем EAGLES.
 function toTime(v) { if (v === '' || v == null) return 0; const n = Number(v); if (isFinite(n) && n > 1e11) return n; const t = Date.parse(v); return isFinite(t) ? t : 0; }
@@ -167,7 +168,7 @@ function proUntil(u) {
 }
 function hasAccess(u) { return isOwner(u) || proUntil(u) > Date.now(); }
 function pub(u) {
-  return { id: u.id, name: u.name, plan: u.plan, balance: r2(u.balance || 0), spentToday: spentToday(u), dayLimit: DAY_LIMIT, owner: isOwner(u),
+  return { id: u.id, name: u.name, plan: u.plan, balance: r2(u.balance || 0), spentToday: spentToday(u), dayLimit: dayCap(u) === Infinity ? 0 : DAY_LIMIT, owner: isOwner(u),
     access: hasAccess(u), proUntil: isOwner(u) ? 0 : proUntil(u), terms: (u.termsV || 0) >= TERMS_V, held: r2(u.held || 0) };
 }
 
@@ -177,7 +178,7 @@ function tooManyFails(key) { const f = fails[key]; return f && f.n >= 5 && Date.
 function addFail(key) { const f = fails[key] = fails[key] && Date.now() - fails[key].t < 3600000 ? fails[key] : { n: 0, t: Date.now() }; f.n++; }
 
 const busy = new Set(); // один запрос к нейросети на человека одновременно
-const MEDIA = require('./media.js')({ db, ENV, DATA_DIR, op, save, send, readBody, addSpent, spentToday, r2, DAY_LIMIT });
+const MEDIA = require('./media.js')({ db, ENV, DATA_DIR, op, save, send, readBody, addSpent, spentToday, r2, dayCap });
 
 async function api(req, res, url) {
   const p = url.pathname;
@@ -345,7 +346,7 @@ async function chat(req, res, u) {
   if (busy.has(u.id)) return send(res, 200, { ok: false, error: 'busy' });
 
   // сколько можно потратить: баланс и суточный лимит
-  const room = Math.min((u.balance || 0) - (u.held || 0), DAY_LIMIT - spentToday(u) - (u.held || 0));
+  const room = Math.min((u.balance || 0) - (u.held || 0), dayCap(u) - spentToday(u) - (u.held || 0));
   const estIn = Math.ceil(chars / 2.5) + 50;
   const inCost = costRub(model, estIn, 0);
   const outPer = costRub(model, 0, 1);

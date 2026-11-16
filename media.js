@@ -8,7 +8,7 @@ const path = require('path');
 const crypto = require('crypto');
 
 module.exports = function media(ctx) {
-  const { db, ENV, DATA_DIR, op, save, send, readBody, addSpent, spentToday, r2, DAY_LIMIT } = ctx;
+  const { db, ENV, DATA_DIR, op, save, send, readBody, addSpent, spentToday, r2, dayCap } = ctx;
   const POLZA = (ENV.POLZA_URL || 'https://d5dlktk1t7njgiu965hg.764nr5vy.apigw.yandexcloud.net/api/v1').replace(/\/$/, '');
   const POLZA_KEY = ENV.POLZA_KEY || '';
   const SAVER = ENV.SAVER_URL || '';             // функция media-saver
@@ -279,7 +279,7 @@ module.exports = function media(ctx) {
       const pr = price(mod, o);
       const hold = mod.tok ? Math.ceil(pr * 2) : pr;   // у GPT Image точная цена зависит от картинки — держим с запасом
       const free = r2((u.balance || 0) - heldOf(u));
-      const dayRoom = DAY_LIMIT - spentToday(u) - heldOf(u);
+      const dayRoom = dayCap(u) - spentToday(u) - heldOf(u);
       if (free < hold) return send(res, 200, { ok: false, error: 'no_money', need: hold });
       if (dayRoom < hold) return send(res, 200, { ok: false, error: 'day_limit' });
       const inp = polzaInput(mod, o);

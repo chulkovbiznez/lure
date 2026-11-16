@@ -500,7 +500,7 @@ $('lBack').onclick=function(){$('l1').hidden=false;$('l2').hidden=true;$('lErr2'
 
 /* ---------- приложение ---------- */
 function setMe(m){ME=m;$('balChip').textContent=rub(m.balance);$('wBal').textContent=rub(m.balance);$('wId').textContent=m.id;
-  $('wDay').textContent='Сегодня потрачено '+rub(m.spentToday)+' из '+rub(m.dayLimit)+' в сутки';$('owner').hidden=!m.owner}
+  $('wDay').textContent='Сегодня потрачено '+rub(m.spentToday)+(m.dayLimit?' из '+rub(m.dayLimit)+' в сутки':'');$('owner').hidden=!m.owner}
 function start(m){setMe(m);$('login').hidden=true;$('app').hidden=false;loadModels();openDialog(ls(key('cur'))||null);go(location.hash.replace('#','')||'chat');if(m.access&&!m.terms)$('terms').hidden=false}
 $('tOk').onclick=function(){var b=this;b.disabled=true;$('tErr').textContent='';post('/api/terms').then(function(r){b.disabled=false;if(!r.ok){if(r.error==='auth')showLogin();return}setMe(r.me);$('terms').hidden=true}).catch(function(){b.disabled=false;$('tErr').textContent='Нет связи. Если включён VPN, выключи его.'})};
 function key(k){return 'lure_'+(ME?ME.id:'x')+'_'+k}

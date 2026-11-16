@@ -53,7 +53,7 @@ if [ ! -f $D/lure.env ]; then
   ask_key
   [ -n "$KEY" ] || echo "Ключа нет: LURE встанет, но отвечать начнёт после команды  bash install-lure.sh --key"
   umask 077
-  printf "NEWAPI_KEY=%s\nOWNER_IDS=11111\nRUB_PER_UNIT=100\nDAY_LIMIT_RUB=1500\nWELCOME_RUB=0\n" "$KEY" > $D/lure.env
+  printf "NEWAPI_KEY=%s\nOWNER_IDS=11111\nRUB_PER_UNIT=100\nDAY_LIMIT_RUB=0\nWELCOME_RUB=0\n" "$KEY" > $D/lure.env
   umask 022
 fi
 
