@@ -1,4 +1,7 @@
-/* EYE v3.3 (16.11.2026) — кнопка «показать экран» есть и на телефоне: пробуем, иначе понятная подсказка.
+/* EYE v4 (16.11.2026) — EYE как продукт: золотая кнопка EYE на главной вместо «Чата с командой», пункт EYE в нижнем меню,
+   красная цифра = непрочитанные сообщения + пропущенные звонки + запросы в друзья; в окне EYE вкладки «Чаты», «Звонки», «Объявления».
+   «Звонки»: друзья с кнопками аудио/видео, недавние и пропущенные звонки (журнал хранится в этом телефоне/компьютере), добавить друга по ID.
+   EYE v3.3 (16.11.2026) — кнопка «показать экран» есть и на телефоне: пробуем, иначе понятная подсказка.
    EYE v3.2 (16.11.2026) — главный экран (у каждого свой выбор, нажатием), демонстрация экрана с компьютера, значки микрофона/камеры.
    EYE v3.1 (16.11.2026) — камера выключена: аватарка или серый «ноунейм», имя и фамилия, аудиоволны.
    EYE v3 (16.11.2026) — аудио или видео, звонок до 4 человек (кнопка «+» в звонке зовёт своего друга).
@@ -118,6 +121,22 @@
     '.eye-who{bottom:auto!important;top:calc(66px + env(safe-area-inset-top,0px))}.eye-c.on{background:linear-gradient(180deg,#fff1b8,#ffd23f 40%,#d98d16);color:#2a1702;border:0}' +
     '@media (max-width:400px){.eye-c{width:44px;height:44px}.eye-c.end{width:56px;height:56px}.eye-ctl{padding:10px 12px}}' +
     '@media (prefers-reduced-motion:reduce){.eye-av::before,.eye-av::after,.eye-yes i,.eye-card{animation:none}}';
+  css += '' +
+    '.eye-tn{position:absolute;top:0;left:calc(50% + 5px);min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#e8321a;color:#fff;font:900 10px/16px Montserrat,sans-serif;font-style:normal;text-align:center;box-shadow:0 0 0 2px #0a0806}.eye-tn[hidden]{display:none}' +
+    '#openChat[data-eye] .cb-t b{letter-spacing:.22em}' +
+    '.eye-h1{color:#ffd23f;letter-spacing:.16em}.eye-h1s{display:block;margin-top:2px;font:700 11px/1.2 Montserrat,sans-serif;letter-spacing:0;color:#a29b90}' +
+    '.eye-calls{font-family:Montserrat,system-ui,sans-serif;color:#f4f2ee}' +
+    '.eye-lbl{margin:16px 2px 8px;font:800 11px/1 Montserrat,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#e9a23b}.eye-calls .eye-lbl:first-child{margin-top:2px}' +
+    '.eye-row{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;margin-bottom:8px;border-radius:16px;background:#141217;border:1px solid #2a2622;color:#f4f2ee;text-align:left;font-family:inherit}' +
+    'button.eye-row{cursor:pointer}' +
+    '.eye-row .t{flex:1;min-width:0;font:800 14.5px/1.25 Montserrat,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+    '.eye-row .t small{display:block;margin-top:2px;font:600 12px/1.3 Montserrat,sans-serif;color:#a29b90;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.eye-row .t small.miss{color:#ff6a5a}' +
+    '.eye-row .tm{flex:none;align-self:flex-start;font:700 11px/1 Montserrat,sans-serif;color:#6d675f}' +
+    '.eye-row .fb{flex:none;display:flex;gap:8px}' +
+    '.eye-cb{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;cursor:pointer;border:0;color:#2a1702;background:linear-gradient(180deg,#fff1b8,#ffd23f 38%,#f3b230 72%,#d98d16);box-shadow:0 6px 16px rgba(255,180,40,.25)}' +
+    '.eye-cb.au{color:#ffd23f;background:rgba(255,210,63,.08);border:1px solid rgba(255,210,63,.45);box-shadow:none}' +
+    '.eye-cb svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}' +
+    '.eye-calls .eye-req{margin:0 0 8px}.eye-calls .eye-add{margin-top:0}.eye-note{margin:14px 2px 0;font:600 11px/1.45 Montserrat,sans-serif;color:#6d675f}';
   function addCss() { if (document.getElementById('eye-css')) return; var s = document.createElement('style'); s.id = 'eye-css'; s.textContent = css; document.head.appendChild(s); }
 
   var IC = {
@@ -130,7 +149,8 @@
     flip: '<svg viewBox="0 0 24 24"><path d="M4 9a8 8 0 0114-4l2 2M20 15a8 8 0 01-14 4l-2-2M20 4v4h-4M4 20v-4h4"/></svg>',
     add: '<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6.5 7-6.5s7 2.5 7 6.5M19 8v6M16 11h6"/></svg>',
     ok: '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
-    tel: '<svg viewBox="0 0 24 24"><path d="M5 3.5h3.5l1.8 4.6-2.3 1.5a11 11 0 006.4 6.4l1.5-2.3 4.6 1.8V19a2 2 0 01-2 2A17.5 17.5 0 013 5.5a2 2 0 012-2z"/></svg>'
+    tel: '<svg viewBox="0 0 24 24"><path d="M5 3.5h3.5l1.8 4.6-2.3 1.5a11 11 0 006.4 6.4l1.5-2.3 4.6 1.8V19a2 2 0 01-2 2A17.5 17.5 0 013 5.5a2 2 0 012-2z"/></svg>',
+    eye: '<svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>'
   };
 
   var ov = null;
@@ -148,7 +168,7 @@
                 : '<button class="eye-b eye-no" id="eyeNo"><i>' + IC.end + '</i>Отменить</button>') +
       '</div>';
     document.body.appendChild(ov);
-    ov.querySelector('#eyeNo').onclick = function () { if (call) send({ t: incoming ? 'decline' : 'hangup', cid: call.cid }); finish(''); };
+    ov.querySelector('#eyeNo').onclick = function () { if (call) { call.byMe = true; send({ t: incoming ? 'decline' : 'hangup', cid: call.cid }); } finish(''); };
     if (incoming) ov.querySelector('#eyeYes').onclick = accept;
   }
   function setSt(t) { var e = ov && ov.querySelector('#eyeSt'); if (e) e.textContent = t; }
@@ -430,6 +450,7 @@
     var id = String(x.id);
     delete call.inv[id];
     var P = call.peers[id] = { id: id, name: x.name || '', iceQ: [], stream: null, cs: 'new' };
+    if (call.seen) call.seen[id] = x.name || call.seen[id] || '';
     var pc = P.pc = new RTCPeerConnection({ iceServers: ICE });
     try {
       P.dc = pc.createDataChannel('eye', { negotiated: true, id: 0 });
@@ -491,6 +512,7 @@
 
   function finish(msg) {
     if (call) {
+      try { logCall(call); } catch (e) {}
       clearInterval(call.timer);
       vals(call.peers).forEach(function (P) { try { P.pc.close(); } catch (e) {} });
       if (wvRaf) { cancelAnimationFrame(wvRaf); wvRaf = 0; }
@@ -529,13 +551,13 @@
     if (m.t === 'error') {
       // v2.1: ошибки подключения (много открытых вкладок, нет входа) не показываем — они не про звонок.
       if (m.why === 'too_many' || m.why === 'no_login') { retry = 300000; return; }
-      if (call && call.role === 'caller' && !call.cid) finish(WHY[m.why] || 'Не получилось позвонить');
+      if (call && call.role === 'caller' && !call.cid) { call.why = m.why; finish(WHY[m.why] || 'Не получилось позвонить'); }
       else if (call) toast(WHY[m.why] || 'Ошибка звонка');
       return;
     }
     if (m.t === 'ring') {
       if (call) { send({ t: 'decline', cid: m.cid }); return; }
-      call = { cid: m.cid, role: 'callee', peer: m.from, video: m.video !== false, peers: {}, inv: {}, host: m.from && m.from.id };
+      call = { cid: m.cid, role: 'callee', peer: m.from, video: m.video !== false, peers: {}, inv: {}, host: m.from && m.from.id, ts: Date.now(), seen: {} };
       var grp = (m.group || []).map(first).filter(Boolean);
       ringScreen(m.from, grp.length ? 'зовёт тебя в звонок с: ' + grp.join(', ') : 'звонит тебе в EAGLES…', true); startTone();
       if (document.hidden && window.Notification && Notification.permission === 'granted') {
@@ -579,7 +601,7 @@
       else Q.iceQ.push(m.c);
       return;
     }
-    if (m.t === 'hangup') { finish(WHY[m.why] != null ? WHY[m.why] : 'Звонок завершён'); }
+    if (m.t === 'hangup') { call.why = m.why || ''; finish(WHY[m.why] != null ? WHY[m.why] : 'Звонок завершён'); }
   }
 
   function connect() {
@@ -604,7 +626,7 @@
     if (call) return;
     if (!ws || ws.readyState !== 1) { toast('EYE сейчас недоступен. Проверь интернет и попробуй ещё раз.'); return; }
     try { if (window.Notification && Notification.permission === 'default') Notification.requestPermission(); } catch (e) {}
-    call = { cid: '', role: 'caller', peer: { id: String(id), name: name || '' }, video: video, peers: {}, inv: {}, host: 'me' };
+    call = { cid: '', role: 'caller', peer: { id: String(id), name: name || '' }, video: video, peers: {}, inv: {}, host: 'me', ts: Date.now(), seen: {} };
     audioCtx();
     ringScreen(call.peer, video ? 'Включаю камеру…' : 'Включаю микрофон…', false);
     media(video).then(function (s) {
@@ -720,52 +742,183 @@
     b.hidden = false; if (b.textContent !== label) b.textContent = label;
   }
 
-  /* ---------- «Сообщения»: блок «Друзья · EYE» на главном экране ---------- */
-  function homeBlock() {
-    var home = document.getElementById('chHome'), list = document.getElementById('vChats');
-    if (!home || !list) return;
-    var el = document.getElementById('eyeHome');
-    if (!el) { addCss(); el = document.createElement('div'); el.id = 'eyeHome'; el.className = 'eye-home'; el.hidden = true; list.parentNode.insertBefore(el, list); }
-    el.hidden = FRON !== true || list.hidden || home.style.display === 'none';
-    if (el.hidden) return;
-    var key = JSON.stringify(FL);
+  /* ---------- v4: журнал звонков (хранится в этом телефоне/компьютере) ---------- */
+  function myId() { try { return localStorage.getItem('eaglesfree_id') || ''; } catch (e) { return ''; } }
+  function logKey() { return 'eye_log_' + myId(); }
+  function getLog() { try { var a = JSON.parse(localStorage.getItem(logKey()) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+  function putLog(a) { try { localStorage.setItem(logKey(), JSON.stringify(a.slice(0, 60))); } catch (e) {} }
+  function logCall(c) {
+    if (!c || !c.peer || !c.peer.id || !myId() || c.why === 'elsewhere') return;
+    var inc = c.role === 'callee', st;
+    if (c.live) st = 'ok';
+    else if (inc) st = c.byMe ? 'declined' : 'missed';
+    else st = c.byMe ? 'cancel' : c.why === 'declined' ? 'declined' : c.why === 'noanswer' ? 'noanswer' : 'fail';
+    var pid = String(c.peer.id), others = [], ids = {}; ids[pid] = 1;
+    Object.keys(c.seen || {}).forEach(function (k) { if (!ids[k] && k !== String(me && me.id)) { ids[k] = 1; others.push(c.seen[k] || ''); } });
+    var e = { cid: c.cid || '', ts: c.ts || Date.now(), id: pid, name: c.peer.name || (c.seen && c.seen[pid]) || '', others: others,
+      n: Object.keys(ids).length + 1, video: c.video !== false, dir: inc ? 'in' : 'out', st: st,
+      dur: c.live && c.t0 ? Math.round((Date.now() - c.t0) / 1000) : 0, fresh: st === 'missed' };
+    var a = getLog();
+    if (e.cid) {                        // тот же звонок уже записан другой вкладкой
+      for (var i = 0; i < a.length; i++) if (a[i].cid === e.cid) {
+        if (a[i].st === 'ok' && e.st !== 'ok') return;
+        a.splice(i, 1); break;
+      }
+    }
+    a.unshift(e); putLog(a);
+  }
+  function missedN() { return getLog().filter(function (e) { return e.fresh; }).length; }
+  function markMissedSeen() { var a = getLog(), ch = false; a.forEach(function (e) { if (e.fresh) { e.fresh = false; ch = true; } }); if (ch) putLog(a); }
+  function hm(ms) { var d = new Date(ms); return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
+  function whenTs(ms) {
+    var d = new Date(ms), n = new Date();
+    if (d.toDateString() === n.toDateString()) return hm(ms);
+    if (d.toDateString() === new Date(n - 864e5).toDateString()) return 'вчера';
+    return ('0' + d.getDate()).slice(-2) + '.' + ('0' + (d.getMonth() + 1)).slice(-2);
+  }
+  function mmss(s) { return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
+  function logLine(e) {
+    var k = (e.video ? 'видео' : 'аудио') + (e.n > 2 ? ' · групповой, ' + e.n + ' чел.' : '');
+    var st = e.st === 'ok' ? (e.dir === 'in' ? 'входящий' : 'исходящий') + (e.dur ? ' · ' + mmss(e.dur) : '')
+      : e.st === 'missed' ? 'пропущенный' : e.st === 'declined' ? (e.dir === 'in' ? 'ты отклонил' : 'отклонил звонок')
+      : e.st === 'noanswer' ? 'не ответил' : e.st === 'cancel' ? 'отменён' : 'не дозвонился';
+    return k + ' · ' + st;
+  }
+
+  /* ---------- v4: непрочитанные сообщения (сервер EAGLES) ---------- */
+  var UNR = { n: 0, t: 0 };
+  function loadUnread() {
+    if (sess().length < 40) return;
+    UNR.t = Date.now();
+    api({ action: 'chat_unread' }).then(function (r) { if (r && r.ok) UNR.n = Number(r.n) || 0; badges(); }).catch(function () {});
+  }
+  function total() { return UNR.n + missedN() + FL.incoming.length; }
+  function setN(el, n) { if (!el) return; var t = n > 9 ? '9+' : String(n); if (el.textContent !== t) el.textContent = t; el.hidden = !n; el.style.display = n ? '' : 'none'; }
+
+  /* ---------- v4: золотая кнопка EYE на главной (вместо «Чата с командой») ---------- */
+  function homeBtn() {
+    var b = document.getElementById('openChat'); if (!b) return;
+    if (!b.getAttribute('data-eye')) {
+      addCss(); b.setAttribute('data-eye', '1'); b.setAttribute('aria-label', 'Открыть EYE');
+      var t = b.querySelector('.cb-t'); if (t) t.innerHTML = '<b>EYE</b><small>Чаты и звонки команды</small>';
+      var f = document.getElementById('egChf'); if (f) f.title = 'EYE';
+      var n0 = document.getElementById('chatN'); if (n0) n0.style.setProperty('display', 'none', 'important');
+      var n = document.createElement('i'); n.className = 'cb-n'; n.id = 'eyeN'; n.style.display = 'none';
+      (b.querySelector('.cb-vid') || b).appendChild(n);
+    }
+    setN(document.getElementById('eyeN'), total());
+  }
+
+  /* ---------- v4: пункт EYE в нижнем меню (на всех страницах) ---------- */
+  function navTab() {
+    var bar = document.querySelector('.tabbar'), inner = bar;
+    if (!bar) { var ek = document.querySelector('.ek-nav > div'); if (ek) { bar = ek.parentNode; inner = ek; } }
+    if (!bar || !inner || !inner.children.length) return;
+    var t = document.getElementById('tabEye');
+    if (!t) {
+      addCss();
+      var ref = inner.children[0];
+      t = document.createElement('a'); t.id = 'tabEye'; t.href = '/profile.html?chat=';
+      if (ref.classList.contains('tab-item')) t.className = 'tab-item';
+      t.innerHTML = IC.eye + 'EYE<i class="eye-tn" hidden></i>';
+      inner.insertBefore(t, ref.nextSibling);
+      inner.style.setProperty('grid-template-columns', 'repeat(' + inner.children.length + ',1fr)', 'important');
+      t.onclick = function (e) { var oc = document.getElementById('openChat'); if (oc) { e.preventDefault(); oc.click(); } };
+    }
+    setN(t.querySelector('.eye-tn'), total());
+  }
+
+  /* ---------- v4: экран EYE (страница чата): вкладки «Чаты», «Звонки», «Объявления» ---------- */
+  var CALLS_ON = false;
+  function eyePage() {
+    var home = document.getElementById('chHome'), tabs = home && home.querySelector('.ch-tabs');
+    if (!tabs) return;
+    if (!tabs.getAttribute('data-eye')) {
+      addCss(); tabs.setAttribute('data-eye', '1');
+      var h1 = home.querySelector('.ch-h1'); if (h1) h1.innerHTML = '<span class="eye-h1">EYE</span><small class="eye-h1s">чаты и звонки EAGLES</small>';
+      try { document.title = 'EYE · EAGLES'; } catch (e) {}
+      var ann = null;
+      Array.prototype.forEach.call(tabs.querySelectorAll('button'), function (b) {
+        var dt = b.getAttribute('data-t');
+        if (dt === 'chats' && b.firstChild && b.firstChild.nodeType === 3) b.firstChild.nodeValue = 'Чаты';
+        if (dt === 'ann') ann = b;
+        b.addEventListener('click', function () { CALLS_ON = false; var v = document.getElementById('vCalls'); if (v) v.hidden = true; });
+      });
+      var cb = document.createElement('button'); cb.type = 'button'; cb.setAttribute('data-t', 'calls'); cb.id = 'eyeTabCalls';
+      cb.innerHTML = 'Звонки<span class="ch-n" id="nCalls" hidden></span>';
+      tabs.insertBefore(cb, ann);
+      tabs.style.gridTemplateColumns = 'repeat(3,1fr)';
+      var v = document.createElement('div'); v.id = 'vCalls'; v.className = 'eye-calls'; v.hidden = true;
+      var va = document.getElementById('vAnn'); (va || document.getElementById('vChats')).insertAdjacentElement('afterend', v);
+      cb.onclick = showCalls;
+    }
+    var nc = document.getElementById('nCalls'); if (nc) { var k = missedN() + FL.incoming.length; nc.hidden = !k; nc.textContent = k > 9 ? '9+' : k; }
+    if (CALLS_ON) drawCalls();
+  }
+  function showCalls() {
+    CALLS_ON = true;
+    Array.prototype.forEach.call(document.querySelectorAll('.ch-tabs button'), function (b) { b.classList.toggle('on', b.getAttribute('data-t') === 'calls'); });
+    ['vChats', 'chFind', 'vAnn'].forEach(function (id) { var e = document.getElementById(id); if (e) e.hidden = true; });
+    var v = document.getElementById('vCalls'); if (v) v.hidden = false;
+    markMissedSeen(); drawCalls(); loadFriends();
+  }
+  function drawCalls() {
+    var el = document.getElementById('vCalls'); if (!el || el.hidden) return;
+    var log = getLog(), key = JSON.stringify([FRON, FL, log]);
     if (el.getAttribute('data-k') === key) return;
     var keep = el.querySelector('#eyeAddId'), typed = keep ? keep.value : '', focused = keep && document.activeElement === keep;
     el.setAttribute('data-k', key);
-    var h = '<div class="eye-hh"><b>Друзья<span>EYE</span></b><small>видеозвонки только<br>между друзьями</small></div>';
-    FL.incoming.forEach(function (x) {
-      h += '<div class="eye-req eye-sm">' + ava(x) + '<div class="t">' + esc(x.name) + '<small>хочет дружить в EAGLES</small></div>' +
-        '<button type="button" class="eye-fr eye-gold" data-a="ok" data-id="' + esc(x.id) + '">Принять</button>' +
-        '<button type="button" class="x" data-a="no" data-id="' + esc(x.id) + '" aria-label="Отклонить">✕</button></div>';
-    });
-    if (FL.friends.length) {
-      h += '<div class="eye-chips">' + FL.friends.map(function (x) {
-        return '<button type="button" class="eye-chip" data-a="call" data-id="' + esc(x.id) + '" aria-label="Позвонить: ' + esc(x.name) + '">' + ava(x, true) + '<em>' + esc(first(x.name)) + '</em></button>';
-      }).join('') + '</div>';
-    } else if (!FL.incoming.length) {
-      h += '<div class="eye-empty">Пока нет друзей. Открой переписку с человеком и нажми «В друзья» или впиши его ID ниже. Когда он подтвердит, сможете созваниваться по видео.</div>';
+    var h = '';
+    if (FL.incoming.length) {
+      h += '<div class="eye-lbl">Хотят дружить</div>';
+      FL.incoming.forEach(function (x) {
+        h += '<div class="eye-req eye-sm">' + ava(x) + '<div class="t">' + esc(x.name) + '<small>хочет дружить в EAGLES</small></div>' +
+          '<button type="button" class="eye-fr eye-gold" data-a="ok" data-id="' + esc(x.id) + '">Принять</button>' +
+          '<button type="button" class="x" data-a="no" data-id="' + esc(x.id) + '" aria-label="Отклонить">✕</button></div>';
+      });
     }
+    h += '<div class="eye-lbl">Друзья · позвонить</div>';
+    if (FRON === null && !FL.friends.length) h += '<div class="eye-empty">Загружаю…</div>';
+    else if (!FL.friends.length) h += '<div class="eye-empty">Пока нет друзей. Звонить в EYE можно только друзьям. Впиши ID человека внизу или открой с ним переписку и нажми «В друзья». Когда он подтвердит, сможете созваниваться.</div>';
+    FL.friends.forEach(function (x) {
+      h += '<div class="eye-row eye-sm">' + ava(x) + '<div class="t">' + esc(x.name) + '<small>ID ' + esc(x.id) + '</small></div><div class="fb">' +
+        '<button type="button" class="eye-cb au" data-a="tel" data-id="' + esc(x.id) + '" aria-label="Аудиозвонок: ' + esc(x.name) + '">' + IC.tel + '</button>' +
+        '<button type="button" class="eye-cb" data-a="vid" data-id="' + esc(x.id) + '" aria-label="Видеозвонок: ' + esc(x.name) + '">' + IC.cam + '</button></div></div>';
+    });
     if (FL.outgoing.length) h += '<div class="eye-wait">Ждут подтверждения: ' + FL.outgoing.map(function (x) { return esc(first(x.name)); }).join(', ') + '</div>';
-    h += '<form class="eye-add" autocomplete="off"><input id="eyeAddId" inputmode="numeric" maxlength="8" placeholder="Добавить в друзья по ID" aria-label="ID человека">' +
+    h += '<div class="eye-lbl">Недавние звонки</div>';
+    if (!log.length) h += '<div class="eye-empty">Звонков пока не было.</div>';
+    log.slice(0, 30).forEach(function (e) {
+      var f = byId(e.id), nm = e.name || (f && f.name) || ('ID ' + e.id);
+      var title = e.others && e.others.length ? first(nm) + ', ' + e.others.map(first).filter(Boolean).slice(0, 1).join(', ') + (e.others.length > 1 ? ' и ещё ' + (e.others.length - 1) : '') : nm;
+      h += '<button type="button" class="eye-row eye-sm" data-a="log" data-id="' + esc(e.id) + '" data-v="' + (e.video ? 1 : 0) + '">' + ava({ name: nm, av: f && f.av }) +
+        '<div class="t">' + esc(title) + '<small' + (e.st === 'missed' ? ' class="miss"' : '') + '>' + esc(logLine(e)) + '</small></div><span class="tm">' + esc(whenTs(e.ts)) + '</span></button>';
+    });
+    h += '<div class="eye-lbl">Добавить друга по ID</div>';
+    h += '<form class="eye-add" autocomplete="off"><input id="eyeAddId" inputmode="numeric" maxlength="8" placeholder="ID в EAGLES" aria-label="ID человека">' +
       '<button type="submit" class="eye-gold" id="eyeAddGo" disabled>Позвать</button></form>';
+    h += '<div class="eye-note">Недавние звонки видны на том телефоне или компьютере, где был открыт EAGLES. Пропущенный звонок попадёт сюда, если EAGLES был открыт.</div>';
     el.innerHTML = h;
     var inp = el.querySelector('#eyeAddId'), go = el.querySelector('#eyeAddGo');
     inp.value = typed; go.disabled = typed.length < 5; if (focused) inp.focus();
     inp.oninput = function () { this.value = this.value.replace(/\D/g, ''); go.disabled = this.value.length < 5; };
     el.querySelector('form').onsubmit = function (e) {
       e.preventDefault(); var id = inp.value; if (id.length < 5) return;
-      go.disabled = true; frDo('fr_add', id, '').then(function () { var i2 = document.getElementById('eyeAddId'); if (i2) { i2.value = ''; } });
+      go.disabled = true; frDo('fr_add', id, '').then(function () { var i2 = document.getElementById('eyeAddId'); if (i2) i2.value = ''; });
     };
     Array.prototype.forEach.call(el.querySelectorAll('[data-a]'), function (b) {
       b.onclick = function () {
         var id = b.getAttribute('data-id'), a = b.getAttribute('data-a'), x = byId(id);
-        if (a === 'call') pickCall(id, x ? x.name : '');
+        if (a === 'tel' || a === 'vid') startCall(id, x ? x.name : '', a === 'vid');
+        else if (a === 'log') { if (FS[id] === 'yes' || FRON === false) pickCall(id, x ? x.name : ''); else toast(WHY.not_friends); }
         else if (a === 'ok') frDo('fr_add', id, x ? x.name : '');
         else if (a === 'no') frDo('fr_del', id, x ? x.name : '');
       };
     });
   }
-  // выбор: аудио или видео (для кружков друзей)
+  function badges() { homeBtn(); if (!TOPW) navTab(); eyePage(); }
+
+  // выбор: аудио или видео (недавние звонки)
   function pickCall(id, name) {
     addCss();
     var d = document.createElement('div'); d.className = 'eye-pick'; d.setAttribute('role', 'dialog');
@@ -807,7 +960,7 @@
     cardEl.querySelector('[data-a="ok"]').onclick = function () { markSeen(id); frDo('fr_add', id, nm); };
   }
 
-  function render() { placeButton(); homeBlock(); reqCard(); }
+  function render() { placeButton(); badges(); reqCard(); }
 
   /* ---------- запуск ---------- */
   // Окно чата внутри Профиля (iframe того же сайта, где тоже подключён EYE): своё соединение не открываем,
@@ -825,12 +978,15 @@
   function tick() {
     render();
     if (!document.hidden && Date.now() - flT > (document.getElementById('chHome') ? 45000 : 120000)) loadFriends();
+    if (!TOPW && !document.hidden && Date.now() - UNR.t > 60000 && (document.getElementById('openChat') || document.getElementById('tabEye'))) loadUnread();
   }
   function boot() {
     if (!TOPW) connect();
     loadFriends();
     setInterval(tick, 1000);
     document.addEventListener('visibilitychange', function () { if (!document.hidden && Date.now() - flT > 15000) loadFriends(); });
+    // окно EYE закрыли или прочитали переписку — пересчитать красную цифру
+    window.addEventListener('message', function (e) { if (e.data && (e.data.eg === 'chatClose' || e.data.eg === 'chatSeen')) setTimeout(loadUnread, 400); });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();
