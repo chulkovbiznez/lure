@@ -14,7 +14,7 @@ module.exports = function media(ctx) {
   const SAVER = ENV.SAVER_URL || '';             // функция media-saver
   const SAVER_KEY = ENV.SAVER_KEY || '';
   // наценка своя у каждой модели (так LURE не дороже Syntx и Higgsfield); можно поменять в lure.env: MARKUP_NB21=1.8
-  const MK = { nb21: 1.66, nbpro: 1.5, gpt26: 1.5, veof: 1.5, veo: 1.5, sd25: 1.5, sd2: 1.5, omni: 1.5, kl3: 1.5, kl26: 1.5, mc3: 1.5, mc26: 1.5 };
+  const MK = { nb21: 1.66, nbpro: 1.5, gpt26: 1.5, veof: 1.5, veo: 1.5, sd25: 1.5, sd2: 1.5, omni: 1.5, kl3: 1.5, kl26: 1.5, mc3: 1.5, mc26: 1.5, el4: 1.5, sfx: 1.5 };
   const MAX_JOBS = 3;                            // одновременно у одного человека
   const REF_CHARS = 2.7e6;                       // все фото-референсы вместе, символов base64 (лимит шлюзов Яндекса ~3,5 МБ)
 
@@ -60,10 +60,17 @@ module.exports = function media(ctx) {
         ar: ['16:9', '9:16'], dur: [4, 6, 8, 10], res: ['720p', '1080p', '4k'], durStr: true,
         tiers: [{ c: ['duration=4', 'has_video=false'], r: 48 }, { c: ['duration=6', 'has_video=false'], r: 63 }, { c: ['duration=8', 'has_video=false'], r: 79 }, { c: ['duration=10', 'has_video=false'], r: 95 },
           { c: ['resolution=4k', 'duration=4', 'has_video=false'], r: 111 }, { c: ['resolution=4k', 'duration=6', 'has_video=false'], r: 126 }, { c: ['resolution=4k', 'duration=8', 'has_video=false'], r: 142 }, { c: ['resolution=4k', 'duration=10', 'has_video=false'], r: 158 }, { c: ['has_video=true'], r: 126 }, { c: ['has_video=true', 'resolution=4k'], r: 189 }] }
+    ],
+    // Звук (16.11): озвучка ElevenLabs v4 (готовые голоса, сразу через /audio/speech) и эффекты Suno Sounds (/media).
+    sound: [
+      { k: 'el4', eta: 25, id: 'elevenlabs/eleven-v4', n: 'ElevenLabs v4', d: 'Озвучка текста живыми голосами, 21 голос', tts: true, max: 2000,
+        perChar: 9507.456 / 1e6,
+        voices: ['george', 'sarah', 'adam', 'alice', 'bella', 'bill', 'brian', 'callum', 'charlie', 'chris', 'daniel', 'eric', 'harry', 'jessica', 'laura', 'liam', 'lily', 'matilda', 'river', 'roger', 'will'] },
+      { k: 'sfx', eta: 60, id: 'suno/sounds', n: 'Suno Sounds', d: 'Звуковые эффекты, шумы и лупы по описанию', max: 500, loop: true, fixed: 2 }
     ]
   };
   const BY = {};
-  for (const kind of ['img', 'video']) for (const m of CAT[kind]) { m.kind = kind; BY[m.k] = m; }
+  for (const kind of ['img', 'video', 'sound']) for (const m of CAT[kind]) { m.kind = kind === 'sound' ? 'snd' : kind; BY[m.k] = m; }
 
   // свежие цены из каталога Polza
   let pricesAt = 0;
@@ -92,6 +99,7 @@ module.exports = function media(ctx) {
       if (o.prompt) inp.prompt = o.prompt;
       return inp;
     }
+    if (m.kind === 'snd') { const inp = { prompt: o.prompt }; if (m.loop) inp.soundLoop = !!o.loop; return inp; }
     const inp = { prompt: o.prompt };
     if (o.ar && m.ar.includes(o.ar) && o.ar !== 'auto') inp.aspect_ratio = o.ar;
     if (m.kind === 'img') {
@@ -109,6 +117,7 @@ module.exports = function media(ctx) {
   }
   // себестоимость Polza по условиям тарифа
   function baseCost(m, o) {
+    if (m.tts) return Math.max(1, (o.prompt || '').length) * (Number(ENV.TTS_RUB_PER_CHAR) || m.perChar);
     if (m.tok) return m.est[o.q] || m.est.high;
     if (m.fixed && !m.tiers) return m.fixed;
     const r0 = o.res || (m.res && m.res[0]), snd = String(o.audio !== false && !!m.audio);
@@ -132,7 +141,12 @@ module.exports = function media(ctx) {
   const UP_I = /^https:\/\/storage\.yandexcloud\.net\/[a-z0-9.-]+\/up\/[\w-]{1,40}\/[a-f0-9]{16}\.(jpg|png|webp)$/;
   const UP_A = /^https:\/\/storage\.yandexcloud\.net\/[a-z0-9.-]+\/up\/[\w-]{1,40}\/[a-f0-9]{16}\.(mp3|wav|m4a|flac)$/;
   function clean(m, b) {
-    const o = { prompt: String(b.prompt || '').trim().slice(0, 4000) };
+    const o = { prompt: String(b.prompt || '').trim().slice(0, m.max || 4000) };
+    if (m.kind === 'snd') {
+      if (m.voices) o.voice = m.voices.includes(b.voice) ? b.voice : m.voices[0];
+      if (m.loop) o.loop = b.loop === true;
+      return o;
+    }
     o.ar = m.ar.includes(b.ar) ? b.ar : m.ar[0];
     if (m.res) o.res = m.res.includes(b.res) ? b.res : m.res[0];
     if (m.q) o.q = m.q.includes(b.q) ? b.q : m.q[0];
@@ -160,7 +174,7 @@ module.exports = function media(ctx) {
   const heldOf = u => r2(u.held || 0);
   const safeId = id => String(id).replace(/[^\w-]/g, '_');
   const MEDIA_BUCKET = ENV.MEDIA_BUCKET || 'lure-media';
-  const pubJob = j => ({ id: j.id, kind: j.kind, model: j.n, k: j.k, prompt: j.o.prompt, ar: j.o.ar, dur: j.o.dur, res: j.o.res, status: j.status, price: j.price, cost: j.cost, url: j.url, at: j.at, err: j.err });
+  const pubJob = j => ({ id: j.id, kind: j.kind, model: j.n, k: j.k, prompt: j.o.prompt, ar: j.o.ar, dur: j.o.dur, res: j.o.res, voice: j.o.voice, status: j.status, price: j.price, cost: j.cost, url: j.url, at: j.at, err: j.err });
 
   async function polza(method, p, body) {
     const r = await fetch(POLZA + p, { method, headers: { Authorization: 'Bearer ' + POLZA_KEY, 'Content-Type': 'application/json' },
@@ -184,7 +198,7 @@ module.exports = function media(ctx) {
     j.status = status; Object.assign(j, extra || {});
     if (status === 'done') {
       addSpent(u, j.cost);
-      op(u, 'spend', -j.cost, j.n + ' · ' + (j.kind === 'img' ? 'картинка' : 'видео ' + j.o.dur + ' сек'));
+      op(u, 'spend', -j.cost, j.n + ' · ' + (j.kind === 'img' ? 'картинка' : j.kind === 'snd' ? (BY[j.k] && BY[j.k].tts ? 'озвучка ' + j.o.prompt.length + ' симв.' : 'звук') : 'видео ' + j.o.dur + ' сек'));
     }
     const list = gal(u.id); const i = list.findIndex(x => x.id === j.id);
     if (status === 'failed') { if (i >= 0) list.splice(i, 1); } else if (i >= 0) list[i] = pubJob(j); else list.unshift(pubJob(j));
@@ -200,13 +214,14 @@ module.exports = function media(ctx) {
   const checking = new Set();
   async function check(j) {
     if (checking.has(j.id) || j.status !== 'run') return;
+    if (j.tts) { if (Date.now() - j.at > 10 * 60e3) finish(j, 'failed', { err: 'нейросеть не ответила, попробуй ещё раз' }); return; }
     checking.add(j.id);
     try {
       const r = await polza('GET', '/media/' + encodeURIComponent(j.pid));
       if (r.status === 'completed') {
         const src = r.data && (r.data.url || (Array.isArray(r.data) && r.data[0] && (r.data[0].url || r.data[0])));
         if (!src) return finish(j, 'failed', { err: 'Нет файла в ответе' });
-        const ext = (String(src).match(/\.(png|jpe?g|webp|gif|mp4|mov)(\?|$)/i) || [, j.kind === 'img' ? 'png' : 'mp4'])[1].toLowerCase();
+        const ext = (String(src).match(/\.(png|jpe?g|webp|gif|mp4|mov|mp3|wav|m4a)(\?|$)/i) || [, j.kind === 'img' ? 'png' : j.kind === 'snd' ? 'mp3' : 'mp4'])[1].toLowerCase();
         const url = await keep(src, j.uid.replace(/[^\w-]/g, '_') + '/' + j.id + '.' + ext);
         const polzaCost = Number(r.usage && (r.usage.cost_rub ?? r.usage.cost));
         const m = BY[j.k];
@@ -214,7 +229,7 @@ module.exports = function media(ctx) {
         return finish(j, 'done', { url, cost, polzaCost: isFinite(polzaCost) ? polzaCost : null, doneAt: Date.now() });
       }
       if (r.status === 'failed' || r.status === 'cancelled') return finish(j, 'failed', { err: (r.error && r.error.message) || 'Не получилось' });
-      if (Date.now() - j.at > (j.kind === 'img' ? 45 : 120) * 60e3) return finish(j, 'failed', { err: 'нейросеть не успела, попробуй ещё раз' });
+      if (Date.now() - j.at > (j.kind === 'video' ? 120 : 45) * 60e3) return finish(j, 'failed', { err: 'нейросеть не успела, попробуй ещё раз' });
     } catch (e) {
       j.tries = (j.tries || 0) + 1;
       if (j.tries <= 3 || j.tries % 10 === 0) console.error('media check', j.id, j.k, 'try', j.tries, e.message);
@@ -223,12 +238,39 @@ module.exports = function media(ctx) {
   }
   setInterval(() => { for (const j of Object.values(db.jobs)) check(j); }, 8000);
 
+  // озвучка: Polza отвечает сразу (аудио base64), кладём mp3 в наше хранилище по подписанной ссылке (папка tts/)
+  async function runTts(j, m) {
+    try {
+      const r = await polza('POST', '/audio/speech', { model: m.id, input: j.o.prompt, voice: j.o.voice, response_format: 'mp3', user: 'lure-' + j.uid });
+      if (!r.audio || r.error) {
+        console.error('tts', JSON.stringify(r).slice(0, 300));
+        return finish(j, 'failed', { err: (r.error && r.error.message || 'нейросеть не приняла текст').slice(0, 160) });
+      }
+      const buf = Buffer.from(String(r.audio).replace(/^data:[^,]*,/, ''), 'base64');
+      const key = 'tts/' + safeId(j.uid) + '/' + crypto.randomBytes(8).toString('hex') + '.mp3';
+      const pr = await fetch(SAVER, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Saver-Key': SAVER_KEY },
+        body: JSON.stringify({ presign: true, key }), signal: AbortSignal.timeout(20000) });
+      const pj = await pr.json().catch(() => ({}));
+      if (!pj.put) throw new Error('presign ' + (pj.error || pr.status));
+      const up = await fetch(pj.put, { method: 'PUT', body: buf, headers: { 'Content-Type': 'audio/mpeg' }, signal: AbortSignal.timeout(60000) });
+      if (!up.ok) throw new Error('put ' + up.status);
+      const polzaCost = Number(r.usage && (r.usage.cost_rub ?? r.usage.cost));
+      const cost = isFinite(polzaCost) && polzaCost > 0 ? Math.max(1, r2(Math.ceil(polzaCost * markup(m) * 100) / 100)) : j.price;
+      j.o.dur = Number(r.duration) ? Math.round(Number(r.duration)) : undefined;
+      finish(j, 'done', { url: pj.url, cost, polzaCost: isFinite(polzaCost) ? polzaCost : null, doneAt: Date.now() });
+    } catch (e) {
+      console.error('tts', j.id, e.message);
+      finish(j, 'failed', { err: 'не получилось сохранить звук, попробуй ещё раз' });
+    }
+  }
+
   // ---------- API ----------
   return async function route(req, res, p, m, u, gate) {
     if (p === '/api/media/catalog') {
       await refreshPrices().catch(() => {});
       const out = {};
-      for (const kind of ['img', 'video']) out[kind] = CAT[kind].map(x => ({ k: x.k, n: x.n, d: x.d, refs: x.refs, ar: x.ar, res: x.res || null, q: x.q || null, dur: x.dur || null, audio: !!x.audio, eta: x.eta || 60, mc: !!x.mc, ps: x.mc ? perSecTable(x) : null, audioDef: x.audioDef !== false,
+      for (const kind of ['img', 'video', 'sound']) out[kind] = CAT[kind].map(x => ({ voices: x.voices || null, max: x.max || 0, loop: !!x.loop,
+        perChar: x.tts ? (Number(ENV.TTS_RUB_PER_CHAR) || x.perChar) * markup(x) : 0, k: x.k, n: x.n, d: x.d, refs: x.refs, ar: x.ar, res: x.res || null, q: x.q || null, dur: x.dur || null, audio: !!x.audio, eta: x.eta || 60, mc: !!x.mc, ps: x.mc ? perSecTable(x) : null, audioDef: x.audioDef !== false,
         vrefs: x.vrefs || 0, vmax: x.vmax || 0, vsum: x.vsum || 0, arefs: x.arefs || 0, rrefs: x.rrefs || 0, refsV: x.refsV || 0,
         table: priceTable(x), tableV: x.vrefs ? priceTable(x, true) : null }));
       return send(res, 200, { ok: true, cat: out, ready: !!POLZA_KEY });
@@ -267,6 +309,7 @@ module.exports = function media(ctx) {
       const mod = BY[String(b.k || '')];
       if (!mod) return send(res, 200, { ok: false, error: 'bad_model' });
       const o = clean(mod, b);
+      if (mod.tts && !SAVER) return send(res, 200, { ok: false, error: 'media_off' });
       if (o.prompt.length < 2 && !mod.mc) return send(res, 200, { ok: false, error: 'no_prompt' });
       if (mod.mc) {
         const pre = 'https://storage.yandexcloud.net/' + MEDIA_BUCKET + '/up/' + safeId(u.id) + '/';
@@ -285,6 +328,14 @@ module.exports = function media(ctx) {
       const dayRoom = dayCap(u) - spentToday(u) - heldOf(u);
       if (free < hold) return send(res, 200, { ok: false, error: 'no_money', need: hold });
       if (dayRoom < hold) return send(res, 200, { ok: false, error: 'day_limit' });
+      if (mod.tts) {
+        const id = crypto.randomBytes(9).toString('hex');
+        u.held = r2(heldOf(u) + hold);
+        const j = { id, uid: u.id, pid: null, tts: true, k: mod.k, n: mod.n, kind: mod.kind, o, price: pr, hold, at: Date.now(), status: 'run' };
+        db.jobs[id] = j; save();
+        runTts(j, mod);
+        return send(res, 200, { ok: true, job: pubJob(j), held: heldOf(u) });
+      }
       const inp = polzaInput(mod, o);
       if (refs.length) inp.images = refs.map(x => ({ type: 'base64', data: x }));
       const id = crypto.randomBytes(9).toString('hex');
