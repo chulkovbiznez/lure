@@ -237,6 +237,20 @@ body:not([data-tab=chat]) #dOpen{display:none}
 .ta{display:block;height:auto;min-height:46px;padding:12px 14px;font:400 15.5px/1.45 var(--f);color:var(--text);resize:none;overflow-y:hidden;border-radius:14px}
 .ta::placeholder{color:#6f6a64;font-weight:400}
 .m.u .ut.clip{max-height:calc(15 * 1.62em);overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 2.4em),transparent);mask-image:linear-gradient(180deg,#000 calc(100% - 2.4em),transparent)}
+.att{flex:none;width:44px;height:44px;margin-bottom:2px;border-radius:50%;border:.5px solid #2c2824;background:#121014;display:grid;place-items:center}
+.att svg{width:21px;height:21px;fill:none;stroke:#a39b90;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.att.web.on{border-color:rgba(233,162,59,.7);background:#2a2216}.att.web.on svg{stroke:var(--gold)}
+.webtag{display:block;font:600 11px var(--f);color:var(--gold);margin-bottom:4px}
+.phint{font:600 12px var(--f);color:#8a837a;text-align:right;padding-bottom:6px!important}.phint:empty{display:none}.phint b{color:var(--gold)}
+.attrow{display:flex;gap:8px;flex-wrap:wrap;padding-bottom:8px!important}
+.attrow .ac{position:relative;display:flex;align-items:center;gap:6px;height:56px;border-radius:12px;border:.5px solid #2c2824;background:#121014;padding:0 26px 0 10px;font:600 12px var(--f);color:#c9c1b5;max-width:220px}
+.attrow .ac img{width:56px;height:56px;object-fit:cover;border-radius:12px;margin-left:-10px}
+.attrow .ac.i{padding:0 0 0 10px}
+.attrow .ac span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.attrow .ac button{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:#2a2622;color:#fff;font-size:14px;line-height:22px;padding:0}
+.uimgs{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;margin-bottom:6px}
+.uimgs img{width:96px;height:96px;object-fit:cover;border-radius:12px;display:block}
+.ufile{display:inline-block;font:600 12px var(--f);color:#c9c1b5;background:#00000033;border-radius:10px;padding:6px 10px;margin:0 0 6px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px}
 .m.u .more{display:block;margin:4px 0 0 auto;font:600 13px var(--f);color:var(--gold);padding:2px 0}
 /* картинки и видео */
 .olab{display:block;font:600 12px var(--f);color:#8a837a;margin:14px 0 6px;text-transform:uppercase;letter-spacing:.06em}
@@ -384,7 +398,10 @@ body[data-tab=img] #dNew2,body[data-tab=video] #dNew2,body[data-tab=sound] #dNew
     <section id="chat" data-tab="chat">
       
       <div class="msgs" id="msgs"><div class="wrap" id="mlist"></div></div>
-      <div class="composer"><div class="wrap">
+      <div class="composer"><div class="wrap phint" id="pHint"></div><div class="wrap attrow" id="attRow" hidden></div><div class="wrap">
+        <button class="att" id="attBtn" type="button" aria-label="Прикрепить фото или файл"><svg viewBox="0 0 24 24"><path d="M21 11.5l-8.6 8.6a5.5 5.5 0 01-7.8-7.8l8.6-8.6a3.7 3.7 0 015.2 5.2l-8.6 8.6a1.8 1.8 0 01-2.6-2.6l8-8"/></svg></button>
+        <button class="att web" id="webBtn" type="button" aria-label="Интернет" aria-pressed="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.8 3 2.8 15 0 18M12 3c-2.8 3-2.8 15 0 18"/></svg></button>
+        <input type="file" id="attFile" accept="image/jpeg,image/png,image/webp,image/*,.pdf,.docx,.txt,.md,.csv" multiple hidden>
         <textarea id="q" rows="1" placeholder="Спроси что угодно"></textarea>
         <button class="send" id="sendBtn" type="button" aria-label="Отправить"><svg viewBox="0 0 24 24"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg></button>
       </div></div>
@@ -629,7 +646,7 @@ $('lBack').onclick=function(){vhUnlock();clearTimeout(lResT);$('l1').hidden=fals
 /* ---------- приложение ---------- */
 function setMe(m){ME=m;$('balChip').textContent=rub(m.balance);$('wBal').textContent=rub(m.balance);$('wId').textContent=m.id;
   $('wDay').textContent='Сегодня потрачено '+rub(m.spentToday)+(m.dayLimit?' из '+rub(m.dayLimit)+' в сутки':'');$('owner').hidden=!m.owner}
-function start(m){zgrDone();setMe(m);$('login').hidden=true;$('app').hidden=false;loadModels();openDialog(ls(key('cur'))||null);go(location.hash.replace('#','').split('&')[0]||'chat');if(m.access&&!m.terms)$('terms').hidden=false;usePF()}
+function start(m){WEB=ls(key('web'))==='1';drawWeb();zgrDone();setMe(m);$('login').hidden=true;$('app').hidden=false;loadModels();openDialog(ls(key('cur'))||null);go(location.hash.replace('#','').split('&')[0]||'chat');if(m.access&&!m.terms)$('terms').hidden=false;usePF()}
 $('tOk').onclick=function(){var b=this;b.disabled=true;$('tErr').textContent='';post('/api/terms').then(function(r){b.disabled=false;if(!r.ok){if(r.error==='auth')showLogin();return}setMe(r.me);$('terms').hidden=true}).catch(function(){b.disabled=false;$('tErr').textContent='Нет связи. Если включён VPN, выключи его.'})};
 function key(k){return 'lure_'+(ME?ME.id:'x')+'_'+k}
 function go(t){if(!/^(chat|sound|img|video|wallet)$/.test(t))t='chat';document.body.dataset.tab=t;$('secName').textContent={chat:'Чаты',sound:'Звук',img:'Изображения',video:'Видео',wallet:'Баланс'}[t];$('mpanel').hidden=true;
@@ -653,7 +670,7 @@ function loadModels(){get('/api/models').then(function(r){if(!r.ok){if(r.error==
   ls(key('model'),sel||null);drawModels();drawPrices(r.models)})}
 var DESC=[[/opus/i,'Самая умная, для сложных задач'],[/sonnet/i,'Отличная на каждый день'],[/haiku/i,'Быстрая и недорогая'],[/gpt/i,'Универсальная от OpenAI'],[/gemini.*pro/i,'Сильная от Google'],[/flash/i,'Быстрая и самая дешёвая']];
 function desc(id){for(var i=0;i<DESC.length;i++)if(DESC[i][0].test(id))return DESC[i][1];return ''}
-function drawModels(){var sel=ls(key('model'));var m=MODELS.filter(function(x){return x.id===sel})[0];
+function drawModels(){setTimeout(priceHint,0);var sel=ls(key('model'));var m=MODELS.filter(function(x){return x.id===sel})[0];
   $('mName').textContent=m?pretty(m.id):'LURE';
   $('mlistSel').innerHTML=MODELS.map(function(x){return '<button class="opt'+(x.id===sel?' on':'')+(isBest(x.id)?' best':'')+'" data-m="'+esc(x.id)+'" role="option"><span><b>'+esc(pretty(x.id))+(isBest(x.id)?'<em class="tagb">ЛУЧШАЯ</em>':'')+'</b><small>'+esc(desc(x.id))+' · ≈ '+rub(typical(x))+' за ответ</small></span><i></i></button>'}).join('');
   [].forEach.call($('mlistSel').querySelectorAll('[data-m]'),function(b){b.onclick=function(){ls(key('model'),b.dataset.m);$('mpanel').hidden=true;drawModels()}})}
@@ -843,9 +860,9 @@ function inl(s){return s.replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*([
 
 function drawMsgs(){var L=$('mlist');
   if(!CUR.msgs.length){L.innerHTML='<div class="empty">Чем помочь сегодня?</div>';return}
-  L.innerHTML=CUR.msgs.map(function(m,i){return m.role==='user'?'<div class="m u"><div class="ut clip">'+esc(m.content)+'</div></div>':'<div class="m a"><div class="tx">'+md(m.content)+'</div><div class="meta">'+(m.model?esc(pretty(m.model)):'')+(m.cost!=null?' · '+rub(m.cost):'')+'<button data-c="'+i+'">Копировать</button></div></div>'}).join('');
+  L.innerHTML=CUR.msgs.map(function(m,i){return m.role==='user'?'<div class="m u">'+(m.imgs&&m.imgs.length?'<div class="uimgs">'+m.imgs.map(function(u){return '<a href="'+esc(u)+'" target="_blank" rel="noopener"><img src="'+esc(u)+'" alt="" loading="lazy"></a>'}).join('')+'</div>':'')+(m.files&&m.files.length?'<div style="text-align:right">'+m.files.map(function(f){return '<span class="ufile">📄 '+esc(f.name)+'</span>'}).join('')+'</div>':'')+(m.web?'<span class="webtag">🌐 с интернетом</span>':'')+(m.content?'<div class="ut clip">'+esc(m.content)+'</div>':'')+'</div>':'<div class="m a"><div class="tx">'+md(m.content)+'</div><div class="meta">'+(m.model?esc(pretty(m.model)):'')+(m.cost!=null?' · '+rub(m.cost):'')+'<button data-c="'+i+'">Копировать</button></div></div>'}).join('');
   [].forEach.call(L.querySelectorAll('[data-c]'),function(b){b.onclick=function(){var t=CUR.msgs[+b.dataset.c].content;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){toast('Скопировано')},function(){toast('Не получилось скопировать')})}});
-  clipU(L);var box=$('msgs');box.scrollTop=box.scrollHeight}
+  clipU(L);var box=$('msgs');box.scrollTop=box.scrollHeight;priceHint()}
 function clipU(L){[].forEach.call(L.querySelectorAll('.m.u .ut.clip'),function(u){if(u.scrollHeight<=u.clientHeight+2){u.classList.remove('clip');return}
   if(u.nextSibling)return;var b=document.createElement('button');b.className='more';b.textContent='ещё';
   b.onclick=function(){var o=u.classList.toggle('clip');b.textContent=o?'ещё':'свернуть'};u.parentNode.appendChild(b)})}
@@ -853,24 +870,31 @@ function clipU(L){[].forEach.call(L.querySelectorAll('.m.u .ut.clip'),function(u
 /* ---------- отправка ---------- */
 var SEND='<svg viewBox="0 0 24 24"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg>',STOP='<svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
 function grow(){var t=$('q'),cs=getComputedStyle(t),max=parseFloat(cs.lineHeight)*7+parseFloat(cs.paddingTop)+parseFloat(cs.paddingBottom)+1;t.style.height='auto';var hh=t.scrollHeight;t.style.height=Math.min(hh,max)+'px';t.style.overflowY=hh>max?'auto':'hidden'}
-$('q').oninput=grow;
+$('q').oninput=function(){grow();priceHint()};
 $('q').onkeydown=function(e){if(e.key==='Enter'&&!e.shiftKey&&window.matchMedia('(min-width:700px)').matches){e.preventDefault();$('sendBtn').click()}};
 $('sendBtn').onclick=function(){
   if(ctl){ctl.abort();return}
-  var text=$('q').value.trim(),model=ls(key('model'));if(!text)return;if(!model){toast('Модели ещё загружаются');return}
+  var text=$('q').value.trim(),model=ls(key('model'));if(!text&&!ATT.length)return;if(!model){toast('Модели ещё загружаются');return}
+  if(ATT.some(function(a){return a.busy})){toast('Подожди, файл ещё читается');return}
   if(ME.balance<=0){toast(ERR.no_money);go('wallet');return}
-  CUR.msgs.push({role:'user',content:text});if(!CUR.title)CUR.title=text.slice(0,60);
-  $('q').value='';grow();drawMsgs();dStore(CUR);
-  var L=$('mlist'),el=document.createElement('div');el.className='m a';el.innerHTML='<div class="tx typing"></div>';L.appendChild(el);$('msgs').scrollTop=$('msgs').scrollHeight;
+  var att=ATT.slice(),IM=att.filter(function(a){return a.k==='i'}),FL=att.filter(function(a){return a.k==='f'});
+  if(IM.length&&!IM.every(function(a){return a.url})){var sb=$('sendBtn'),fake={};sb.disabled=true;var n=0;
+    (function next(){var it=IM[n++];if(!it){sb.disabled=false;$('sendBtn').click();return}upFile(it,fake,'').then(next,function(e){sb.disabled=false;toast(e&&e.error==='upload_failed'?'Фото не загрузилось. Попробуй ещё раз.':err(e&&e.error,e))})})();
+    toast('Загружаю фото…');return}
+  var web=WEB||/https?:\/\/\S+/i.test(text);
+  var um={role:'user',content:text};if(web)um.web=1;if(IM.length)um.imgs=IM.map(function(a){return a.url});if(FL.length)um.files=FL.map(function(a){return {name:a.name,text:a.text}});
+  CUR.msgs.push(um);if(!CUR.title)CUR.title=(text||(FL[0]&&FL[0].name)||'Фото').slice(0,60);
+  $('q').value='';ATT=[];drawAtt();grow();drawMsgs();dStore(CUR);priceHint();
+  var L=$('mlist'),el=document.createElement('div');el.className='m a';el.innerHTML=web?'<div class="tx typing"><p style="opacity:.7">🌐 Ищу в интернете…</p></div>':'<div class="tx typing"></div>';L.appendChild(el);$('msgs').scrollTop=$('msgs').scrollHeight;
   var tx=el.querySelector('.tx'),acc='',info=null,dialog=CUR;
   ctl=new AbortController();$('sendBtn').innerHTML=STOP;$('sendBtn').classList.add('stop');
   function done(errText){ctl=null;$('sendBtn').innerHTML=SEND;$('sendBtn').classList.remove('stop');
     if(acc)dialog.msgs.push({role:'assistant',content:acc,model:model,cost:info?info.cost:null});
-    else if(errText){dialog.msgs.pop();if(!$('q').value)$('q').value=text;grow()}
+    else if(errText){dialog.msgs.pop();if(!$('q').value)$('q').value=text;if(!ATT.length){ATT=att;drawAtt()}grow()}
     dStore(dialog);if(dialog===CUR)drawMsgs();if(errText)toast(errText);
     if(info){ME.balance=info.balance;ME.spentToday=Math.round((ME.spentToday+info.cost)*100)/100;setMe(ME)}}
   fetch(U('/api/chat'),{method:'POST',credentials:CRED,signal:ctl.signal,headers:H({'Content-Type':'application/json'}),
-    body:JSON.stringify({model:model,messages:dialog.msgs.map(function(m){return{role:m.role,content:m.content}})})}).then(function(r){
+    body:JSON.stringify({model:model,messages:dialog.msgs.map(function(m){var o={role:m.role,content:m.content};if(m.imgs)o.imgs=m.imgs;if(m.files)o.files=m.files;return o}),web:web})}).then(function(r){
     var ct=r.headers.get('content-type')||'';
     if(ct.indexOf('event-stream')<0)return r.json().then(function(j){if(j.error==='auth')showLogin();if(j.error==='need_pro'){ME.access=false;go('chat')}if(j.error==='need_terms')$('terms').hidden=false;if(j.error==='pin_locked')showPin('enter');done(err(j.error,j))});
     var rd=r.body.getReader(),dec=new TextDecoder(),buf='',ev='';
@@ -887,6 +911,40 @@ $('sendBtn').onclick=function(){
         }catch(e){}}
       return pump()})}
     return pump()}).catch(function(e){done(e&&e.name==='AbortError'?(acc?'':'Остановлено'):'Связь прервалась. Если включён VPN, выключи его.')})};
+
+/* ---------- вложения в чате: фото и файлы ---------- */
+var ATT=[];ERR.img_failed='Не получилось прочитать фото. Пришли его ещё раз.';
+function drawAtt(){priceHint();var R=$('attRow');R.hidden=!ATT.length;R.innerHTML=ATT.map(function(a,i){return a.k==='i'?'<div class="ac i"><img src="'+a.thumb+'" alt=""><button type="button" data-ax="'+i+'" aria-label="Убрать">×</button></div>':'<div class="ac"><span>'+(a.busy?'⏳ ':'📄 ')+esc(a.name)+'</span><button type="button" data-ax="'+i+'" aria-label="Убрать">×</button></div>'}).join('');
+  [].forEach.call(R.querySelectorAll('[data-ax]'),function(b){b.onclick=function(){ATT.splice(+b.dataset.ax,1);drawAtt()}})}
+function shrinkJ(file,mx){return new Promise(function(ok,no){var u=URL.createObjectURL(file),im=new Image();im.onerror=function(){URL.revokeObjectURL(u);no()};im.onload=function(){var k=Math.min(1,mx/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);ok(c.toDataURL('image/jpeg',.82))};im.src=u})}
+var LIBS={};function lib(src){return LIBS[src]||(LIBS[src]=new Promise(function(ok,no){var s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=function(){delete LIBS[src];no()};document.head.appendChild(s)}))}
+function fileText(f){var ext=(f.name.split('.').pop()||'').toLowerCase();
+  if(ext==='pdf')return lib('lib/pdf.min.js').then(function(){pdfjsLib.GlobalWorkerOptions.workerSrc='lib/pdf.worker.min.js';return f.arrayBuffer()}).then(function(b){return pdfjsLib.getDocument({data:b}).promise}).then(function(doc){var n=Math.min(doc.numPages,300),out=[],i=1;
+    function pg(){if(i>n)return out.join('\n\n');return doc.getPage(i++).then(function(p){return p.getTextContent()}).then(function(t){out.push(t.items.map(function(x){return x.str+(x.hasEOL?'\n':'')}).join(' '));return pg()})}return pg()});
+  if(ext==='docx')return lib('lib/mammoth.browser.min.js').then(function(){return f.arrayBuffer()}).then(function(b){return mammoth.extractRawText({arrayBuffer:b})}).then(function(r){return r.value});
+  if(['txt','md','csv'].indexOf(ext)>=0)return f.text();
+  return Promise.reject({bad:1})}
+// цена до отправки (Андрей 17.11): история + текст + файлы + фото + интернет; ответ берём ≈600 токенов
+function priceHint(){var el=$('pHint');if(!el)return;var mid=ls(key('model')),m=(typeof MODELS!=='undefined'?MODELS:[]).filter(function(x){return x.id===mid})[0];
+  var t=$('q').value.trim();if(!m||!m.per1M||(!t&&!ATT.length)){el.innerHTML='';return}
+  var ch=t.length;(CUR&&CUR.msgs||[]).slice(-40).forEach(function(x){ch+=(x.content||'').length;(x.files||[]).forEach(function(f){ch+=f.text.length})});
+  var ni=0;ATT.forEach(function(a){if(a.k==='f')ch+=(a.text||'').length;else ni++});(CUR&&CUR.msgs||[]).forEach(function(x){ni+=(x.imgs||[]).length});ni=Math.min(ni,4);
+  var tin=ch/2.5+ni*1600+50,tout=600,web=WEB||/https?:\/\/\S+/i.test(t);
+  var r=(tin*m.per1M.in+tout*m.per1M.out)/1e6;if(web)r=r*2+2.2;
+  el.innerHTML='≈ <b>'+rub(Math.max(0.01,r))+'</b> за ответ'+(web?' · с интернетом':'')+(ATT.length?' · с вложениями':'')}
+var WEB=ls(key('web'))==='1';function drawWeb(){var b=$('webBtn');b.classList.toggle('on',WEB);b.setAttribute('aria-pressed',WEB?'true':'false')}
+$('webBtn').onclick=function(){WEB=!WEB;ls(key('web'),WEB?'1':null);drawWeb();priceHint();toast(WEB?'Интернет включён: модель будет искать свежие данные и читать ссылки. Поиск +≈1 ₽.':'Интернет выключен')};
+$('attBtn').onclick=function(){$('attFile').value='';$('attFile').click()};
+$('attFile').onchange=function(){[].slice.call(this.files||[]).forEach(function(f){
+  if(/^image\//.test(f.type)){if(ATT.filter(function(a){return a.k==='i'}).length>=4){toast('Можно до 4 фото в одном сообщении');return}
+    var a={k:'i',busy:true,thumb:''};ATT.push(a);shrinkJ(f,1280).then(function(d){a.busy=false;a.thumb=d;a.file=d2b(d);a.ext='jpg';drawAtt()},function(){ATT.splice(ATT.indexOf(a),1);drawAtt();toast('Не получилось открыть фото')});return}
+  if(ATT.filter(function(a){return a.k==='f'}).length>=3){toast('Можно до 3 файлов в одном сообщении');return}
+  if(f.size>30e6){toast('Файл больше 30 МБ');return}
+  var a={k:'f',busy:true,name:f.name};ATT.push(a);drawAtt();
+  fileText(f).then(function(t){t=String(t||'').replace(/[ \t]+/g,' ').replace(/\n{3,}/g,'\n\n').trim();
+    if(!t){ATT.splice(ATT.indexOf(a),1);drawAtt();toast('В файле нет текста. Если это скан, пришли страницы как фото.');return}
+    if(t.length>60000){t=t.slice(0,60000)+'\n…(дальше обрезано)';toast('Файл длинный, возьму первые 60 000 символов')}
+    a.text=t;a.busy=false;drawAtt()},function(e){ATT.splice(ATT.indexOf(a),1);drawAtt();toast(e&&e.bad?'Подходят фото, PDF, Word (.docx), txt, md, csv':'Не получилось прочитать файл')})});drawAtt()};
 
 /* ---------- кошелёк ---------- */
 var KIND={topup:'Пополнение кодом',credit:'Пополнение',gift:'Подарок',spend:'Ответ'};

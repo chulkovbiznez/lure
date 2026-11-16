@@ -19,7 +19,7 @@ const OWNERS = String(ENV.OWNER_IDS || '11111').split(',').map(s => s.trim()).fi
 const RUB_PER_UNIT = Number(ENV.RUB_PER_UNIT || 100);      // сколько рублей стоит 1 «$» движка New API
 const DAY_LIMIT = Number(ENV.DAY_LIMIT_RUB || 0);          // суточный лимит на человека, ₽; 0 — без лимита (решение Андрея 16.11). Владельца не ограничивает никогда
 const MAX_OUT = Number(ENV.MAX_OUTPUT_TOKENS || 4000);     // длина ответа
-const MAX_IN_CHARS = Number(ENV.MAX_INPUT_CHARS || 120000);
+const MAX_IN_CHARS = Number(ENV.MAX_INPUT_CHARS || 200000);
 const WELCOME = Number(ENV.WELCOME_RUB || 0);              // подарок новому человеку
 const SESSION_DAYS = 30;                                   // как ключ входа EAGLES: после него снова код на почту
 const LOCK_MIN = Number(ENV.LOCK_MIN || 30);               // без дела столько минут → снова ПИН
@@ -124,9 +124,27 @@ function udir(u) { return path.join(DLG_DIR, String(u.id).replace(/[^\w-]/g, '_'
 function dlgIndex(u) { try { return JSON.parse(fs.readFileSync(path.join(udir(u), 'index.json'), 'utf8')); } catch (e) { return []; } }
 function writeAtomic(f, data) { fs.writeFileSync(f + '.tmp', data); fs.renameSync(f + '.tmp', f); }
 function dlgSaveIndex(u, list) { fs.mkdirSync(udir(u), { recursive: true }); writeAtomic(path.join(udir(u), 'index.json'), JSON.stringify(list)); }
+const UP_IMG = /^https:\/\/storage\.yandexcloud\.net\/[a-z0-9.-]+\/up\/[\w-]{1,40}\/[a-f0-9]{16}\.(jpg|png|webp)$/;
+const IMG_CACHE = new Map();
+async function imgData(url) {   // фото из нашего хранилища → data:URL для модели (Polza сама наш адрес не качает)
+  if (IMG_CACHE.has(url)) return IMG_CACHE.get(url);
+  const r = await fetch(url, { signal: AbortSignal.timeout(20000) });
+  if (!r.ok) throw new Error('img ' + r.status);
+  const buf = Buffer.from(await r.arrayBuffer());
+  if (buf.length > 3e6) throw new Error('img big');
+  const ext = url.split('.').pop();
+  const d = 'data:image/' + (ext === 'jpg' ? 'jpeg' : ext) + ';base64,' + buf.toString('base64');
+  IMG_CACHE.set(url, d); if (IMG_CACHE.size > 60) IMG_CACHE.delete(IMG_CACHE.keys().next().value);
+  return d;
+}
 function dlgClean(d) {
   const msgs = (Array.isArray(d.msgs) ? d.msgs : []).filter(x => x && (x.role === 'user' || x.role === 'assistant') && typeof x.content === 'string').map(x => {
     const o = { role: x.role, content: x.content };
+    if (x.role === 'user' && x.web) o.web = 1;
+    if (x.role === 'user') {   // вложения: фото (ссылки на наше хранилище) и текст файлов
+      if (Array.isArray(x.imgs)) { const a = x.imgs.filter(z => typeof z === 'string' && UP_IMG.test(z)).slice(0, 4); if (a.length) o.imgs = a; }
+      if (Array.isArray(x.files)) { const f = x.files.filter(z => z && typeof z.name === 'string' && typeof z.text === 'string').slice(0, 3).map(z => ({ name: z.name.slice(0, 120), text: z.text.slice(0, 60000) })); if (f.length) o.files = f; }
+    }
     if (x.role === 'assistant') { if (typeof x.model === 'string') o.model = x.model.slice(0, 120); if (typeof x.cost === 'number' && isFinite(x.cost)) o.cost = x.cost; }
     return o;
   });
@@ -339,9 +357,34 @@ async function chat(req, res, u) {
   await loadPrices();
   const model = String(b.model || '');
   if (!PRICES.models[model]) return send(res, 200, { ok: false, error: 'bad_model' });
-  const msgs = (Array.isArray(b.messages) ? b.messages : []).slice(-40).map(x => ({ role: x.role === 'assistant' ? 'assistant' : x.role === 'system' ? 'system' : 'user', content: String(x.content || '') }));
+  const mine = 'https://storage.yandexcloud.net/' + (ENV.MEDIA_BUCKET || 'lure-media') + '/up/' + String(u.id).replace(/[^\w-]/g, '_') + '/';
+  const raw = (Array.isArray(b.messages) ? b.messages : []).slice(-40);
+  let imgLeft = 4;   // в запрос идут только 4 последних фото (лимит шлюза ~3,5 МБ)
+  const keepImg = new Set();
+  for (let i = raw.length - 1; i >= 0 && imgLeft > 0; i--) {
+    const x = raw[i]; if (!x || x.role === 'assistant' || !Array.isArray(x.imgs)) continue;
+    for (const z of x.imgs.slice(0, 4)) if (imgLeft > 0 && typeof z === 'string' && UP_IMG.test(z) && z.startsWith(mine)) { keepImg.add(i + '|' + z); imgLeft--; }
+  }
+  const msgs = []; let nImg = 0;
+  for (let i = 0; i < raw.length; i++) {
+    const x = raw[i] || {};
+    const role = x.role === 'assistant' ? 'assistant' : x.role === 'system' ? 'system' : 'user';
+    let text = String(x.content || '');
+    if (role === 'user' && Array.isArray(x.files)) for (const f of x.files.slice(0, 3)) if (f && typeof f.text === 'string') text += '\n\n[Файл: ' + String(f.name || 'файл').slice(0, 120) + ']\n' + f.text.slice(0, 60000);
+    const imgs = role === 'user' && Array.isArray(x.imgs) ? x.imgs.filter(z => keepImg.has(i + '|' + z)) : [];
+    const old = role === 'user' && Array.isArray(x.imgs) ? x.imgs.length - imgs.length : 0;
+    if (old > 0) text = '[было фото: ' + old + ' шт.]\n' + text;
+    if (role === 'user' && !text.trim()) text = imgs.length ? 'Посмотри фото.' : '…';
+    if (imgs.length) {
+      const parts = [{ type: 'text', text }];
+      try { for (const z of imgs) { parts.push({ type: 'image_url', image_url: { url: await imgData(z) } }); nImg++; } }
+      catch (e) { console.error('chat img', e.message); return send(res, 200, { ok: false, error: 'img_failed' }); }
+      msgs.push({ role, content: parts, _len: text.length });
+    } else msgs.push({ role, content: text, _len: text.length });
+  }
   if (!msgs.length) return send(res, 200, { ok: false, error: 'empty' });
-  const chars = msgs.reduce((s, x) => s + x.content.length, 0);
+  const chars = msgs.reduce((s, x) => s + x._len, 0) + nImg * 4000;
+  msgs.forEach(x => delete x._len);
   if (chars > MAX_IN_CHARS) return send(res, 200, { ok: false, error: 'too_long' });
   if (busy.has(u.id)) return send(res, 200, { ok: false, error: 'busy' });
 
@@ -357,6 +400,8 @@ async function chat(req, res, u) {
     if (maxTok < 150) return send(res, 200, { ok: false, error: 'no_money' });
     maxTok = Math.min(MAX_OUT, maxTok);
   } else if (costRub(model, 0, 0) > room) return send(res, 200, { ok: false, error: 'no_money' });
+
+  if (b.web === true && ENV.POLZA_KEY) return webChat(req, res, u, model, msgs, room, inCost);
 
   busy.add(u.id);
   let up;
@@ -400,6 +445,50 @@ async function chat(req, res, u) {
   op(u, 'spend', -cost, model + ' · ' + pin + '+' + pout + ' ток.');
   busy.delete(u.id);
   if (!res.writableEnded) { res.write('event: lure\ndata: ' + JSON.stringify({ cost, balance: u.balance, tokens: { in: pin, out: pout }, estimated: !usage }) + '\n\n'); res.end(); }
+}
+
+// ---------------- чат с интернетом: напрямую в Polza (серверные инструменты поиска и чтения страниц) ----------------
+// New API эти поля не пропускает, поэтому идём в Polza через шлюз polza-api тем же ключом, что картинки.
+// Цена: точная сумма Polza (usage.cost_rub: модель + поиски по 0,50 ₽) × WEB_MARKUP (как наценка чата).
+const POLZA_URL = (ENV.POLZA_URL || 'https://d5dlktk1t7njgiu965hg.764nr5vy.apigw.yandexcloud.net/api/v1').replace(/\/$/, '');
+async function webChat(req, res, u, model, msgs, room, inCost) {
+  const MK = Number(ENV.WEB_MARKUP || 2.2);
+  if (room < inCost + 3) return send(res, 200, { ok: false, error: 'no_money' });
+  const cap = Math.max(1, Math.min(30, Math.floor((room - inCost) / MK)));
+  busy.add(u.id);
+  u.held = r2((u.held || 0) + 3); save();
+  let j = null;
+  try {
+    const sys = { role: 'system', content: 'Сегодня ' + new Date().toLocaleDateString('ru-RU', { timeZone: 'Europe/Moscow', day: 'numeric', month: 'long', year: 'numeric' }) + '. У тебя есть поиск в интернете и чтение страниц по ссылке. Пользуйся ими, когда нужны свежие данные или человек дал ссылку. Отвечай на языке пользователя.' };
+    const r = await fetch(POLZA_URL + '/chat/completions', {
+      method: 'POST', signal: AbortSignal.timeout(170000),
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + ENV.POLZA_KEY },
+      body: JSON.stringify({ model, messages: [sys].concat(msgs), max_tokens: MAX_OUT, user: 'lure-' + u.id,
+        tools: [{ type: 'polza:web_search', parameters: { max_results: 5 } }, { type: 'polza:web_fetch' }, { type: 'polza:datetime' }],
+        max_tool_calls: 8, stop_server_tools_when: { type: 'spend_cap', value_rub: cap } })
+    });
+    const t = await r.text(); try { j = JSON.parse(t); } catch (e) { j = { error: { message: 'HTTP ' + r.status } }; }
+    if (!r.ok && !j.error) j.error = { message: 'HTTP ' + r.status };
+  } catch (e) { j = { error: { message: e.message } }; }
+  u.held = r2(Math.max(0, (u.held || 0) - 3));
+  busy.delete(u.id);
+  const msg = j && j.choices && j.choices[0] && j.choices[0].message;
+  let text = msg && typeof msg.content === 'string' ? msg.content : '';
+  if (!text) { save(); console.error('web chat', model, JSON.stringify(j).slice(0, 300)); return send(res, 200, { ok: false, error: 'engine_error' }); }
+  const src = []; const seen = new Set();
+  for (const a of (msg.annotations || [])) { const c = a && a.url_citation; if (c && c.url && !seen.has(c.url) && src.length < 8) { seen.add(c.url); src.push('- ' + (c.title ? c.title.replace(/[\r\n]+/g, ' ').slice(0, 100) + ': ' : '') + c.url); } }
+  if (src.length) text += '\n\n**Источники:**\n' + src.join('\n');
+  const us = j.usage || {};
+  const pin = us.prompt_tokens || 0, pout = us.completion_tokens || 0;
+  const pc = Number(us.cost_rub ?? us.cost);
+  let cost = isFinite(pc) && pc > 0 ? pc * MK : (costRub(model, pin, pout) || 0) + 0.5 * MK * ((us.server_tool_use && us.server_tool_use.web_search_requests) || 0);
+  cost = Math.max(0.01, r2(cost));
+  addSpent(u, cost);
+  op(u, 'spend', -cost, model + ' · ' + pin + '+' + pout + ' ток. · интернет');
+  res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-store' });
+  res.write('data: ' + JSON.stringify({ choices: [{ delta: { content: text } }] }) + '\n\n');
+  res.write('event: lure\ndata: ' + JSON.stringify({ cost, balance: u.balance, tokens: { in: pin, out: pout }, web: true }) + '\n\n');
+  res.end();
 }
 
 // ---------------- статика ----------------
