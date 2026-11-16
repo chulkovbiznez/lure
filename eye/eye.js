@@ -1,4 +1,5 @@
-/* EYE v3.2 (16.11.2026) — главный экран (у каждого свой выбор, нажатием), демонстрация экрана с компьютера, значки микрофона/камеры.
+/* EYE v3.3 (16.11.2026) — кнопка «показать экран» есть и на телефоне: пробуем, иначе понятная подсказка.
+   EYE v3.2 (16.11.2026) — главный экран (у каждого свой выбор, нажатием), демонстрация экрана с компьютера, значки микрофона/камеры.
    EYE v3.1 (16.11.2026) — камера выключена: аватарка или серый «ноунейм», имя и фамилия, аудиоволны.
    EYE v3 (16.11.2026) — аудио или видео, звонок до 4 человек (кнопка «+» в звонке зовёт своего друга).
    Было: EYE v2.3 (16.11.2026) — видеозвонки EAGLES. Подключается на страницах сайта одной строкой:
@@ -47,7 +48,7 @@
     '.eye-pill.g{color:#ffd23f;border-color:rgba(255,210,63,.35)}' +
     '.eye-who{position:absolute;left:16px;bottom:calc(120px + env(safe-area-inset-bottom,0px));z-index:2;font:900 19px/1.15 Montserrat,sans-serif;text-shadow:0 2px 10px rgba(0,0,0,.8)}' +
     '.eye-ctl{position:absolute;left:12px;right:12px;bottom:calc(24px + env(safe-area-inset-bottom,0px));z-index:2;max-width:420px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-radius:30px;background:rgba(14,12,15,.65);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,210,63,.28)}' +
-    '.eye-c{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:rgba(255,210,63,.14);border:1px solid rgba(255,210,63,.5);color:#ffd23f;cursor:pointer}' +
+    '.eye-c{flex:none;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:rgba(255,210,63,.14);border:1px solid rgba(255,210,63,.5);color:#ffd23f;cursor:pointer}' +
     '.eye-c.off{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.12);color:#8a847c}' +
     '.eye-c svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}' +
     '.eye-c.end{width:60px;height:60px;background:linear-gradient(180deg,#ff6a5a,#d91f12);border:0;color:#fff}' +
@@ -115,6 +116,7 @@
     '.eye-strip .tn{display:block!important;position:absolute;left:0;right:0;bottom:4px;text-align:center;font:800 10px/1 Montserrat,sans-serif;text-shadow:0 1px 4px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px}' +
     '.eye-tile.me video{transform:scaleX(-1)}.eye-tile.scr video{object-fit:contain;background:#000;transform:none}' +
     '.eye-who{bottom:auto!important;top:calc(66px + env(safe-area-inset-top,0px))}.eye-c.on{background:linear-gradient(180deg,#fff1b8,#ffd23f 40%,#d98d16);color:#2a1702;border:0}' +
+    '@media (max-width:400px){.eye-c{width:44px;height:44px}.eye-c.end{width:56px;height:56px}.eye-ctl{padding:10px 12px}}' +
     '@media (prefers-reduced-motion:reduce){.eye-av::before,.eye-av::after,.eye-yes i,.eye-card{animation:none}}';
   function addCss() { if (document.getElementById('eye-css')) return; var s = document.createElement('style'); s.id = 'eye-css'; s.textContent = css; document.head.appendChild(s); }
 
@@ -159,13 +161,14 @@
       '<div class="eye-who" id="eyeWho"></div>' +
       '<div class="eye-ctl"><button class="eye-c" id="eyeMic" aria-label="Микрофон">' + IC.mic + '</button><button class="eye-c" id="eyeCam" aria-label="Камера">' + IC.cam + '</button>' +
       '<button class="eye-c end" id="eyeEnd" aria-label="Завершить">' + IC.end + '</button><button class="eye-c" id="eyeAdd" aria-label="Добавить в звонок">' + IC.add + '</button>' +
-      (CANSHARE ? '<button class="eye-c" id="eyeScr" aria-label="Демонстрация экрана">' + IC.scr + '</button>' : '<button class="eye-c" id="eyeFlip" aria-label="Сменить камеру">' + IC.flip + '</button>') + '</div>';
+      '<button class="eye-c" id="eyeScr" aria-label="Демонстрация экрана">' + IC.scr + '</button>' +
+      (PHONE ? '<button class="eye-c" id="eyeFlip" aria-label="Сменить камеру">' + IC.flip + '</button>' : '') + '</div>';
     document.body.appendChild(ov);
     ov.querySelector('#eyeEnd').onclick = function () { send({ t: 'hangup', cid: call.cid }); finish('Звонок завершён'); };
     ov.querySelector('#eyeMic').onclick = function () { toggle('audio', this); };
     ov.querySelector('#eyeCam').onclick = function () { toggle('video', this); };
     ov.querySelector('#eyeAdd').onclick = addPick;
-    if (CANSHARE) ov.querySelector('#eyeScr').onclick = shareScreen; else ov.querySelector('#eyeFlip').onclick = flip;
+    ov.querySelector('#eyeScr').onclick = shareScreen; if (PHONE) ov.querySelector('#eyeFlip').onclick = flip;
     var st0 = myState(); ov.querySelector('#eyeMic').innerHTML = st0.mic ? IC.mic : IC.micx; ov.querySelector('#eyeMic').classList.toggle('off', !st0.mic);
     if (!wvRaf) wvRaf = requestAnimationFrame(waves);
     call.t0 = Date.now();
@@ -291,7 +294,11 @@
     return { cam: camOn || !!(call && call.screen), camOn: camOn, mic: a.some(function (t) { return t.enabled; }), scr: !!(call && call.screen) };
   }
   /* v3.2: демонстрация экрана (браузер на компьютере; телефонные браузеры экран отдавать не умеют) */
-  var CANSHARE = !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) && !/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  // v3.3: кнопка экрана есть везде; на телефоне пробуем — если браузер не даёт, говорим об этом (и оставляем «сменить камеру»)
+  var PHONE = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  var HASDM = !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
+  var CANSHARE = true;
+  var NOSHARE = 'Этот телефон не даёт сайту показать экран (так устроен браузер). Показать экран можно с компьютера, а смотреть — и с телефона.';
   function camTrack() { var v = call && call.local ? call.local.getVideoTracks() : []; return v[0] || null; }
   function vTr(P) {
     var ts = P.pc && P.pc.getTransceivers ? P.pc.getTransceivers() : [];
@@ -305,6 +312,7 @@
   function shareScreen() {
     if (!call) return;
     if (call.screen) { stopShare(); return; }
+    if (!HASDM) { toast(NOSHARE); return; }
     navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 15 }, audio: false }).then(function (st) {
       var t = st.getVideoTracks()[0];
       if (!call || !t) { st.getTracks().forEach(function (x) { x.stop(); }); return; }
@@ -314,7 +322,7 @@
       vals(call.peers).forEach(function (P) { setVideoSend(P, t); sendState(P); });
       toast('Ты показываешь экран. Остановить — та же кнопка.');
       layout();
-    }).catch(function () {});
+    }).catch(function (e) { if (PHONE || (e && e.name === 'NotSupportedError')) toast(NOSHARE); });
   }
   function stopShare() {
     if (!call || !call.screen) return;
