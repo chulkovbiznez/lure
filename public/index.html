@@ -398,7 +398,7 @@ body[data-tab=img] #dNew2,body[data-tab=video] #dNew2,body[data-tab=sound] #dNew
     <section id="chat" data-tab="chat">
       
       <div class="msgs" id="msgs"><div class="wrap" id="mlist"></div></div>
-      <div class="composer"><div class="wrap phint" id="pHint"></div><div class="wrap attrow" id="attRow" hidden></div><div class="wrap">
+      <div class="composer"><div class="wrap phint" id="priceLine"></div><div class="wrap attrow" id="attRow" hidden></div><div class="wrap">
         <button class="att" id="attBtn" type="button" aria-label="Прикрепить фото или файл"><svg viewBox="0 0 24 24"><path d="M21 11.5l-8.6 8.6a5.5 5.5 0 01-7.8-7.8l8.6-8.6a3.7 3.7 0 015.2 5.2l-8.6 8.6a1.8 1.8 0 01-2.6-2.6l8-8"/></svg></button>
         <button class="att web" id="webBtn" type="button" aria-label="Интернет" aria-pressed="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.8 3 2.8 15 0 18M12 3c-2.8 3-2.8 15 0 18"/></svg></button>
         <input type="file" id="attFile" accept="image/*,video/*,audio/*,.pdf,.docx,.txt,.md,.csv,.mp3,.m4a,.wav,.ogg,.opus,.mp4,.mov,.webm" multiple hidden>
@@ -940,7 +940,7 @@ function fileText(f){var ext=(f.name.split('.').pop()||'').toLowerCase();
   if(['txt','md','csv'].indexOf(ext)>=0)return f.text();
   return Promise.reject({bad:1})}
 // цена до отправки (Андрей 17.11): история + текст + файлы + фото + интернет; ответ берём ≈600 токенов
-function priceHint(){var el=$('pHint');if(!el)return;var mid=ls(key('model')),m=(typeof MODELS!=='undefined'?MODELS:[]).filter(function(x){return x.id===mid})[0];
+function priceHint(){var el=$('priceLine');if(!el)return;var mid=ls(key('model')),m=(typeof MODELS!=='undefined'?MODELS:[]).filter(function(x){return x.id===mid})[0];
   var t=$('q').value.trim();if(!m||!m.per1M||(!t&&!ATT.length)){el.innerHTML='';return}
   var ch=t.length;(CUR&&CUR.msgs||[]).slice(-40).forEach(function(x){ch+=(x.content||'').length;(x.files||[]).forEach(function(f){ch+=f.text.length})});
   var ni=0;ATT.forEach(function(a){if(a.k==='f')ch+=(a.text||'').length;else if(a.k==='v')ni+=(a.sheets||[1]).length;else ni++});(CUR&&CUR.msgs||[]).forEach(function(x){ni+=(x.imgs||[]).length});ni=Math.min(ni,4);
