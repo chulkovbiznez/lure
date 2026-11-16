@@ -361,10 +361,12 @@ async function chat(req, res, u) {
   if (!PRICES.models[model]) return send(res, 200, { ok: false, error: 'bad_model' });
   const mine = 'https://storage.yandexcloud.net/' + (ENV.MEDIA_BUCKET || 'lure-media') + '/up/' + String(u.id).replace(/[^\w-]/g, '_') + '/';
   const raw = (Array.isArray(b.messages) ? b.messages : []).slice(-40);
-  let imgLeft = 4;   // в запрос идут только 4 последних фото (лимит шлюза ~3,5 МБ)
+  let imgLeft = 4;   // фото уходят модели только в том сообщении, где их прикрепили (иначе каждое следующее сообщение дорожает)
   const keepImg = new Set();
   for (let i = raw.length - 1; i >= 0 && imgLeft > 0; i--) {
-    const x = raw[i]; if (!x || x.role === 'assistant' || !Array.isArray(x.imgs)) continue;
+    const x = raw[i]; if (!x || x.role === 'assistant') continue;
+    if (i !== raw.length - 1) break;
+    if (!Array.isArray(x.imgs)) continue;
     for (const z of x.imgs.slice(0, 4)) if (imgLeft > 0 && typeof z === 'string' && UP_IMG.test(z) && z.startsWith(mine)) { keepImg.add(i + '|' + z); imgLeft--; }
   }
   const msgs = []; let nImg = 0;
