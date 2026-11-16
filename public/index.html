@@ -7,6 +7,7 @@
 <meta name="theme-color" content="#070708">
 <meta name="robots" content="noindex">
 <link rel="icon" href="/znak.webp">
+<link rel="preload" as="image" href="/lure-logo.webp">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap">
@@ -27,6 +28,23 @@ a{color:var(--gold)}
 .btn{display:block;width:100%;border-radius:16px;padding:16px;background:linear-gradient(90deg,#ff6a2b,#ff9a3c);color:#1a0d05;font:900 16px var(--f);text-align:center;box-shadow:0 10px 26px rgba(255,106,43,.28)}
 .btn:disabled{opacity:.5}
 .btn2{border:1px solid var(--line);background:#0d0c0f;border-radius:12px;padding:10px 14px;font:700 13.5px var(--f);color:var(--text)}
+#zgr{--zgr-img:url(/lure-logo.webp);--zgr-ar:640/395}/* ЭКРАН ЗАГРУЗКИ (09.11.2026): логотип по центру, золотая полоска */
+.zgr{position:fixed;inset:0;z-index:100005;background:#070708;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:38px;padding:0 24px 6vh;overflow:hidden;transition:opacity .45s ease}
+.zgr[hidden]{display:none!important}
+.zgr.zgr-out{opacity:0;pointer-events:none}
+.zgr-glw{position:absolute;left:50%;top:43%;width:600px;height:600px;margin:-300px 0 0 -300px;border-radius:50%;background:radial-gradient(circle,rgba(255,176,46,.22),rgba(255,120,30,.07) 38%,rgba(0,0,0,0) 66%);animation:zgrPulse 3.4s ease-in-out infinite;pointer-events:none}
+.zgr-lg{position:relative;width:min(82vw,360px);aspect-ratio:var(--zgr-ar);background:var(--zgr-img) center/contain no-repeat;animation:zgrIn .8s cubic-bezier(.2,.8,.2,1) both,zgrFloat 4.2s ease-in-out .8s infinite}
+.zgr-lg::after{content:"";position:absolute;inset:0;-webkit-mask:var(--zgr-img) center/contain no-repeat;mask:var(--zgr-img) center/contain no-repeat;background:linear-gradient(100deg,rgba(255,255,255,0) 40%,rgba(255,246,214,.75) 50%,rgba(255,255,255,0) 60%) no-repeat;background-size:300% 100%;animation:zgrShine 2.8s ease-in-out .6s infinite}
+.zgr-bar{position:relative;width:min(58vw,230px);height:4px;border-radius:4px;background:rgba(255,210,63,.13);box-shadow:inset 0 0 0 .5px rgba(255,210,63,.18);animation:zgrIn .6s .25s both}
+.zgr-bar i{position:absolute;left:0;top:0;bottom:0;width:6%;border-radius:4px;background:linear-gradient(90deg,#ffe08a,#ffd23f 30%,#ff9a2a 70%,#ff5a1f);box-shadow:0 0 14px rgba(255,170,40,.75),0 0 3px rgba(255,220,120,.9);transition:width .5s cubic-bezier(.3,.7,.3,1)}
+.zgr-bar i::after{content:"";position:absolute;right:-3px;top:50%;width:10px;height:10px;margin-top:-5px;border-radius:50%;background:radial-gradient(circle,#fff6d6,rgba(255,200,80,.6) 45%,rgba(255,170,40,0) 70%)}
+.zgr-t{position:absolute;left:0;right:0;bottom:calc(14vh + env(safe-area-inset-bottom,0px));text-align:center;font:600 13px/1.5 var(--f),system-ui,sans-serif;color:#8a8074;padding:0 24px}
+.zgr-t a{color:#ffd23f}
+@keyframes zgrIn{from{opacity:0;transform:scale(.94) translateY(8px)}to{opacity:1;transform:none}}
+@keyframes zgrFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes zgrShine{0%{background-position:100% 0}55%,100%{background-position:0 0}}
+@keyframes zgrPulse{0%,100%{opacity:.75;transform:scale(1)}50%{opacity:1;transform:scale(1.06)}}
+@media (prefers-reduced-motion:reduce){.zgr-lg,.zgr-lg::after,.zgr-glw{animation:none}}
 .inp{width:100%;height:52px;border-radius:14px;border:1px solid var(--line);background:#100e12;padding:0 16px;font:600 16px var(--f);outline:none}
 .inp:focus{border-color:var(--gold2)}
 .card{background:linear-gradient(180deg,#17141a,#110f13);border:1px solid var(--line);border-radius:22px;padding:16px;margin-bottom:12px}
@@ -252,29 +270,88 @@ body[data-tab=img] #dNew2,body[data-tab=video] #dNew2{visibility:hidden}
 .mp{font-size:15px!important;font-weight:500!important;line-height:1.45;overflow-y:hidden}
 #vInfo{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-size:12px;margin:8px 2px}
 #vInfo.open{display:block}
+
+/* НОВЫЙ ВХОД (09.11.2026): как окно ПИН, 6 ячеек, без кнопки «Войти» */
+#login .logo{position:relative;margin-bottom:6px}
+#login .logo::before{content:"";position:absolute;left:50%;top:50%;width:460px;height:460px;margin:-230px 0 0 -230px;border-radius:50%;background:radial-gradient(circle,rgba(255,176,46,.18),rgba(255,120,30,.05) 40%,rgba(0,0,0,0) 66%);pointer-events:none;animation:vhPulse 3.6s ease-in-out infinite}
+@keyframes vhPulse{50%{opacity:.6;transform:scale(1.06)}}
+#login .biglogo{position:relative;transition:width .45s cubic-bezier(.2,.8,.2,1)}
+#login.vh2 .biglogo{width:min(230px,62vw)}
+.vh-h{margin:18px 0 4px;text-align:center;font:800 23px/1.25 var(--f);color:var(--text)}
+.vh-sub{margin:0 auto;text-align:center;color:var(--dim);font:500 14px/1.5 var(--f);max-width:330px}
+.vh-sub b{color:var(--text);font-weight:700}
+.vh-fld{position:relative;margin-top:24px}
+.vh-fld input{height:58px;border-radius:16px;padding:0 18px 0 50px;font:600 17px var(--f);color:var(--text);transition:border-color .2s,box-shadow .2s}
+.vh-fld input:focus{border-color:rgba(255,210,63,.6);box-shadow:0 0 0 4px rgba(255,210,63,.08)}
+.vh-fld svg{position:absolute;left:17px;top:19px;width:20px;height:20px;stroke:var(--gold2);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#l1 .err{text-align:center}
+.vh-btn{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:58px;border-radius:16px;background:linear-gradient(180deg,#ffe9a3 0%,#ffd23f 42%,#f0a830 100%);color:#2a1a04;font:800 16.5px var(--f);box-shadow:0 12px 30px rgba(255,180,50,.28),inset 0 1px 0 rgba(255,255,255,.65),inset 0 -2px 0 rgba(150,80,0,.25);transition:transform .12s,filter .2s}
+.vh-btn::before{content:"";position:absolute;top:0;bottom:0;width:60%;left:-70%;background:linear-gradient(100deg,rgba(255,255,255,0),rgba(255,255,255,.55),rgba(255,255,255,0));transform:skewX(-18deg);animation:vhSweep 3.4s ease-in-out 1.2s infinite}
+@keyframes vhSweep{0%{left:-70%}45%,100%{left:130%}}
+.vh-btn:active{transform:scale(.985)}
+.vh-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.vh-btn .sp{display:none;width:18px;height:18px;border-radius:50%;border:2.5px solid rgba(42,26,4,.25);border-top-color:#2a1a04;animation:vhRot .7s linear infinite}
+.vh-btn.busy{filter:saturate(.8)}.vh-btn.busy .sp{display:block}.vh-btn.busy svg{display:none}
+@keyframes vhRot{to{transform:rotate(360deg)}}
+.vh-cells{position:relative;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px;margin:28px auto 0;max-width:340px}
+.vh-cells i{position:relative;display:flex;align-items:center;justify-content:center;aspect-ratio:5/6;border-radius:14px;background:#141217;border:1px solid var(--line);font:800 26px var(--f);font-style:normal;color:var(--gold1);font-variant-numeric:tabular-nums;transition:border-color .2s,background .2s,transform .2s,box-shadow .2s}
+.vh-cells i.f{border-color:rgba(255,210,63,.55);background:linear-gradient(180deg,#1f1a12,#141217);animation:vhPop .22s ease-out}
+@keyframes vhPop{50%{transform:scale(1.08)}}
+.vh-cells i.cur::after{content:"";width:2px;height:28px;border-radius:2px;background:var(--gold);animation:vhBlink 1s steps(2) infinite}
+@keyframes vhBlink{50%{opacity:0}}
+.vh-cells input{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;border:0;background:transparent;color:transparent;caret-color:transparent}
+.vh-cells.chk i{border-color:rgba(255,210,63,.7);animation:vhWave 1s ease-in-out infinite}
+.vh-cells.chk i:nth-child(2){animation-delay:.08s}.vh-cells.chk i:nth-child(3){animation-delay:.16s}.vh-cells.chk i:nth-child(4){animation-delay:.24s}.vh-cells.chk i:nth-child(5){animation-delay:.32s}.vh-cells.chk i:nth-child(6){animation-delay:.4s}
+@keyframes vhWave{50%{transform:translateY(-5px);box-shadow:0 8px 20px rgba(255,190,60,.25)}}
+.vh-cells.bad{animation:vhShake .42s}
+.vh-cells.bad i{border-color:rgba(255,107,90,.8);color:#ff6b5a}
+@keyframes vhShake{20%{transform:translateX(-9px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(3px)}}
+.vh-cells.good i{border-color:var(--green);color:#bff5cf;background:linear-gradient(180deg,#123222,#101a14)}
+.vh-cells.lock i{opacity:.35}
+.vh-msg{min-height:22px;margin:12px 2px 0;font:600 13.5px/1.45 var(--f);color:var(--dim);text-align:center}
+.vh-msg.err{color:#ff7b6b}.vh-msg.ok{color:var(--green)}
+.vh-lock{display:flex;gap:12px;align-items:center;margin-top:14px;padding:14px 16px;border-radius:16px;background:linear-gradient(180deg,#1f1410,#160f0d);border:1px solid rgba(255,107,90,.35)}
+.vh-lock[hidden]{display:none}
+.vh-lock svg{flex:none;width:28px;height:28px;stroke:#ff6b5a;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.vh-lock b{display:block;font:800 14.5px var(--f);color:#ffd9d3}
+.vh-lock span{font:600 13px var(--f);color:#c9a49d}
+.vh-lock em{font-style:normal;color:#fff;font-variant-numeric:tabular-nums}
+.vh-links{display:flex;justify-content:space-between;gap:10px;margin-top:20px}
+.vh-lnk{font:700 13.5px var(--f);color:var(--gold);padding:6px 0;background:none;border:0}
+.vh-lnk[disabled]{color:var(--dim2)}
+.vh-foot{margin-top:24px;text-align:center;font:500 12.5px/1.6 var(--f);color:var(--dim2)}
+.vh-foot a{font-weight:700;text-decoration:none}
+@media (prefers-reduced-motion:reduce){#login .logo::before,.vh-btn::before,.vh-cells i,.vh-cells.bad{animation:none!important}}
 </style>
 </head>
 <body>
+<!-- ЭКРАН ЗАГРУЗКИ (09.11.2026): логотип LURE + золотая полоска, уходит, когда открылся вход, ПИН или сам LURE -->
+<div class="zgr" id="zgr" role="status" aria-label="Загрузка"><div class="zgr-glw"></div><div class="zgr-lg"></div><div class="zgr-bar"><i></i></div><div class="zgr-t" hidden></div></div>
+<script>(function(){var Z=document.getElementById('zgr'),B=Z.querySelector('.zgr-bar i'),p=6,t=0,fin=0;function tick(){if(fin)return;p+=(92-p)*(p<60?.16:.07);B.style.width=p+'%'}window.zgrShow=function(){if(!Z.hidden&&t)return;fin=0;Z.classList.remove('zgr-out');Z.hidden=false;if(!t){tick();t=setInterval(tick,260);clearTimeout(Z._w);Z._w=setTimeout(function(){if(!fin&&!Z.hidden){var x=Z.querySelector('.zgr-t');x.innerHTML='Загрузка идёт дольше обычного. <a href=>Обновить</a>';x.hidden=false}},15000)}};window.zgrDone=function(){if(Z.hidden||fin)return;fin=1;clearInterval(t);t=0;B.style.width='100%';setTimeout(function(){Z.classList.add('zgr-out');setTimeout(function(){Z.hidden=true;Z.classList.remove('zgr-out')},460)},380)};if(!Z.hidden){Z.hidden=true;zgrShow()}})();</script>
 
 <!-- ВХОД -->
 <section id="login" hidden><div class="wrap" style="max-width:440px">
   <div class="logo">
     <img class="biglogo" src="/lure-logo.webp" width="640" height="395" alt="LURE. Покажи свой мир">
-    <p>Лучшие нейросети в одном месте: Claude, GPT и Gemini. Вход тем же аккаунтом, что и в EAGLES.</p>
   </div>
   <div id="l1">
-    <input class="inp" id="lLogin" placeholder="Твой ID или почта" autocomplete="username" inputmode="email">
-    <div class="err" id="lErr1"></div>
-    <button class="btn" id="lBtn1">Получить код на почту</button>
-    <p class="muted" style="text-align:center;margin-top:16px">Если LURE не открывается или не отвечает, выключи VPN.</p>
-    <p class="muted" style="text-align:center;margin-top:16px">Нет аккаунта EAGLES? <a href="https://app.eaglesteam.ru/">Зарегистрируйся бесплатно</a></p>
+    <h1 class="vh-h">Вход в LURE</h1>
+    <p class="vh-sub">Тот же аккаунт, что и в EAGLES. Впиши ID или почту, пришлём код.</p>
+    <form id="lF1" novalidate>
+      <div class="vh-fld"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><input class="inp" id="lLogin" placeholder="ID или почта" autocomplete="username" autocapitalize="none" spellcheck="false" inputmode="email" aria-label="ID или почта"></div>
+      <div class="err" id="lErr1"></div>
+      <button class="vh-btn" id="lBtn1" type="submit"><span class="sp"></span><span id="lBtn1t">Получить код</span><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    </form>
+    <p class="vh-foot">Нет аккаунта EAGLES? <a href="https://app.eaglesteam.ru/">Зарегистрируйся бесплатно</a><br>Если LURE не открывается, выключи VPN.</p>
   </div>
   <div id="l2" hidden>
-    <p class="muted" id="lHint" style="text-align:center"></p>
-    <input class="inp" id="lCode" placeholder="Код из письма" inputmode="numeric" autocomplete="one-time-code" maxlength="6" style="text-align:center;letter-spacing:6px;font-size:22px">
-    <div class="err" id="lErr2"></div>
-    <button class="btn" id="lBtn2">Войти</button>
-    <p style="text-align:center;margin-top:14px"><button class="btn2" id="lBack">← Другой ID или почта</button></p>
+    <h1 class="vh-h">Код из письма</h1>
+    <p class="vh-sub" id="lHint"></p>
+    <div class="vh-cells" id="lCells"><i></i><i></i><i></i><i></i><i></i><i></i><input id="lCode" inputmode="numeric" autocomplete="one-time-code" aria-label="Код из письма, 6 цифр"></div>
+    <div class="vh-msg" id="lErr2"></div>
+    <div class="vh-lock" id="lLock" hidden></div>
+    <div class="vh-links"><button class="vh-lnk" id="lBack" type="button">← Другой ID</button><button class="vh-lnk" id="lResend" type="button" disabled>Новый код через 0:59</button></div>
+    <p class="vh-foot">Письма нет? Загляни в «Спам» или «Промоакции».</p>
   </div>
   <div id="lp" hidden>
     <p id="pTitle" style="text-align:center;font:700 18px var(--f);margin:0 0 6px"></p>
@@ -354,6 +431,7 @@ body[data-tab=img] #dNew2,body[data-tab=video] #dNew2{visibility:hidden}
     </div></section>
     <input type="file" id="mvFile" accept="video/mp4,video/quicktime,video/webm,video/*" hidden>
     <input type="file" id="xrFile" hidden>
+    <input type="file" id="xrImg" accept="image/jpeg,image/png,image/webp" multiple hidden>
     <input type="file" id="refFile" accept="image/jpeg,image/png,image/webp" multiple hidden>
     <div class="viewer" id="viewer" hidden><div class="vbox"><div id="vMedia"></div><p id="vInfo" class="muted"></p>
       <div class="flex"><a class="btn" id="vDl" target="_blank" rel="noopener" download>Скачать</a><button class="btn2" id="vRef" type="button">✏️ Изменить</button><button class="btn2" id="vRefV" type="button">🎬 В видео</button><button class="btn2" id="vDel" type="button">Удалить</button></div>
@@ -449,12 +527,12 @@ function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null
 
 /* ---------- вход ---------- */
 var lid='';
-function showLogin(){sss(0);TOK(null);$('app').hidden=true;$('login').hidden=false;$('l1').hidden=false;$('l2').hidden=true;$('lp').hidden=true}
+function showLogin(){zgrDone();sss(0);TOK(null);$('app').hidden=true;$('login').hidden=false;$('l1').hidden=false;$('l2').hidden=true;$('lp').hidden=true;$('login').classList.remove('vh2')}
 /* ---------- ПИН: один на весь EAGLES (тот же, что на сайте) ---------- */
 var PM='',P1='',MAXU='https://max.ru/u/f9LHodD0cOIec-v91ujcZ-dap9pM51MzN00AwcIMTy-x29hys8Mcg8n8HJ4';
 function ssg(){try{return sessionStorage.getItem('lure_ul')}catch(e){return null}}
 function sss(v){try{if(v)sessionStorage.setItem('lure_ul','1');else sessionStorage.removeItem('lure_ul')}catch(e){}}
-function showPin(mode,hint){PM=mode;P1='';$('app').hidden=true;$('dlgs').hidden=true;$('terms').hidden=true;$('login').hidden=false;$('l1').hidden=true;$('l2').hidden=true;$('lp').hidden=false;
+function showPin(mode,hint){zgrDone();PM=mode;P1='';$('app').hidden=true;$('dlgs').hidden=true;$('terms').hidden=true;$('login').hidden=false;$('l1').hidden=true;$('l2').hidden=true;$('lp').hidden=false;$('login').classList.remove('vh2');
   $('pIn').value='';$('pIn').disabled=false;$('pCode').value='';$('pErr').textContent='';$('pCode').hidden=mode!=='rec';$('pForgot').hidden=mode!=='enter';
   $('pTitle').textContent={enter:'Введи ПИН',set:'Придумай ПИН из 4 цифр',rep:'Повтори ПИН',rec:'Код из письма и новый ПИН'}[mode];
   $('pHint').textContent=hint||{enter:'Тот же ПИН, что на сайте EAGLES.',set:'Он будет общим для LURE и сайта EAGLES.',rep:'',rec:''}[mode];
@@ -476,32 +554,76 @@ $('pIn').oninput=function(){var v=this.value.replace(/\D/g,'').slice(0,4);if(v!=
 $('pCode').oninput=function(){var v=this.value.replace(/\D/g,'').slice(0,6);if(v!==this.value)this.value=v;if(v.length===6)$('pIn').focus()};
 $('pForgot').onclick=function(){var b=this;b.disabled=true;post('/api/pin/rec_request').then(function(r){b.disabled=false;if(!r.ok){pinErr(r);return}showPin('rec','Код отправлен на '+(r.emailHint||'твою почту')+'. Введи его и придумай новый ПИН.')}).catch(function(){b.disabled=false;netErr()})};
 $('pOut').onclick=function(){post('/api/logout').then(showLogin,showLogin)};
+/* Промпт из «Карт EAGLES» (08.11.2026): ссылка lure.eaglesteam.ru/#img&p=<промпт>. Промпт держим в sessionStorage,
+   чтобы он дожил до конца входа и ввода ПИН в этой же вкладке; адрес сразу чистим до #img. */
+var PF=null;(function(){var h=location.hash,i=h.indexOf('&p=');
+  if(i>0){try{PF=decodeURIComponent(h.slice(i+3)).slice(0,4000)}catch(e){PF=null}try{if(PF)sessionStorage.setItem('lure_pf',PF)}catch(e){}history.replaceState(null,'','#'+h.slice(1,i))}
+  if(!PF)try{PF=sessionStorage.getItem('lure_pf')}catch(e){}})();
+function usePF(){if(!PF||!ME||!ME.access)return;var t=PF;PF=null;try{sessionStorage.removeItem('lure_pf')}catch(e){}
+  if(curTab()!=='img')go('img');$('imgP').value=t;MOPT.img.ar='1:1';mgrow($('imgP'));if(MC)drawOpts('img');
+  toast('Промпт из Карт EAGLES готов. Выбери модель и нажми «Создать картинку»')}
 function afterLogin(m){sss(1);post('/api/pin/state').then(function(s){if(s.ok&&!s.has)showPin('set');else start(m)}).catch(function(){start(m)})}
 function boot(){get('/api/me').then(function(r){if(!r.ok){showLogin();return}
   if(!r.locked&&ssg()){start(r.me);return}
   post('/api/pin/state').then(function(s){if(!s.ok){pinErr(s);showLogin();return}if(!s.has){showPin('set');return}
     if(r.locked)showPin('enter');else post('/api/lock').then(function(){showPin('enter')})}).catch(showLogin)}).catch(showLogin)}
-$('lBtn1').onclick=function(){
-  var v=$('lLogin').value.trim();if(!v){$('lErr1').textContent='Впиши свой ID или почту.';return}
-  var b=this;b.disabled=true;$('lErr1').textContent='';
-  post('/api/login/request',{login:v}).then(function(r){b.disabled=false;
-    if(!r.ok){$('lErr1').textContent=err(r.error,r);return}
-    lid=r.id;$('l1').hidden=true;$('l2').hidden=false;$('lHint').innerHTML='Код отправлен на <b></b>. Он придёт от kod@eaglesteam.ru.';$('lHint').querySelector('b').textContent=r.emailHint||'твою почту';$('lCode').value='';setTimeout(function(){$('lCode').focus()},100);
-  }).catch(function(){b.disabled=false;$('lErr1').textContent='Нет связи. Проверь интернет. Если включён VPN, выключи его.'})};
-$('lLogin').onkeydown=function(e){if(e.key==='Enter')$('lBtn1').click()};
-$('lCode').oninput=function(){var v=this.value.replace(/\D/g,'').slice(0,6);if(v!==this.value)this.value=v;if(v.length===6)$('lBtn2').click()};
-$('lBtn2').onclick=function(){
-  var c=$('lCode').value.trim();if(!/^\d{6}$/.test(c)){$('lErr2').textContent='Код: 6 цифр из письма.';return}
-  var b=this;b.disabled=true;$('lErr2').textContent='';
-  post('/api/login/verify',{id:lid,code:c}).then(function(r){b.disabled=false;
-    if(!r.ok){$('lErr2').textContent=err(r.error,r);return}
-    if(r.token)TOK(r.token);afterLogin(r.me)}).catch(function(){b.disabled=false;$('lErr2').textContent='Нет связи. Проверь интернет. Если включён VPN, выключи его.'})};
-$('lBack').onclick=function(){$('l1').hidden=false;$('l2').hidden=true;$('lErr2').textContent=''};
+/* НОВЫЙ ВХОД (09.11.2026): кнопки «Войти» нет — 6 цифр, и проверка идёт сама. Вставка целиком из письма
+   («EAGLES: код для входа 123456») — берём цифры, последние 6. Обрыв связи — тихий повтор 1 раз. */
+var lLog='',lBusy=0,lLockT=0,lResAt=0,lResT=0,VH0='Вставь или впиши код. Вход откроется сам.';
+function vhMsg(t,c){var m=$('lErr2');m.innerHTML=t||'';m.className='vh-msg'+(c?' '+c:'')}
+function vhDraw(){var x=$('lCode'),v=x.value,C=$('lCells').querySelectorAll('i'),f=document.activeElement===x;
+  for(var k=0;k<6;k++){C[k].textContent=v[k]||'';C[k].classList.toggle('f',!!v[k]);C[k].classList.toggle('cur',f&&k===v.length&&!lBusy&&!x.disabled)}}
+function vhClear(){$('lCode').value='';$('lCells').className='vh-cells';vhDraw()}
+function vhUnlock(){clearTimeout(lLockT);$('lLock').hidden=true;$('lCode').disabled=false}
+function vhStep2(hint,old){vhUnlock();$('l1').hidden=true;$('l2').hidden=false;$('login').classList.add('vh2');
+  $('lHint').innerHTML=(old?'Код уже отправлен на <b></b>, он ещё действует.':'Отправили на <b></b>.')+' Письмо от kod@eaglesteam.ru';$('lHint').querySelector('b').textContent=hint||'твою почту';
+  vhClear();vhMsg(VH0);if(!old)lResAt=Date.now()+60000;vhRes();setTimeout(function(){$('lCode').focus();vhDraw()},120)}
+function vhBtn(on){var b=$('lBtn1');b.disabled=on;b.classList.toggle('busy',on);$('lBtn1t').textContent=on?'Отправляю код…':'Получить код'}
+$('lF1').onsubmit=function(e){e.preventDefault();
+  var v=$('lLogin').value.trim();if(!v){$('lErr1').textContent='Впиши свой ID или почту.';$('lLogin').focus();return}
+  vhBtn(true);$('lErr1').textContent='';
+  post('/api/login/request',{login:v}).then(function(r){vhBtn(false);
+    if(r.ok){lid=r.id;lLog=v;vhStep2(r.emailHint);return}
+    if(r.error==='too_often'&&lid&&lLog===v){vhStep2('',1);return}
+    $('lErr1').textContent=err(r.error,r)}).catch(function(){vhBtn(false);$('lErr1').textContent='Нет связи. Проверь интернет. Если включён VPN, выключи его.'})};
+$('lLogin').onkeydown=null;
+$('lCode').addEventListener('input',function(){var d=this.value.replace(/\D/g,'');if(d.length>6)d=d.slice(-6);this.value=d;
+  $('lCells').classList.remove('bad');if(!lBusy)vhMsg(VH0);vhDraw();if(d.length===6)vhVerify(d,0)});
+$('lCode').addEventListener('focus',vhDraw);$('lCode').addEventListener('blur',vhDraw);
+$('lCells').addEventListener('click',function(){$('lCode').focus()});
+function vhVerify(c,retry){if(lBusy||$('lCode').disabled)return;lBusy=1;$('lCells').className='vh-cells chk';vhDraw();vhMsg('Проверяю…');
+  post('/api/login/verify',{id:lid,code:c}).then(function(r){lBusy=0;
+    if(r.ok){$('lCells').className='vh-cells good';vhMsg('Готово, заходим…','ok');if(r.token)TOK(r.token);setTimeout(function(){afterLogin(r.me)},350);return}
+    if(r.error==='locked'){vhLocked(Number(r.retryAfterMin)||60);return}
+    $('lCells').className='vh-cells bad';
+    var t=err(r.error,r);
+    if(r.error==='bad_code'){t=retry?'Код не подошёл. Возможно, он уже сработал, пока не было связи. Нажми «Прислать новый код».':'Неверный код. Проверь письмо.';if(!retry&&r.left>0)t='Неверный код. Осталось попыток: '+r.left}
+    if(r.error==='expired'){lResAt=0;vhRes()}
+    vhMsg(t,'err');setTimeout(function(){$('lCode').value='';vhDraw()},450)
+  }).catch(function(){lBusy=0;
+    if(!retry){vhMsg('Проверяю…');setTimeout(function(){vhVerify(c,1)},900);return}
+    $('lCells').className='vh-cells';vhDraw();
+    vhMsg('Нет связи. Код не пропал. <button class="vh-lnk" id="lRetry" type="button">Проверить ещё раз</button><br>Если включён VPN, выключи его.','err');
+    $('lRetry').onclick=function(){vhVerify($('lCode').value,1)}})}
+function vhLocked(min){var until=Date.now()+min*60000,L=$('lLock');$('lCode').disabled=true;vhClear();$('lCells').className='vh-cells lock';vhMsg('');
+  clearTimeout(lResT);$('lResend').disabled=true;$('lResend').textContent='Новый код недоступен';
+  L.innerHTML='<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><div><b>Слишком много попыток</b><span>Вход по этому ID откроется через <em id="lLt"></em></span></div>';L.hidden=false;
+  (function t(){var s=Math.max(0,Math.ceil((until-Date.now())/1000)),e=$('lLt');if(!e)return;e.textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+    if(s>0)lLockT=setTimeout(t,1000);else{vhUnlock();vhClear();vhMsg('Можно снова. Нажми «Прислать новый код».');lResAt=0;vhRes()}})()}
+function vhRes(){clearTimeout(lResT);var r=$('lResend'),s=Math.ceil((lResAt-Date.now())/1000);if($('lCode').disabled)return;
+  if(s>0){r.disabled=true;r.textContent='Новый код через 0:'+String(s).padStart(2,'0');lResT=setTimeout(vhRes,500)}else{r.disabled=false;r.textContent='Прислать новый код'}}
+$('lResend').onclick=function(){var r=this;r.disabled=true;r.textContent='Отправляю…';
+  post('/api/login/request',{login:lLog||lid}).then(function(x){
+    if(x.ok){lid=x.id;vhClear();vhMsg('Новый код отправлен на почту.','ok');lResAt=Date.now()+60000;vhRes();$('lCode').focus();return}
+    if(x.error==='locked'){vhLocked(Number(x.retryAfterMin)||60);return}
+    if(x.error==='too_often')lResAt=Date.now()+60000;
+    vhMsg(err(x.error,x),'err');vhRes()}).catch(function(){vhMsg('Нет связи. Попробуй ещё раз через минуту.','err');lResAt=0;vhRes()})};
+$('lBack').onclick=function(){vhUnlock();clearTimeout(lResT);$('l1').hidden=false;$('l2').hidden=true;$('login').classList.remove('vh2');$('lErr1').textContent='';setTimeout(function(){$('lLogin').focus()},50)};
 
 /* ---------- приложение ---------- */
 function setMe(m){ME=m;$('balChip').textContent=rub(m.balance);$('wBal').textContent=rub(m.balance);$('wId').textContent=m.id;
   $('wDay').textContent='Сегодня потрачено '+rub(m.spentToday)+(m.dayLimit?' из '+rub(m.dayLimit)+' в сутки':'');$('owner').hidden=!m.owner}
-function start(m){setMe(m);$('login').hidden=true;$('app').hidden=false;loadModels();openDialog(ls(key('cur'))||null);go(location.hash.replace('#','')||'chat');if(m.access&&!m.terms)$('terms').hidden=false}
+function start(m){zgrDone();setMe(m);$('login').hidden=true;$('app').hidden=false;loadModels();openDialog(ls(key('cur'))||null);go(location.hash.replace('#','').split('&')[0]||'chat');if(m.access&&!m.terms)$('terms').hidden=false;usePF()}
 $('tOk').onclick=function(){var b=this;b.disabled=true;$('tErr').textContent='';post('/api/terms').then(function(r){b.disabled=false;if(!r.ok){if(r.error==='auth')showLogin();return}setMe(r.me);$('terms').hidden=true}).catch(function(){b.disabled=false;$('tErr').textContent='Нет связи. Если включён VPN, выключи его.'})};
 function key(k){return 'lure_'+(ME?ME.id:'x')+'_'+k}
 function go(t){if(!/^(chat|sound|img|video|wallet)$/.test(t))t='chat';document.body.dataset.tab=t;$('secName').textContent={chat:'Чаты',sound:'Звук',img:'Изображения',video:'Видео',wallet:'Баланс'}[t];$('mpanel').hidden=true;
@@ -556,11 +678,13 @@ function drawOpts(t){var m=mModel(t),o=MOPT[t];if(!m){$(t+'O').innerHTML='';retu
   if(m.audio)h+=chipRow(t,'audio',[true,false],'Звук',function(v){return v===true||v==='true'?'Со звуком':'Без звука'});
   if(m.mc){if(!o.orient)o.orient='video';h+=chipRow(t,'orient',['video','image'],'Поворот персонажа',function(v){return v==='video'?'Как в видео (до 30 сек)':'Как на фото (до 10 сек)'});
     h+='<b class="ttl" style="display:block;margin:12px 0 6px;font-size:13px">Видео с движением</b><button class="refb" type="button" id="mvBtn" style="margin-top:0">'+(MV?'🎬 '+esc(MV.name)+' · '+MV.dur+' сек · заменить':'＋ Выбрать видео (танец, жест, движение)')+'</button>'}
-  if(t==='video'&&(m.vrefs||m.arefs)){
+  if(t==='video'&&(m.vrefs||m.arefs||m.rrefs)){
     var xr=function(kind,max,lbl,add){if(!max)return '';var L=XR[kind].slice(0,max);return '<b class="ttl" style="display:block;margin:12px 0 6px;font-size:13px">'+lbl+'</b>'+L.map(function(x,i){return '<div class="refb" style="margin-top:0;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:8px"><span>'+(kind==='v'?'🎬 ':'🎵 ')+esc(x.name)+' · '+x.dur+' сек</span><button type="button" data-xx="'+kind+i+'" aria-label="Убрать" style="background:none;border:0;color:inherit;font-size:18px;padding:0 4px;cursor:pointer">×</button></div>'}).join('')+(L.length<max?'<button class="refb" type="button" data-xa="'+kind+'" style="margin-top:0">'+add+'</button>':'')};
-    h+=xr('v',m.vrefs,'Видео-референс','＋ Добавить видео (до '+m.vmax+' сек)'+(m.tableV?' · с видео дороже':''))+xr('a',m.arefs,'Аудио-референс','＋ Добавить аудио (голос, музыка) · можно до '+m.arefs)}
+    if(m.rrefs){var R=XR.r.slice(0,m.rrefs);h+='<b class="ttl" style="display:block;margin:12px 0 6px;font-size:13px">Фото-референсы (персонажи, предметы, места) · '+R.length+' из '+m.rrefs+'</b><div class="refs">'+R.map(function(x,i){return '<span><img src="'+x.thumb+'" alt=""><button type="button" data-xx="r'+i+'" aria-label="Убрать">×</button></span>'}).join('')+'</div>'+(R.length<m.rrefs?'<button class="refb" type="button" data-xa="r" style="margin-top:0">＋ Добавить фото-референсы · можно до '+m.rrefs+'</button>':'')}
+    var vs=m.vsum?XR.v.slice(0,m.vrefs).reduce(function(a,x){return a+x.dur},0):0;
+    h+=xr('v',m.vrefs,'Видео-референс'+(m.vrefs>1?' · '+Math.min(XR.v.length,m.vrefs)+' из '+m.vrefs+(m.vsum?', всего '+Math.round(vs)+' из '+m.vsum+' сек':''):''),'＋ Добавить видео (до '+m.vmax+' сек)'+(m.tableV?' · с видео дороже':''))+xr('a',m.arefs,'Аудио-референс','＋ Добавить аудио (голос, музыка) · можно до '+m.arefs)}
   $(t+'O').innerHTML=h;
-  [].forEach.call($(t+'O').querySelectorAll('[data-xa]'),function(b){b.onclick=function(){XRKIND=b.dataset.xa;var f=$('xrFile');f.accept=XRKIND==='v'?'video/mp4,video/quicktime,video/webm,video/*':'audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/x-m4a,audio/flac,audio/*';f.value='';f.click()}});
+  [].forEach.call($(t+'O').querySelectorAll('[data-xa]'),function(b){b.onclick=function(){XRKIND=b.dataset.xa;if(XRKIND==='r'){$('xrImg').value='';$('xrImg').click();return}var f=$('xrFile');f.accept=XRKIND==='v'?'video/mp4,video/quicktime,video/webm,video/*':'audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/x-m4a,audio/flac,audio/*';f.value='';f.click()}});
   [].forEach.call($(t+'O').querySelectorAll('[data-xx]'),function(b){b.onclick=function(){XR[b.dataset.xx[0]].splice(+b.dataset.xx.slice(1),1);drawOpts(t)}});
   if(t==='video'){var vp=$('videoP');if(!vp.dataset.ph)vp.dataset.ph=vp.placeholder;vp.placeholder=m.mc?'Необязательно: что поменять в сцене (фон, одежда, стиль)':vp.dataset.ph}
   if(m.mc)$('mvBtn').onclick=function(){$('mvFile').value='';$('mvFile').click()};
@@ -568,7 +692,10 @@ function drawOpts(t){var m=mModel(t),o=MOPT[t];if(!m){$(t+'O').innerHTML='';retu
   var p=(t==='video'&&m.tableV&&m.vrefs&&XR.v.length?m.tableV:m.table)[[m.res?o.res:'',m.q?o.q:'',m.dur?o.dur:'',m.audio?(o.audio?1:0):''].join('|')];
   if(m.mc){var lim=o.orient==='image'?10:30;p=MV?Math.max(1,Math.ceil(m.ps[o.res]*Math.min(lim,Math.ceil(MV.dur)))):0;$(t+'Price').textContent=p?rub(p):rub(Math.ceil(m.ps[o.res]))+'/сек';if(MV&&MV.dur>lim)toast('Видео длиннее '+lim+' сек, возьмём первые '+lim+' сек')}
   else $(t+'Price').textContent=p?(m.q?'≈ ':'')+rub(p):'—';drawRefs(t)}
-var MV=null,XR={v:[],a:[]},XRKIND='v';
+var MV=null,XR={v:[],a:[],r:[]},XRKIND='v';
+function d2b(d){var a=d.split(','),b=atob(a[1]),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return new Blob([u],{type:'image/jpeg'})}
+$('xrImg').onchange=function(){var m=mModel('video');if(!m||!m.rrefs)return;var fs=[].slice.call(this.files||[]).slice(0,Math.max(0,m.rrefs-XR.r.length));
+  Promise.all(fs.map(shrink)).then(function(L){L.forEach(function(d){XR.r.push({file:d2b(d),ext:'jpg',thumb:d,name:'фото'})});drawOpts('video')},function(){toast('Не получилось открыть фото')})};
 $('xrFile').onchange=function(){var f=this.files&&this.files[0],kind=XRKIND,m=mModel('video');if(!f||!m)return;var ext=(f.name.split('.').pop()||'').toLowerCase();if(ext==='qt')ext='mov';
   var okx=kind==='v'?['mp4','mov','webm']:['mp3','wav','m4a','flac'];
   if(okx.indexOf(ext)<0){ext=kind==='v'?(/webm/.test(f.type)?'webm':/quicktime/.test(f.type)?'mov':/mp4/.test(f.type)?'mp4':''):(/mpeg|mp3/.test(f.type)?'mp3':/wav/.test(f.type)?'wav':/mp4|m4a|aac/.test(f.type)?'m4a':/flac/.test(f.type)?'flac':'')}
@@ -577,14 +704,15 @@ $('xrFile').onchange=function(){var f=this.files&&this.files[0],kind=XRKIND,m=mM
   v.onloadedmetadata=function(){var d=Math.round(v.duration*10)/10;v.onerror=null;v.onloadedmetadata=null;v.removeAttribute('src');URL.revokeObjectURL(u);
     if(!(d>0)){toast('Не получилось прочитать файл');return}
     if(kind==='v'&&m.vmax&&d>m.vmax+0.5){toast('Видео длиннее '+m.vmax+' сек. Обрежь его и загрузи снова.');return}
+    if(kind==='v'&&m.vsum){var sm=XR.v.slice(0,m.vrefs).reduce(function(a,x){return a+x.dur},0);if(sm+d>m.vsum+0.5){toast('Все видео вместе должны быть не длиннее '+m.vsum+' сек. Сейчас уже '+Math.round(sm)+' сек.');return}}
     XR[kind].push({file:f,ext:ext,dur:d,name:f.name.length>22?f.name.slice(0,20)+'…':f.name});drawOpts('video')};
   v.onerror=function(){URL.revokeObjectURL(u);toast('Не получилось прочитать файл')};v.src=u};
 function upFile(it,btn,lbl){if(it.url)return Promise.resolve(it.url);return post('/api/media/upload',{ext:it.ext,size:it.file.size}).then(function(r){if(!r.ok)throw r;
   return new Promise(function(ok,no){var x=new XMLHttpRequest();x.open('PUT',r.put);x.upload.onprogress=function(e){if(e.lengthComputable)btn.textContent=lbl+' '+Math.round(e.loaded/e.total*100)+'%'};
     x.onload=function(){if(x.status>=200&&x.status<300){it.url=r.url;ok(r.url)}else no({error:'upload_failed',code:x.status})};x.onerror=function(){no({error:'upload_failed',code:0})};x.send(it.file)})})}
-function upAll(t,btn){if(t!=='video')return Promise.resolve({v:[],a:[]});var m=mModel(t),V=XR.v.slice(0,m.vrefs||0),A=XR.a.slice(0,m.arefs||0),L=V.concat(A),i=0;
-  function next(){if(i>=L.length)return Promise.resolve();var it=L[i++];return upFile(it,btn,(V.indexOf(it)>=0?'Загружаю видео':'Загружаю аудио')+(L.length>1?' '+i+'/'+L.length:'')).then(next)}
-  return next().then(function(){return {v:V.map(function(x){return x.url}),a:A.map(function(x){return x.url})}})}
+function upAll(t,btn){if(t!=='video')return Promise.resolve({v:[],a:[],r:[]});var m=mModel(t),V=XR.v.slice(0,m.vrefs||0),A=XR.a.slice(0,m.arefs||0),R=XR.r.slice(0,m.rrefs||0),L=R.concat(V,A),i=0;
+  function next(){if(i>=L.length)return Promise.resolve();var it=L[i++];return upFile(it,btn,(V.indexOf(it)>=0?'Загружаю видео':A.indexOf(it)>=0?'Загружаю аудио':'Загружаю фото')+(L.length>1?' '+i+'/'+L.length:'')).then(next)}
+  var u=function(x){return x.url};return next().then(function(){return {v:V.map(u),a:A.map(u),r:R.map(u)}})}
 $('mvFile').onchange=function(){var f=this.files&&this.files[0];if(!f)return;var ext=(f.name.split('.').pop()||'').toLowerCase();if(ext==='qt')ext='mov';
   if(['mp4','mov','webm'].indexOf(ext)<0){ext=/webm/.test(f.type)?'webm':/quicktime/.test(f.type)?'mov':/mp4/.test(f.type)?'mp4':''}
   if(!ext){toast(ERR.bad_video);return}if(f.size>100e6){toast(ERR.video_big);return}
@@ -597,7 +725,7 @@ function upVideo(btn){return post('/api/media/upload',{ext:MV.ext,size:MV.file.s
 function maxRefs(t){var m=mModel(t);return !m?0:(t==='video'&&m.refsV&&m.vrefs&&XR.v.length?m.refsV:m.refs)}
 function drawRefs(t){var m=mModel(t),L=REFS[t];$(t+'R').innerHTML=L.map(function(s,i){return '<span><img src="'+s+'" alt=""><button type="button" data-rx="'+i+'" aria-label="Убрать">×</button></span>'}).join('');
   [].forEach.call($(t+'R').querySelectorAll('[data-rx]'),function(b){b.onclick=function(){L.splice(+b.dataset.rx,1);drawRefs(t)}});
-  var rb=document.querySelector('.refb[data-ref="'+t+'"]');if(rb){rb.hidden=!m||L.length>=maxRefs(t);rb.textContent=(m&&m.mc?'＋ Фото персонажа':'＋ Добавить фото'+(t==='video'?' (первый кадр или референс)':'-референс'))+(m?' · можно до '+maxRefs(t)+(L.length?', добавлено '+L.length:''):'')}}
+  var rb=document.querySelector('.refb[data-ref="'+t+'"]');if(rb){rb.hidden=!m||L.length>=maxRefs(t);rb.textContent=(m&&m.mc?'＋ Фото персонажа':t==='video'&&m&&m.rrefs?'＋ Первый и последний кадр':'＋ Добавить фото'+(t==='video'?' (первый кадр или референс)':'-референс'))+(m?' · можно до '+maxRefs(t)+(L.length?', добавлено '+L.length:''):'')}}
 function shrink(file){return new Promise(function(ok,no){var fr=new FileReader();fr.onerror=no;fr.onload=function(){var im=new Image();im.onerror=no;im.onload=function(){var k=Math.min(1,1600/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);ok(c.toDataURL('image/jpeg',.85))};im.src=fr.result};fr.readAsDataURL(file)})}
 [].forEach.call(document.querySelectorAll('.refb[data-ref]'),function(b){b.onclick=function(){REFKIND=b.dataset.ref;$('refFile').value='';$('refFile').click()}});
 $('refFile').onchange=function(){var t=REFKIND,m=mModel(t),fs=[].slice.call(this.files||[]).slice(0,m?Math.max(0,maxRefs(t)-REFS[t].length):0);
@@ -624,6 +752,11 @@ function view(x){VX=x;$('vMedia').innerHTML=x.kind==='img'?'<img src="'+esc(x.ur
 function vClose(){$('viewer').hidden=true;$('vMedia').innerHTML=''}
 $('vClose').onclick=vClose;$('vInfo').onclick=function(){this.classList.toggle('open')};$('viewer').onclick=function(e){if(e.target===this)vClose()};
 $('vDel').onclick=function(){if(!VX||!confirm('Удалить из галереи?'))return;var id=VX.id;['img','video'].forEach(function(t){GAL[t]=GAL[t].filter(function(x){return x.id!==id});drawGal(t)});post('/api/media/delete',{id:id}).catch(function(){});vClose()};
+// «Скачать»: качаем файл прямо на месте, без перехода во вкладку с картинкой (Андрей 09.11). Если не вышло — открываем как раньше.
+$('vDl').onclick=function(e){if(!VX||!VX.url)return;e.preventDefault();var u=VX.url,b=this,bt=b.textContent;b.textContent='Скачиваю…';
+  fetch(u).then(function(r){if(!r.ok)throw 0;return r.blob()}).then(function(bl){var ext=(bl.type.split('/')[1]||(VX.kind==='img'?'png':'mp4')).replace('jpeg','jpg').replace('quicktime','mov').split(';')[0];
+    var o=URL.createObjectURL(bl),a=document.createElement('a');a.href=o;a.download='LURE-'+(VX.id||Date.now())+'.'+ext;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(o)},60000);
+    b.textContent=bt;toast('Скачано ✓ Файл в «Загрузках»')}).catch(function(){b.textContent=bt;window.open(u,'_blank','noopener')})};
 function toRef(t){if(!VX)return;var u=VX.url;vClose();fetch(u).then(function(r){return r.blob()}).then(shrink).then(function(s){if(curTab()!==t)go(t);loadCat(function(){var m=mModel(t);if(m&&REFS[t].length<m.refs){REFS[t].push(s);drawRefs(t);toast(t==='video'?'Картинка добавлена в видео как кадр':'Добавлено в референсы')}else toast('У этой модели больше фото не добавить')})}).catch(function(){toast('Не получилось взять фото')})}
 $('vRef').onclick=function(){toRef('img')};$('vRefV').onclick=function(){toRef('video')};
 function mgrow(e){var t=e.target||e,cs=getComputedStyle(t),lh=parseFloat(cs.lineHeight),pad=parseFloat(cs.paddingTop)+parseFloat(cs.paddingBottom),max=lh*12+pad+2,min=lh*4+pad+2;t.style.height='auto';var h=Math.max(min,t.scrollHeight);t.style.height=Math.min(h,max)+'px';t.style.overflowY=h>max?'auto':'hidden'}
@@ -632,9 +765,9 @@ function create(t){var m=mModel(t),o=MOPT[t],b=$(t+'Go'),pr=$(t+'P').value.trim(
   if(m.mc){if(!REFS[t].length){toast(ERR.need_photo);return}if(!MV){toast(ERR.need_video);return}}
   else if(pr.length<2){toast(ERR.no_prompt);$(t+'P').focus();return}
   var bt=b.textContent;b.disabled=true;
-  var X={v:[],a:[]};
+  var X={v:[],a:[],r:[]};
   (m.mc?(MV.url?Promise.resolve(MV.url):upVideo(b).then(function(u){MV.url=u;return u})):upAll(t,b).then(function(r){X=r;return ''}))
-  .then(function(vurl){b.textContent=bt;return post('/api/media/create',{k:m.k,prompt:pr,ar:o.ar,res:o.res,q:o.q,dur:o.dur,audio:o.audio,refs:REFS[t].slice(0,maxRefs(t)),vurl:vurl,vdur:MV&&MV.dur,orient:o.orient,vrefs:X.v,arefs:X.a})},function(e){b.textContent=bt;throw e})
+  .then(function(vurl){b.textContent=bt;return post('/api/media/create',{k:m.k,prompt:pr,ar:o.ar,res:o.res,q:o.q,dur:o.dur,audio:o.audio,refs:REFS[t].slice(0,maxRefs(t)),vurl:vurl,vdur:MV&&MV.dur,orient:o.orient,vrefs:X.v,arefs:X.a,rrefs:X.r})},function(e){b.textContent=bt;throw e})
   .then(function(r){b.disabled=false;
     if(!r.ok){if(r.error==='auth'){showLogin();return}if(r.error==='no_money'){toast(ERR.no_money);go('wallet');return}toast(err(r.error,r));return}
     GAL[t].unshift(r.job);drawGal(t);poll();toast(t==='img'?'Рисую. Картинка появится ниже.':'Снимаю. Видео появится ниже через несколько минут.')}).catch(function(e){b.disabled=false;if(e&&e.error){toast(e.error==='upload_failed'?'Файл не загрузился (код '+(e.code||'нет ответа')+'). Попробуй ещё раз.':err(e.error,e));return}toast('Нет связи. Если включён VPN, выключи его.')})}

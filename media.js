@@ -38,10 +38,10 @@ module.exports = function media(ctx) {
       { k: 'veo', eta: 200, id: 'google/veo3', n: 'Veo 3.1', d: 'Google · лучшее кино-качество со звуком и речью', refs: 2,
         ar: ['16:9', '9:16'], dur: [4, 6, 8], res: ['720p', '1080p', '4k'],
         tiers: [{ c: ['resolution=720p'], r: 187.5 }, { c: ['resolution=1080p'], r: 197.5 }, { c: ['resolution=4k'], r: 277.5 }] },
-      { k: 'sd25', eta: 240, id: 'bytedance/seedance-2-5', n: 'Seedance 2.5', d: 'ByteDance · новейшая, длинные ролики до 30 сек', refs: 2, arefs: 3,
+      { k: 'sd25', eta: 240, id: 'bytedance/seedance-2-5', n: 'Seedance 2.5', d: 'ByteDance · новейшая, длинные ролики до 30 сек', refs: 2, rrefs: 30, vrefs: 10, vmax: 30, vsum: 30, arefs: 10,
         ar: ['9:16', '16:9', '1:1', '4:3', '3:4', '21:9'], dur: [5, 10, 15, 20, 30], res: ['480p', '720p'], audio: true, perSec: true,
-        tiers: [{ c: ['resolution=480p', 'has_video=false'], r: 18.9 }, { c: ['resolution=720p', 'has_video=false'], r: 42.525 }] },
-      { k: 'sd2', eta: 180, id: 'bytedance/seedance-2', n: 'Seedance 2', d: 'ByteDance · живые движения людей', refs: 2, vrefs: 1, vmax: 15, arefs: 3,
+        tiers: [{ c: ['resolution=480p', 'has_video=false'], r: 18.9 }, { c: ['resolution=480p', 'has_video=true'], r: 137.07 }, { c: ['resolution=720p', 'has_video=false'], r: 42.525 }, { c: ['resolution=720p', 'has_video=true'], r: 306.38 }] },
+      { k: 'sd2', eta: 180, id: 'bytedance/seedance-2', n: 'Seedance 2', d: 'ByteDance · живые движения людей', refs: 2, rrefs: 9, vrefs: 1, vmax: 15, arefs: 3,
         ar: ['9:16', '16:9', '1:1', '4:3', '3:4', '21:9'], dur: [5, 10, 15], res: ['480p', '720p', '1080p'], audio: true, perSec: true,
         tiers: [{ c: ['resolution=480p', 'has_video=false'], r: 12.825 }, { c: ['resolution=480p', 'has_video=true'], r: 15.39 }, { c: ['resolution=720p', 'has_video=false'], r: 27.675 }, { c: ['resolution=720p', 'has_video=true'], r: 33.75 }, { c: ['resolution=1080p', 'has_video=false'], r: 68.85 }, { c: ['resolution=1080p', 'has_video=true'], r: 83.7 }] },
       { k: 'kl3', eta: 200, id: 'kling/v3', n: 'Kling 3.0', d: 'Kuaishou · лучшая для движения и кино, до 15 сек', refs: 2,
@@ -103,6 +103,7 @@ module.exports = function media(ctx) {
       if (m.audio) inp[m.audioKey || 'generate_audio'] = o.audio !== false;
       if (o.vrefs && o.vrefs.length) inp.videos = o.vrefs.map(u => ({ type: 'url', data: u }));
       if (o.arefs && o.arefs.length) inp.audios = o.arefs.map(u => ({ type: 'url', data: u }));
+      if (o.rrefs && o.rrefs.length) inp.reference_images = o.rrefs.map(u => ({ type: 'url', data: u }));
     }
     return inp;
   }
@@ -128,6 +129,7 @@ module.exports = function media(ctx) {
 
   // свои файлы человека в нашем хранилище (загружены по подписанной ссылке); uid проверяем в create
   const UP_V = /^https:\/\/storage\.yandexcloud\.net\/[a-z0-9.-]+\/up\/[\w-]{1,40}\/[a-f0-9]{16}\.(mp4|mov|webm)$/;
+  const UP_I = /^https:\/\/storage\.yandexcloud\.net\/[a-z0-9.-]+\/up\/[\w-]{1,40}\/[a-f0-9]{16}\.(jpg|png|webp)$/;
   const UP_A = /^https:\/\/storage\.yandexcloud\.net\/[a-z0-9.-]+\/up\/[\w-]{1,40}\/[a-f0-9]{16}\.(mp3|wav|m4a|flac)$/;
   function clean(m, b) {
     const o = { prompt: String(b.prompt || '').trim().slice(0, 4000) };
@@ -139,6 +141,7 @@ module.exports = function media(ctx) {
     const ups = (a, n, re) => (Array.isArray(a) ? a : []).map(String).filter(x => re.test(x)).slice(0, n || 0);
     if (m.vrefs) o.vrefs = ups(b.vrefs, m.vrefs, UP_V);
     if (m.arefs) o.arefs = ups(b.arefs, m.arefs, UP_A);
+    if (m.rrefs) o.rrefs = ups(b.rrefs, m.rrefs, UP_I);
     if (m.mc) {
       o.orient = b.orient === 'image' ? 'image' : 'video';
       o.dur = Math.min(o.orient === 'image' ? 10 : 30, Math.max(1, Math.ceil(Number(b.vdur) || 0)));
@@ -226,7 +229,7 @@ module.exports = function media(ctx) {
       await refreshPrices().catch(() => {});
       const out = {};
       for (const kind of ['img', 'video']) out[kind] = CAT[kind].map(x => ({ k: x.k, n: x.n, d: x.d, refs: x.refs, ar: x.ar, res: x.res || null, q: x.q || null, dur: x.dur || null, audio: !!x.audio, eta: x.eta || 60, mc: !!x.mc, ps: x.mc ? perSecTable(x) : null, audioDef: x.audioDef !== false,
-        vrefs: x.vrefs || 0, vmax: x.vmax || 0, arefs: x.arefs || 0, refsV: x.refsV || 0,
+        vrefs: x.vrefs || 0, vmax: x.vmax || 0, vsum: x.vsum || 0, arefs: x.arefs || 0, rrefs: x.rrefs || 0, refsV: x.refsV || 0,
         table: priceTable(x), tableV: x.vrefs ? priceTable(x, true) : null }));
       return send(res, 200, { ok: true, cat: out, ready: !!POLZA_KEY });
     }
@@ -246,7 +249,7 @@ module.exports = function media(ctx) {
       if (!SAVER) return send(res, 200, { ok: false, error: 'media_off' });
       const b = await readBody(req);
       const ext = String(b.ext || '').toLowerCase();
-      if (!['mp4', 'mov', 'webm', 'mp3', 'wav', 'm4a', 'flac'].includes(ext)) return send(res, 200, { ok: false, error: 'bad_video' });
+      if (!['mp4', 'mov', 'webm', 'mp3', 'wav', 'm4a', 'flac', 'jpg', 'png', 'webp'].includes(ext)) return send(res, 200, { ok: false, error: 'bad_video' });
       if (!(Number(b.size) > 0 && Number(b.size) <= 100e6)) return send(res, 200, { ok: false, error: 'video_big' });
       const key = 'up/' + safeId(u.id) + '/' + crypto.randomBytes(8).toString('hex') + '.' + ext;
       try {
@@ -271,7 +274,7 @@ module.exports = function media(ctx) {
         if (!(Array.isArray(b.refs) && b.refs.length)) return send(res, 200, { ok: false, error: 'need_photo' });
       }
       const mine = 'https://storage.yandexcloud.net/' + MEDIA_BUCKET + '/up/' + safeId(u.id) + '/';
-      if ((o.vrefs || []).concat(o.arefs || []).some(x => !x.startsWith(mine))) return send(res, 200, { ok: false, error: 'need_video' });
+      if ((o.vrefs || []).concat(o.arefs || [], o.rrefs || []).some(x => !x.startsWith(mine))) return send(res, 200, { ok: false, error: 'need_video' });
       const refs = (Array.isArray(b.refs) ? b.refs : []).slice(0, o.vrefs && o.vrefs.length && mod.refsV ? mod.refsV : mod.refs).filter(x => typeof x === 'string' && /^data:image\/(jpeg|png|webp);base64,/.test(x));
       if (refs.reduce((s, x) => s + x.length, 0) > REF_CHARS) return send(res, 200, { ok: false, error: 'refs_big' });
       if (Object.values(db.jobs).filter(j => j.uid === u.id).length >= MAX_JOBS) return send(res, 200, { ok: false, error: 'jobs_busy' });
