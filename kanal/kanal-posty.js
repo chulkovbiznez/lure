@@ -1,5 +1,6 @@
-/* EAGLES · Канал (EYRIE) · kanal-posty.js v1 · 16.11.2026
+/* EAGLES · Канал (EYRIE) · kanal-posty.js v2 · 17.11.2026
    Под каждым постом: 🔥 лайк, 💬 комментарии, Swoop, «Поделиться» (соцсети + «Скопировать ссылку»).
+   v2: Swoop кладёт пост в свой канал человека (kanal.html?u=ID) с подписью «Swoop из канала …»; ссылки — только у «Поделиться».
    У каждого поста и вкладки своя ссылка:  /kanal.html?ref=ID&p=ПОСТ   или   /kanal.html?ref=ID&t=ВКЛАДКА
    Ссылка несёт ID того, кто делится (если он вошёл в EAGLES), иначе ref, по которому пришли (владелец канала).
    Права: гость — смотрит и делится; FREE — + лайк; PRO — + комментарий и Swoop.
@@ -70,16 +71,16 @@ function localSave(d){ ls(LOCAL, JSON.stringify(d)); }
 var API = window.EK_POSTS_API || {
   live: false,
   call: function(action, data){
-    var sess = ls('eaglesfree_session') || '';
-    var q = BACKEND + '?action=' + action + '&ch=' + encodeURIComponent(window.EK_CHANNEL || '11111') + (sess ? '&sess=' + encodeURIComponent(sess) : '') + '&_=' + Date.now();
-    for(var k in data) q += '&' + k + '=' + encodeURIComponent(data[k]);
+    var sess = ls('eaglesfree_session') || '', chq = data.ch || window.EK_CHANNEL || '11111';
+    var q = BACKEND + '?action=' + action + '&ch=' + encodeURIComponent(chq) + (sess ? '&sess=' + encodeURIComponent(sess) : '') + '&_=' + Date.now();
+    for(var k in data) if(k !== 'ch') q += '&' + k + '=' + encodeURIComponent(data[k]);
     return fetch(q).then(function(r){ return r.json(); }).then(function(r){ if(!r || !r.ok) throw r; API.live = true; return r; });
   },
   get: function(ids){ return API.call('kp_get', {ids: ids.join(',')}).then(function(r){ return r.posts || {}; }); },
   like: function(p, on){ return API.call('kp_like', {p: p, on: on ? 1 : 0}); },
   com: function(p, text){ return API.call('kp_com', {p: p, text: text}); },
   coms: function(p){ return API.call('kp_coms', {p: p}).then(function(r){ return r.items || []; }); },
-  swoop: function(p){ return API.call('kp_swoop', {p: p}); }
+  swoop: function(src, on, snap){ var d = {ch: src.ch, p: src.p, on: on ? 1 : 0}; if(snap){ d.t = snap.t; d.x = snap.x; d.i = snap.i; } return API.call('kp_swoop', d); }
 };
 var S = {}; /* p -> {l, c, s, my, sw} */
 function st(p){ return S[p] || (S[p] = {l:0, c:0, s:0, my:false, sw:false}); }
@@ -165,7 +166,21 @@ var css = el('style'); css.id = 'kpCss'; css.textContent = [
 '#eagles-kanal .kp-vid{display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:10px 14px;border-radius:12px;background:rgba(255,210,63,.08);border:1px solid rgba(255,210,63,.35);color:#ffd23f;font:800 13.5px "Montserrat",sans-serif;text-decoration:none}',
 '#eagles-kanal .kp-vrow{display:flex;gap:12px;align-items:center;text-decoration:none;color:#e9e3d9;font:700 14px/1.35 "Montserrat",sans-serif}',
 '#eagles-kanal .kp-vrow i{flex:none;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(255,210,63,.12);color:#ffd23f;font-style:normal}',
-'#eagles-kanal .kp-vrow small{display:block;color:#8a837a;font-weight:600;margin-top:3px}'].join('\n');
+'#eagles-kanal .kp-vrow small{display:block;color:#8a837a;font-weight:600;margin-top:3px}',
+'#eagles-kanal .kp-swok{display:flex;gap:12px;align-items:center;background:rgba(255,210,63,.07);border:1px solid rgba(255,210,63,.3);border-radius:16px;padding:12px;margin:6px 0 12px}',
+'#eagles-kanal .kp-swok img,#eagles-kanal .kp-swok i{flex:none;width:58px;height:58px;border-radius:12px;object-fit:cover;background:#1d1912;display:flex;align-items:center;justify-content:center;color:#ffd23f;font:900 22px "Montserrat",sans-serif;font-style:normal}',
+'#eagles-kanal .kp-swok b{display:block;color:#ffd23f;font:900 15px "Montserrat",sans-serif}',
+'#eagles-kanal .kp-swok span{display:block;color:#e9e3d9;font:700 13px/1.35 "Montserrat",sans-serif;margin-top:3px}',
+'#eagles-kanal .kp-gold{display:block;text-align:center;margin:14px 0 8px;border:0;border-radius:14px;padding:14px;background:linear-gradient(180deg,#fff0b8,#ffd23f 50%,#c8901c);color:#1a1205;font:900 15px "Montserrat",sans-serif;text-decoration:none;cursor:pointer}',
+'#eagles-kanal .kp-undo{display:block;width:100%;border:0;background:none;color:#8a837a;font:700 13px "Montserrat",sans-serif;padding:8px;cursor:pointer}',
+'#eagles-kanal .kp-swh{display:flex;align-items:center;gap:6px;margin:0 0 10px;color:#ffd23f;font:800 12.5px "Montserrat",sans-serif}',
+'#eagles-kanal .kp-swh svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}',
+'#eagles-kanal .kp-swc{display:block;border:1px solid #2a2622;border-radius:16px;overflow:hidden;background:#0d0c0f;text-decoration:none;color:inherit}',
+'#eagles-kanal .kp-swc img{display:block;width:100%;max-height:340px;object-fit:cover}',
+'#eagles-kanal .kp-swc div{padding:12px 14px}',
+'#eagles-kanal .kp-swc b{display:block;color:#f4f4f2;font:900 15.5px/1.3 "Montserrat",sans-serif}',
+'#eagles-kanal .kp-swc span{display:block;color:#cfc7ba;font:600 13.5px/1.45 "Montserrat",sans-serif;margin-top:5px}',
+'#eagles-kanal .kp-swc em{display:inline-block;margin-top:10px;color:#ffd23f;font:800 13px "Montserrat",sans-serif;font-style:normal}'].join('\n');
 document.head.appendChild(css);
 var defs = el('div'); defs.innerHTML = '<svg width="0" height="0" style="position:absolute"><defs><linearGradient id="kpFire" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe08a"/><stop offset=".55" stop-color="#ff9a3c"/><stop offset="1" stop-color="#ff5a1f"/></linearGradient></defs></svg>';
 document.body.appendChild(defs.firstChild);
@@ -206,7 +221,7 @@ function shareBox(o){ /* o: {kind:'p'|'t', val, title, swoop} */
     ['Одноклассники', 'https://connect.ok.ru/offer?url=' + U + '&title=' + T, '#f7931e', '<b style="font:900 14px Montserrat,sans-serif">OK</b>']
   ];
   var b = shSheet.querySelector('.kp-b');
-  b.innerHTML = '<h2>' + (o.swoop ? IC.swoop.replace('<svg', '<svg width="24" height="24" fill="none" stroke="#ffd23f" stroke-width="2.2" stroke-linecap="round"') + 'Swoop' : 'Поделиться') + '<button class="kp-x" type="button" aria-label="Закрыть">×</button></h2>' +
+  b.innerHTML = '<h2>Поделиться<button class="kp-x" type="button" aria-label="Закрыть">×</button></h2>' +
     '<p>' + esc(o.title) + '</p>' +
     '<div class="kp-url"><span>' + esc(url.replace(/^https:\/\//, '')) + '</span><button type="button" class="kp-copy">Скопировать</button></div>' +
     '<div class="kp-soc">' + soc.map(function(x){ return '<a href="' + x[1] + '" target="_blank" rel="noopener"><i style="background:' + x[2] + '">' + x[3] + '</i>' + x[0] + '</a>'; }).join('') +
@@ -287,15 +302,58 @@ function onLike(p, btn){
   if(API.live) API.like(p, s.my).then(function(r){ s.l = r.l | 0; s.my = !!r.my; paint(p); }).catch(function(){});
   else { var d = localDb(); d.my = d.my || {}; d.my[p] = s.my; localSave(d); }
 }
+/* Swoop = забрать пост в СВОЙ канал. Ссылки и соцсети — только у «Поделиться». */
+function snapOf(p){
+  var x = CARDS[p], c = x.card, im = null, pp = null;
+  $$('img', c).some(function(i){ if(!i.closest('.ek-ph') && !/avatar/i.test(i.getAttribute('src') || '')){ im = i; return true; } return false; });
+  var v = !im && c.querySelector('video[poster]');
+  var src = im ? im.src : v ? v.poster : '';
+  if(src.indexOf(location.origin + '/') === 0) src = src.slice(location.origin.length).split(/[?#]/)[0];
+  if(!/^\/[A-Za-z0-9_\/-]{1,100}\.(webp|jpe?g|png)$/i.test(src) && !/^data:image\//.test(src)) src = '';
+  $$('p', c).some(function(e){ if(!e.closest('.ek-ph') && !e.closest('.ek-act') && e.textContent.trim()){ pp = e; return true; } return false; });
+  var tx = pp ? pp.textContent.replace(/\s+/g, ' ').trim() : '';
+  if(tx === x.title) tx = '';
+  return {t: x.title, x: tx.length > 400 ? tx.slice(0, 397) + '…' : tx, i: src};
+}
+function swoopSave(src, on, snap){
+  if(window.EK_CH_DEMO) return window.EK_CH_DEMO.swoop(src, on, snap);
+  return API.swoop(src, on, snap);
+}
+function myChanHref(id){ return '/kanal.html?u=' + encodeURIComponent(id); }
+function swoopBox(p, src, already){
+  var m = me(), x = CARDS[p], snap = snapOf(p), b = shSheet.querySelector('.kp-b'), s = st(p);
+  b.innerHTML = '<h2>' + IC.swoop.replace('<svg', '<svg width="24" height="24" fill="none" stroke="#ffd23f" stroke-width="2.2" stroke-linecap="round"') + 'Swoop<button class="kp-x" type="button" aria-label="Закрыть">×</button></h2>' +
+    '<div class="kp-swok">' + (snap.i ? '<img src="' + esc(snap.i) + '" alt="">' : '<i>✓</i>') + '<div><b>' + (already ? 'Уже в твоём канале' : 'Готово! Пост в твоём канале') + '</b><span>' + esc(x.title) + '</span></div></div>' +
+    '<p class="kp-note">Его видят все, кто заходит в <b>твой канал</b>. Кто зарегистрируется оттуда, попадёт к тебе в команду.</p>' +
+    '<a class="kp-gold" href="' + myChanHref(m.id) + '">Открыть мой канал</a>' +
+    '<button type="button" class="kp-undo">Убрать из моего канала</button>';
+  b.querySelector('.kp-x').onclick = closeAll;
+  var go = b.querySelector('.kp-gold');
+  if(window.EK_DEMO_NAV) go.onclick = function(e){ e.preventDefault(); window.EK_DEMO_NAV(m.id); };
+  var u = b.querySelector('.kp-undo');
+  u.onclick = function(){
+    u.disabled = true;
+    swoopSave(src, false).then(function(r){ s.sw = false; s.s = r && r.s != null && src.ch === CH && src.p === p ? r.s | 0 : Math.max(0, s.s - 1); paint(p); closeAll(); toast('Убрано из твоего канала'); }, function(){ u.disabled = false; toast('Не получилось, попробуй ещё раз'); });
+  };
+  open(shSheet);
+}
 function onSwoop(p){
   var m = me();
-  if(m.role === 'guest') return regSheet('Swoop — это забрать пост к себе и звать людей своей ссылкой. Открывается после регистрации.', 'swoop');
+  if(m.role === 'guest') return regSheet('Swoop — это забрать пост в свой канал и звать людей к себе. Открывается после регистрации.', 'swoop');
   if(m.role !== 'pro') return proOnly('Swoop');
+  var x = CARDS[p], src = x.src || {ch: CH, p: p};
+  if(m.id === src.ch || (OWNERS.indexOf(m.id) >= 0 && src.ch === '11111')) return toast('Это твой пост. Swoop делают другие, а ты жми «Поделиться»');
+  if(x.src && MINE_CH && m.id === CH) return toast('Этот пост уже в твоём канале');
   var s = st(p);
-  if(!s.sw){ s.sw = true; s.s++; paint(p);
-    if(API.live) API.swoop(p).then(function(r){ s.s = r.s | 0; paint(p); }).catch(function(){});
-    else { var d = localDb(); d.sw = d.sw || {}; d.sw[p] = 1; localSave(d); } }
-  shareBox({kind:'p', val:p, title:CARDS[p].title, swoop:true});
+  if(s.sw) return swoopBox(p, src, true);
+  s.sw = true; s.s++; paint(p);
+  swoopSave(src, true, snapOf(p)).then(function(r){
+    if(r && r.s != null && src.ch === CH && src.p === p){ s.s = r.s | 0; paint(p); }
+    swoopBox(p, src, false);
+  }, function(r){
+    s.sw = false; s.s = Math.max(0, s.s - 1); paint(p);
+    toast(r && r.error === 'need_pro' ? 'Swoop — для EAGLES Pro' : r && r.error === 'limit' ? 'Слишком часто, попробуй через минуту' : 'Не получилось, попробуй ещё раз');
+  });
 }
 
 /* ---------- свой канал Pro (?u=ID) ---------- */
@@ -344,6 +402,15 @@ function drawPersonal(){
     (mine ? '<div class="ek-bar"><button class="ek-ic kp-edit" type="button">✎ ' + (ch.hello ? 'Изменить приветствие' : 'Это заготовка. Написать своё') + '</button></div>' : '') + '</article>';
   if(!CHD.posts.length && mine) html += '<div class="ek-card kp-own">Канал готов и уже открыт всем. Добавь первый пост: пару слов или ссылку на ролик. Потом нажми «Ссылка на «Лента»» и поставь её в соцсети: кто зарегистрируется по ней, попадёт к тебе в команду.</div>';
   CHD.posts.forEach(function(x){
+    if(x.sw){
+      var w = x.sw, from = w.n || 'канал EAGLES';
+      var href = SITE.replace(/^https:\/\/[^/]+/, '') + '?' + (w.c !== '11111' ? 'u=' + encodeURIComponent(w.c) + '&' : '') + 'ref=' + encodeURIComponent(shareRef()) + '&p=' + encodeURIComponent(w.p);
+      html += '<article class="ek-card" data-post="' + esc(x.p) + '" data-swc="' + esc(w.c) + '" data-swp="' + esc(w.p) + '"><div class="ek-ph">' + avaHtml(ch, 'kp-ava') + '<div><b>' + esc(firstName(ch.name)) + '</b><small>' + fmtDate(x.ts) + '</small></div>' +
+        (mine ? '<button class="kp-del" type="button" data-del="' + esc(x.p) + '" aria-label="Убрать пост">⋯</button>' : '') + '</div>' +
+        '<div class="kp-swh">' + IC.swoop + 'Swoop · ' + esc(from) + '</div>' +
+        '<a class="kp-swc" href="' + esc(href) + '">' + (w.i ? '<img src="' + esc(w.i) + '" alt="" loading="lazy">' : '') + '<div><b>' + esc(w.t || 'Пост') + '</b>' + (w.x ? '<span>' + esc(w.x) + '</span>' : '') + '<em>Открыть пост →</em></div></a></article>';
+      return;
+    }
     html += '<article class="ek-card" data-post="' + esc(x.p) + '"><div class="ek-ph">' + avaHtml(ch, 'kp-ava') + '<div><b>' + esc(firstName(ch.name)) + '</b><small>' + fmtDate(x.ts) + '</small></div>' + (x.url ? '<span class="ek-tg">Ролик</span>' : '') +
       (mine ? '<button class="kp-del" type="button" data-del="' + esc(x.p) + '" aria-label="Убрать пост">⋯</button>' : '') + '</div>' +
       (x.text ? '<p>' + textHtml(x.text) + '</p>' : '') + (x.url ? '<a class="kp-vid" href="' + esc(x.url) + '" target="_blank" rel="noopener">▶ Смотреть в ' + vidName(x.url) + '</a>' : '') + '</article>';
@@ -403,6 +470,7 @@ function bars(){
     if(card.querySelector('.ek-act')) return;
     var p = pidOf(card, i); card.dataset.post = p; card.id = 'post-' + p;
     CARDS[p] = {card: card, title: titleOf(card), tab: 'lenta'};
+    if(card.dataset.swc){ CARDS[p].src = {ch: card.dataset.swc, p: card.dataset.swp}; var sb = card.querySelector('.kp-swc b'); if(sb) CARDS[p].title = sb.textContent; }
     /* старые серые «🔥» и «Комментировать» заменяет новая полоса */
     $$('.ek-bar [data-reg="like"], .ek-bar [data-reg="comment"]', card).forEach(function(b){ b.remove(); });
     $$('.ek-bar', card).forEach(function(b){ if(!b.children.length) b.remove(); });
