@@ -303,6 +303,7 @@ async function api(req, res, url) {
     return send(res, 200, { ok: true });
   }
 
+  if (p === '/api/chat/transcribe' && m === 'POST') { if (!hasAccess(u)) return send(res, 200, { ok: false, error: 'need_pro' }); if ((u.termsV || 0) < TERMS_V) return send(res, 200, { ok: false, error: 'need_terms' }); return transcribe(req, res, u); }
   if (p === '/api/chat' && m === 'POST') { if (!hasAccess(u)) return send(res, 200, { ok: false, error: 'need_pro' }); if ((u.termsV || 0) < TERMS_V) return send(res, 200, { ok: false, error: 'need_terms' }); return chat(req, res, u); }
 
   // ----- картинки и видео -----
@@ -453,6 +454,38 @@ async function chat(req, res, u) {
 // New API эти поля не пропускает, поэтому идём в Polza через шлюз polza-api тем же ключом, что картинки.
 // Цена: точная сумма Polza (usage.cost_rub: модель + поиски по 0,50 ₽) × WEB_MARKUP (как наценка чата).
 const POLZA_URL = (ENV.POLZA_URL || 'https://d5dlktk1t7njgiu965hg.764nr5vy.apigw.yandexcloud.net/api/v1').replace(/\/$/, '');
+// расшифровка речи: браузер присылает куски WAV 16 кГц (по 4 мин) в нашем хранилище, Polza превращает их в текст
+const STT_MODEL = ENV.STT_MODEL || 'openai/whisper-large-v3';
+const STT_RUB_MIN = Number(ENV.STT_RUB_MIN || 0.108);
+async function transcribe(req, res, u) {
+  const b = await readBody(req);
+  const mine = 'https://storage.yandexcloud.net/' + (ENV.MEDIA_BUCKET || 'lure-media') + '/up/' + String(u.id).replace(/[^\w-]/g, '_') + '/';
+  const urls = (Array.isArray(b.urls) ? b.urls : []).map(String).filter(x => x.startsWith(mine) && /\/[a-f0-9]{16}\.wav$/.test(x)).slice(0, 8);
+  if (!urls.length) return send(res, 200, { ok: false, error: 'empty' });
+  if (!ENV.POLZA_KEY) return send(res, 200, { ok: false, error: 'engine_down' });
+  const MK = Number(ENV.WEB_MARKUP || 2.2);
+  const est = Math.max(0.1, Math.min(32, Number(b.dur) / 60 || urls.length * 4) * STT_RUB_MIN * MK);
+  const room = Math.min((u.balance || 0) - (u.held || 0), dayCap(u) - spentToday(u) - (u.held || 0));
+  if (room < est) return send(res, 200, { ok: false, error: 'no_money' });
+  const one = async url => {
+    const r = await fetch(POLZA_URL + '/audio/transcriptions', { method: 'POST', signal: AbortSignal.timeout(150000),
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + ENV.POLZA_KEY },
+      body: JSON.stringify({ model: STT_MODEL, file: url, response_format: 'json' }) });
+    const t = await r.text(); let j; try { j = JSON.parse(t); } catch (e) { j = { error: { message: 'HTTP ' + r.status + ' ' + t.slice(0, 120) } }; }
+    if (!r.ok || typeof j.text !== 'string') throw new Error((j.error && j.error.message) || ('HTTP ' + r.status));
+    return j;
+  };
+  let parts;
+  try { parts = await Promise.all(urls.map(one)); }
+  catch (e) { console.error('stt', e.message); return send(res, 200, { ok: false, error: 'engine_error' }); }
+  const pc = parts.reduce((s2, j) => s2 + (Number(j.usage && (j.usage.cost_rub ?? j.usage.cost)) || 0), 0);
+  const sec = parts.reduce((s2, j) => s2 + (Number(j.duration || (j.usage && j.usage.durationSeconds)) || 0), 0);
+  const cost = Math.max(0.01, r2((pc > 0 ? pc : sec / 60 * STT_RUB_MIN) * MK));
+  addSpent(u, cost);
+  op(u, 'spend', -cost, 'Расшифровка речи · ' + Math.round(sec) + ' сек');
+  return send(res, 200, { ok: true, text: parts.map(j => j.text.trim()).join('\n'), cost, balance: u.balance, sec });
+}
+
 async function webChat(req, res, u, model, msgs, room, inCost) {
   const MK = Number(ENV.WEB_MARKUP || 2.2);
   if (room < inCost + 3) return send(res, 200, { ok: false, error: 'no_money' });

@@ -877,13 +877,20 @@ $('sendBtn').onclick=function(){
   var text=$('q').value.trim(),model=ls(key('model'));if(!text&&!ATT.length)return;if(!model){toast('Модели ещё загружаются');return}
   if(ATT.some(function(a){return a.busy})){toast('Подожди, файл ещё читается');return}
   if(ME.balance<=0){toast(ERR.no_money);go('wallet');return}
-  var att=ATT.slice(),VD=att.filter(function(a){return a.k==='v'})[0],IM=att.filter(function(a){return a.k==='i'}).concat(VD?VD.sheets:[]),FL=att.filter(function(a){return a.k==='f'});
+  var NEED=ATT.filter(function(a){return a.wavs&&a.wavs.length&&a.stt==null});
+  if(NEED.length){var sb=$('sendBtn'),fake={};sb.disabled=true;toast('Расшифровываю речь…');
+    var jobs=NEED.map(function(a){var items=a.wavs.map(function(b){return {file:b,ext:'wav'}}),n=0;
+      return (function up(){var it=items[n++];if(!it)return Promise.resolve();return upFile(it,fake,'').then(up)})().then(function(){return post('/api/chat/transcribe',{urls:items.map(function(x){return x.url}),dur:a.dur||a.sdur})}).then(function(r){if(!r.ok)throw r;a.stt=r.text||'';if(ME&&r.balance!=null){ME.balance=r.balance;setMe(ME)}})});
+    Promise.all(jobs).then(function(){sb.disabled=false;$('sendBtn').click()},function(e){sb.disabled=false;toast(e&&e.error==='no_money'?ERR.no_money:'Не получилось расшифровать речь. Попробуй ещё раз.')});return}
+  var att=ATT.slice(),VD=att.filter(function(a){return a.k==='v'})[0],IM=att.filter(function(a){return a.k==='i'}).concat(VD?VD.sheets:[]),FL=att.filter(function(a){return a.k==='f'}).concat(att.filter(function(a){return a.k==='a'}).map(function(a){return {k:'f',name:'🎧 '+a.name+' (расшифровка речи)',text:a.stt||'(речи не слышно)'}}));
+  if(VD&&VD.stt)FL.push({k:'f',name:'Речь из видео '+VD.name,text:VD.stt});
   if(IM.length&&!IM.every(function(a){return a.url})){var sb=$('sendBtn'),fake={};sb.disabled=true;var n=0;
     (function next(){var it=IM[n++];if(!it){sb.disabled=false;$('sendBtn').click();return}upFile(it,fake,'').then(next,function(e){sb.disabled=false;toast(e&&e.error==='upload_failed'?'Фото не загрузилось. Попробуй ещё раз.':err(e&&e.error,e))})})();
     toast('Загружаю фото…');return}
   var web=WEB||/https?:\/\/\S+/i.test(text);
   var um={role:'user',content:text};if(web)um.web=1;if(IM.length)um.imgs=IM.map(function(a){return a.url});if(FL.length)um.files=FL.map(function(a){return {name:a.name,text:a.text}});
   if(VD){um.video={name:VD.name,dur:Math.round(VD.dur),frames:VD.frames};if(!text)um.content='Посмотри видео.'}
+  if(!text&&!VD&&att.some(function(a){return a.k==='a'}))um.content='Послушай аудио.';
   CUR.msgs.push(um);if(!CUR.title)CUR.title=(text||(FL[0]&&FL[0].name)||'Фото').slice(0,60);
   $('q').value='';ATT=[];drawAtt();grow();drawMsgs();dStore(CUR);priceHint();
   var L=$('mlist'),el=document.createElement('div');el.className='m a';el.innerHTML=web?'<div class="tx typing"><p style="opacity:.7">🌐 Ищу в интернете…</p></div>':'<div class="tx typing"></div>';L.appendChild(el);$('msgs').scrollTop=$('msgs').scrollHeight;
@@ -915,7 +922,7 @@ $('sendBtn').onclick=function(){
 
 /* ---------- вложения в чате: фото и файлы ---------- */
 var ATT=[];ERR.img_failed='Не получилось прочитать фото. Пришли его ещё раз.';
-function drawAtt(){priceHint();var R=$('attRow');R.hidden=!ATT.length;R.innerHTML=ATT.map(function(a,i){if(a.k==='v')return '<div class="ac'+(a.thumb?' i':'')+'">'+(a.thumb?'<img src="'+a.thumb+'" alt="">':'')+'<span>🎬 '+(a.busy?'кадры '+(a.prog||0)+'%':tc(a.dur)+' · '+a.frames+' кадров')+'</span><button type="button" data-ax="'+i+'" aria-label="Убрать">×</button></div>';return a.k==='i'?'<div class="ac i"><img src="'+a.thumb+'" alt=""><button type="button" data-ax="'+i+'" aria-label="Убрать">×</button></div>':'<div class="ac"><span>'+(a.busy?'⏳ ':'📄 ')+esc(a.name)+'</span><button type="button" data-ax="'+i+'" aria-label="Убрать">×</button></div>'}).join('');
+function drawAtt(){priceHint();var R=$('attRow');R.hidden=!ATT.length;R.innerHTML=ATT.map(function(a,i){if(a.k==='a')return '<div class="ac"><span>'+(a.busy?'⏳ ':'🎧 ')+esc(a.name)+(a.dur?' · '+tc(a.dur):'')+'</span><button type="button" data-ax="'+i+'" aria-label="Убрать">×</button></div>';if(a.k==='v')return '<div class="ac'+(a.thumb?' i':'')+'">'+(a.thumb?'<img src="'+a.thumb+'" alt="">':'')+'<span>🎬 '+(a.busy?'кадры '+(a.prog||0)+'%':tc(a.dur)+' · '+a.frames+' кадров')+'</span><button type="button" data-ax="'+i+'" aria-label="Убрать">×</button></div>';return a.k==='i'?'<div class="ac i"><img src="'+a.thumb+'" alt=""><button type="button" data-ax="'+i+'" aria-label="Убрать">×</button></div>':'<div class="ac"><span>'+(a.busy?'⏳ ':'📄 ')+esc(a.name)+'</span><button type="button" data-ax="'+i+'" aria-label="Убрать">×</button></div>'}).join('');
   [].forEach.call(R.querySelectorAll('[data-ax]'),function(b){b.onclick=function(){ATT.splice(+b.dataset.ax,1);drawAtt()}})}
 function shrinkJ(file,mx){return new Promise(function(ok,no){var u=URL.createObjectURL(file),im=new Image();im.onerror=function(){URL.revokeObjectURL(u);no()};im.onload=function(){var k=Math.min(1,mx/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);ok(c.toDataURL('image/jpeg',.82))};im.src=u})}
 // раскадровка видео прямо в браузере: n кадров с временем → листы 3×3 (их модель смотрит как фото)
@@ -932,6 +939,17 @@ function storyboard(f,maxSheets,onp){return new Promise(function(ok,no){var v=do
         part.forEach(function(fr,j){sg.putImageData(fr,(j%3)*W,Math.floor(j/3)*H)});sheets.push(S.toDataURL('image/jpeg',.72))}
       URL.revokeObjectURL(u);ok({dur:d,sheets:sheets,frames:frames.length})}
     step()};v.src=u})}
+// звук → куски WAV 16 кГц моно по 4 минуты (для расшифровки речи), максимум 30 минут
+var STT_MIN=0.108*2.2;
+function speechWavs(f){return f.arrayBuffer().then(function(buf){var AC=window.AudioContext||window.webkitAudioContext,ctx;try{ctx=new AC({sampleRate:16000})}catch(e){ctx=new AC()}
+  return new Promise(function(ok,no){ctx.decodeAudioData(buf,ok,no)}).then(function(ab){try{ctx.close()}catch(e){}
+    var sr=ab.sampleRate,n=Math.min(ab.length,sr*1800),mono=new Float32Array(n),ch=ab.numberOfChannels;
+    for(var c=0;c<ch;c++){var d=ab.getChannelData(c);for(var i=0;i<n;i++)mono[i]+=d[i]/ch}
+    var step=sr/16000,len=Math.floor(n/step),pcm=new Int16Array(len);for(var j=0;j<len;j++){var v=mono[Math.floor(j*step)];v=v<-1?-1:v>1?1:v;pcm[j]=v*32767}
+    var out=[],CH=16000*240;for(var k=0;k<len;k+=CH){var part=pcm.subarray(k,Math.min(len,k+CH)),h=new DataView(new ArrayBuffer(44)),w=function(o,t){for(var q=0;q<t.length;q++)h.setUint8(o+q,t.charCodeAt(q))};
+      w(0,'RIFF');h.setUint32(4,36+part.length*2,true);w(8,'WAVE');w(12,'fmt ');h.setUint32(16,16,true);h.setUint16(20,1,true);h.setUint16(22,1,true);h.setUint32(24,16000,true);h.setUint32(28,32000,true);h.setUint16(32,2,true);h.setUint16(34,16,true);w(36,'data');h.setUint32(40,part.length*2,true);
+      out.push(new Blob([h,part],{type:'audio/wav'}))}
+    return {wavs:out,dur:len/16000,full:ab.length/sr}})})}
 var LIBS={};function lib(src){return LIBS[src]||(LIBS[src]=new Promise(function(ok,no){var s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=function(){delete LIBS[src];no()};document.head.appendChild(s)}))}
 function fileText(f){var ext=(f.name.split('.').pop()||'').toLowerCase();
   if(ext==='pdf')return lib('lib/pdf.min.js').then(function(){pdfjsLib.GlobalWorkerOptions.workerSrc='lib/pdf.worker.min.js';return f.arrayBuffer()}).then(function(b){return pdfjsLib.getDocument({data:b}).promise}).then(function(doc){var n=Math.min(doc.numPages,300),out=[],i=1;
@@ -943,18 +961,22 @@ function fileText(f){var ext=(f.name.split('.').pop()||'').toLowerCase();
 function priceHint(){var el=$('priceLine');if(!el)return;var mid=ls(key('model')),m=(typeof MODELS!=='undefined'?MODELS:[]).filter(function(x){return x.id===mid})[0];
   var t=$('q').value.trim();if(!m||!m.per1M||(!t&&!ATT.length)){el.innerHTML='';return}
   var ch=t.length;(CUR&&CUR.msgs||[]).slice(-40).forEach(function(x){ch+=(x.content||'').length;(x.files||[]).forEach(function(f){ch+=f.text.length})});
-  var ni=0;ATT.forEach(function(a){if(a.k==='f')ch+=(a.text||'').length;else if(a.k==='v')ni+=(a.sheets||[1]).length;else ni++});(CUR&&CUR.msgs||[]).forEach(function(x){ni+=(x.imgs||[]).length});ni=Math.min(ni,4);
+  var ni=0;ATT.forEach(function(a){if(a.k==='f')ch+=(a.text||'').length;else if(a.k==='a')ch+=(a.stt!=null?a.stt.length:(a.dur||0)*15);else if(a.k==='v'){ni+=(a.sheets||[1]).length;ch+=(a.sdur||0)*15}else ni++});(CUR&&CUR.msgs||[]).forEach(function(x){ni+=(x.imgs||[]).length});ni=Math.min(ni,4);
   var tin=ch/2.5+ni*1600+50,tout=600,web=WEB||/https?:\/\/\S+/i.test(t);
   var r=(tin*m.per1M.in+tout*m.per1M.out)/1e6;if(web)r=r*2+2.2;
-  el.innerHTML='≈ <b>'+rub(Math.max(0.01,r))+'</b> за ответ'+(web?' · с интернетом':'')+(ATT.length?' · с вложениями':'')}
+  var sd=0;ATT.forEach(function(a){if(a.wavs&&a.stt==null)sd+=(a.dur||a.sdur||0)});if(sd)r+=Math.max(0.01,sd/60*STT_MIN);
+  el.innerHTML='≈ <b>'+rub(Math.max(0.01,r))+'</b> за ответ'+(sd?' · с расшифровкой речи '+tc(sd):'')+(web?' · с интернетом':'')+(ATT.length?' · с вложениями':'')}
 var WEB=ls(key('web'))==='1';function drawWeb(){var b=$('webBtn');b.classList.toggle('on',WEB);b.setAttribute('aria-pressed',WEB?'true':'false')}
 $('webBtn').onclick=function(){WEB=!WEB;ls(key('web'),WEB?'1':null);drawWeb();priceHint();toast(WEB?'Интернет включён: модель будет искать свежие данные и читать ссылки. Поиск +≈1 ₽.':'Интернет выключен')};
 $('attBtn').onclick=function(){$('attFile').value='';$('attFile').click()};
 $('attFile').onchange=function(){[].slice.call(this.files||[]).forEach(function(f){
+  if(/^audio\//.test(f.type)||/\.(mp3|m4a|wav|ogg|opus|flac|aac|oga)$/i.test(f.name)){if(ATT.filter(function(a){return a.k==='a'}).length>=2){toast('Можно до 2 аудио в одном сообщении');return}
+    var a={k:'a',busy:true,name:f.name};ATT.push(a);drawAtt();
+    speechWavs(f).then(function(r){a.busy=false;a.wavs=r.wavs;a.dur=r.dur;if(r.full>r.dur+1)toast('Аудио длиннее 30 минут, расшифрую первые 30');drawAtt()},function(){ATT.splice(ATT.indexOf(a),1);drawAtt();toast('Не получилось открыть аудио. Подходят mp3, m4a, wav, ogg.')});return}
   if(/^video\//.test(f.type)||/\.(mp4|mov|webm|m4v)$/i.test(f.name)){if(ATT.some(function(a){return a.k==='v'})){toast('Одно видео в одном сообщении');return}
     var free=4-ATT.filter(function(a){return a.k==='i'}).length;if(free<1){toast('Убери одно фото, чтобы добавить видео');return}
     var a={k:'v',busy:true,name:f.name,file:f};ATT.push(a);drawAtt();
-    storyboard(f,free,function(i,n){a.prog=Math.round(i/n*100);drawAtt()}).then(function(r){a.busy=false;a.dur=r.dur;a.frames=r.frames;a.sheets=r.sheets.map(function(d){return {k:'i',thumb:d,file:d2b(d),ext:'jpg'}});a.thumb=r.sheets[0];drawAtt()},function(){ATT.splice(ATT.indexOf(a),1);drawAtt();toast('Не получилось открыть видео. Подходят mp4, mov, webm.')});return}
+    storyboard(f,free,function(i,n){a.prog=Math.round(i/n*100);drawAtt()}).then(function(r){return speechWavs(f).then(function(s2){a.wavs=s2.wavs;a.sdur=s2.dur;return r},function(){return r})}).then(function(r){a.busy=false;a.dur=r.dur;a.frames=r.frames;a.sheets=r.sheets.map(function(d){return {k:'i',thumb:d,file:d2b(d),ext:'jpg'}});a.thumb=r.sheets[0];drawAtt()},function(){ATT.splice(ATT.indexOf(a),1);drawAtt();toast('Не получилось открыть видео. Подходят mp4, mov, webm.')});return}
   if(/^image\//.test(f.type)){if(ATT.filter(function(a){return a.k==='i'}).length>=4){toast('Можно до 4 фото в одном сообщении');return}
     var a={k:'i',busy:true,thumb:''};ATT.push(a);shrinkJ(f,1280).then(function(d){a.busy=false;a.thumb=d;a.file=d2b(d);a.ext='jpg';drawAtt()},function(){ATT.splice(ATT.indexOf(a),1);drawAtt();toast('Не получилось открыть фото')});return}
   if(ATT.filter(function(a){return a.k==='f'}).length>=3){toast('Можно до 3 файлов в одном сообщении');return}
