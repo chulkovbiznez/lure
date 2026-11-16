@@ -962,12 +962,14 @@ function priceHint(){var el=$('priceLine');if(!el)return;var mid=ls(key('model')
   var t=$('q').value.trim();if(!m||!m.per1M||(!t&&!ATT.length)){el.innerHTML='';return}
   var ch=t.length,hc=0;(CUR&&CUR.msgs||[]).slice(-40).forEach(function(x){hc+=(x.content||'').length;(x.files||[]).forEach(function(f){hc+=f.text.length})});ch+=hc;
   var ni=0;ATT.forEach(function(a){if(a.k==='f')ch+=(a.text||'').length;else if(a.k==='a')ch+=(a.stt!=null?a.stt.length:(a.dur||0)*15);else if(a.k==='v'){ni+=(a.sheets||[1]).length;ch+=(a.sdur||0)*15}else ni++});ni=Math.min(ni,4);
-  var tin=ch/2.5+ni*1600+50,tout=600,web=WEB||/https?:\/\/\S+/i.test(t);
-  var r=(tin*m.per1M.in+tout*m.per1M.out)/1e6;if(web)r=r*2+2.2;
-  var sd=0;ATT.forEach(function(a){if(a.wavs&&a.stt==null)sd+=(a.dur||a.sdur||0)});if(sd)r+=Math.max(0.01,sd/60*STT_MIN);
-  var hist=hc/2.5*m.per1M.in/1e6*(web?2:1),fresh=Math.max(0.01,r-hist);
-  el.innerHTML='≈ <b>'+rub(Math.max(0.01,r))+'</b> за ответ'+(sd?' · с расшифровкой речи '+tc(sd):'')
-    +(web?' · с интернетом':'')+(ATT.length?' · с вложениями':'')+(hist>0.5&&hist>fresh?'<br><span style="color:#c9a26a">Длинный чат: модель каждый раз перечитывает всю переписку. В новом чате ≈ '+rub(fresh)+'</span> <button type="button" id="phNew" style="font:700 12px var(--f);color:var(--gold);text-decoration:underline;padding:0">Открыть новый чат</button>':'');var nb=$('phNew');if(nb)nb.onclick=function(){openDialog(null);$('q').focus();priceHint()}}
+  var tin=ch/2.5+ni*1600+50,web=WEB||/https?:\/\/\S+/i.test(t);
+  // ответ: короткий ≈30 токенов, подробный ≈800 — цена зависит от длины ответа, поэтому показываем вилку (Андрей 17.11: «привет» стоил 0,09, а не 3 ₽)
+  function cost(tout){var x=(tin*m.per1M.in+tout*m.per1M.out)/1e6;if(web)x=x*2+2.2;return x}
+  var lo=cost(30),r=cost(800);
+  var sd=0;ATT.forEach(function(a){if(a.wavs&&a.stt==null)sd+=(a.dur||a.sdur||0)});if(sd){var sc=Math.max(0.01,sd/60*STT_MIN);lo+=sc;r+=sc}
+  var hist=hc/2.5*m.per1M.in/1e6*(web?2:1),fresh=Math.max(0.01,lo-hist);
+  el.innerHTML='≈ <b>'+rub(Math.max(0.01,lo))+'</b> – <b>'+rub(Math.max(0.01,r))+'</b> за ответ <span style="opacity:.7">(короткий – подробный)</span>'+(sd?' · с расшифровкой речи '+tc(sd):'')
+    +(web?' · с интернетом':'')+(ATT.length?' · с вложениями':'')+(hist>0.3&&hist>fresh?'<br><span style="color:#c9a26a">Длинный чат: модель каждый раз перечитывает всю переписку (+'+rub(hist)+' к каждому ответу). В новом чате от '+rub(fresh)+'</span> <button type="button" id="phNew" style="font:700 12px var(--f);color:var(--gold);text-decoration:underline;padding:0">Открыть новый чат</button>':'');var nb=$('phNew');if(nb)nb.onclick=function(){openDialog(null);$('q').focus();priceHint()}}
 var WEB=ls(key('web'))==='1';function drawWeb(){var b=$('webBtn');b.classList.toggle('on',WEB);b.setAttribute('aria-pressed',WEB?'true':'false')}
 $('webBtn').onclick=function(){WEB=!WEB;ls(key('web'),WEB?'1':null);drawWeb();priceHint();toast(WEB?'Интернет включён: модель будет искать свежие данные и читать ссылки. Поиск +≈1 ₽.':'Интернет выключен')};
 $('attBtn').onclick=function(){$('attFile').value='';$('attFile').click()};
