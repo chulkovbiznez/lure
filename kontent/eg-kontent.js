@@ -1,11 +1,12 @@
 /* EAGLES · Загрузка контента в Канал и Обучение · eg-kontent.js v5 · 17.11.2026 (задание 68)
    Одна добавка на две страницы: kanal.html (канал Андрея и свой канал Pro ?u=ID) и obuchenie.html.
    - Сторис ТОЛЬКО съёмкой в приложении: кружочек с камеры до 60 с, 480p (из галереи нельзя — живая жизнь, не реклама).
-     Живут 24 часа и исчезают совсем (архива и «Актуального» нет — Андрей 17.11 11:02: «мы не инстаграм»).
+     Живут 24 часа и исчезают совсем (архива нет, Андрей 17.11 11:02).
      Смотрят по аватарке по порядку, тап — следующая. Меню: «Поделиться ссылкой» (?s=ID), «Удалить» (хозяин).
-   - Папки по темам (вместо «Актуального»): хозяин канала собирает ссылки со своей стены в подборки
-     («Моё похудение», «Отзывы»). Внутри листаются вбок большие чёткие превью, тап — ролик играет прямо там.
-     Канал Андрея и свой канал Pro. Кнопка «📁 В папку» у каждого поста с роликом.
+   - «Актуальное» = КАРТА (Андрей 17.11 11:18): кружки под сторис, обложку хозяин грузит с телефона. Нажал — карта темы
+     («Похудение»): двигать, приближать, отдалять; на ней островки по порядку («Моё начало» и дальше), каждый — ролик со стены.
+     Нажал островок — превью, смотреть, «⬇ К посту на стене». Ролик на карту: кнопка «⭐ В Актуальное» у поста или ссылкой.
+     Канал Андрея и свой канал Pro (в Обучении «Актуального» нет).
    - Превью: само подтягивается с Rutube, VK Видео или Яндекс Диска (сервер kc_meta). Можно поставить своё:
      «📷 Своё превью» или «✨ Сделать в LURE» — LURE открывается с готовым промптом (название ролика + твой кадр).
    - Посты, ролики и уроки — только ссылкой на VK Видео / Rutube / Яндекс Диск. На стене — превью с ▶,
@@ -73,12 +74,60 @@ function thumbHtml(u, th, title, vert){
   if(!th) return embHtml(u, vert);
   return '<button type="button" class="kc-th' + (vert ? ' v' : '') + '" data-kcplay="' + esc(u) + '"><img alt="" loading="lazy" src="' + esc(th) + '" onerror="this.style.opacity=0"><span class="kc-pl"></span><em>' + vidName(u) + '</em></button>';
 }
+/* Плеер поверх размытой страницы (Андрей 17.11 11:23): видео вылетает из превью с пружинкой, своя перемотка у плеера,
+   тап по пустому месту — видео улетает обратно в превью. Открыл ещё раз — продолжает с того же места
+   (Rutube и YouTube ставим на паузу и держим; VK начинается заново — его плеер паузу снаружи не принимает). */
+var PL = el('div'); PL.id = 'kcPlay'; PL.hidden = true; PL.setAttribute('role', 'dialog');
+PL.innerHTML = '<button type="button" class="kp-x" aria-label="Закрыть">×</button><div class="kp-st"></div>';
+var plCache = {}, plCur = null, plFrom = null;
+function plMsg(w, cmd){
+  var f = $('iframe', w); if(!f || !f.contentWindow) return;
+  try{
+    if(/rutube/.test(f.src)) f.contentWindow.postMessage(JSON.stringify({type:'player:' + cmd, data:{}}), '*');
+    else if(/youtube/.test(f.src)) f.contentWindow.postMessage(JSON.stringify({event:'command', func:cmd === 'pause' ? 'pauseVideo' : 'playVideo', args:[]}), '*');
+  }catch(e){}
+}
+function plFly(box, from, open, done){
+  if(!box.animate || !from || !from.isConnected){ if(done) done(); return; }
+  var r1 = from.getBoundingClientRect(), r2 = box.getBoundingClientRect(); if(!r1.width || !r2.width){ if(done) done(); return; }
+  var dx = (r1.left + r1.width / 2) - (r2.left + r2.width / 2), dy = (r1.top + r1.height / 2) - (r2.top + r2.height / 2), sx = r1.width / r2.width, sy = r1.height / r2.height;
+  var T = function(k, a, b){ return 'translate(' + dx * k + 'px,' + dy * k + 'px) scale(' + a + ',' + b + ')'; };
+  var fr = open ? [{transform:T(1, sx, sy), offset:0}, {transform:T(0, 1.05, 1.05), offset:.62}, {transform:T(0, .98, .98), offset:.82}, {transform:T(0, 1, 1), offset:1}]
+    : [{transform:T(0, 1, 1), offset:0}, {transform:T(0, 1.04, 1.04), offset:.2}, {transform:T(1, sx, sy), offset:1}];
+  PL.classList.toggle('kp-dim', !open);
+  box.animate(fr, {duration:open ? 520 : 380, easing:open ? 'cubic-bezier(.2,.8,.3,1)' : 'cubic-bezier(.5,0,.6,1)'}).onfinish = function(){ if(done) done(); };
+}
+function playOpen(u, from){
+  var e = emb(u); if(!e) return;
+  if(!PL.parentNode) document.body.appendChild(PL);
+  var vert = e.v || (from && from.classList.contains('v')), w = plCache[u], st = $('.kp-st', PL);
+  if(!w){
+    var src = e.src + (e.src.indexOf('?') > 0 ? '&' : '?') + 'autoplay=1' + (/youtube/.test(e.src) ? '&enablejsapi=1&playsinline=1' : '');
+    w = el('div', 'kp-v' + (vert ? ' v' : ''), '<iframe src="' + esc(src) + '" allow="autoplay; encrypted-media; fullscreen; picture-in-picture; clipboard-write" allowfullscreen frameborder="0" title="Видео"></iframe>');
+    st.appendChild(w); plCache[u] = w;
+  } else setTimeout(function(){ plMsg(w, 'play'); }, 60);
+  Object.keys(plCache).forEach(function(k){ plCache[k].hidden = plCache[k] !== w; });
+  plCur = w; plFrom = from; PL.hidden = false; PL.classList.add('kp-dim'); document.documentElement.style.overflow = 'hidden';
+  requestAnimationFrame(function(){ PL.classList.remove('kp-dim'); });
+  plFly(w, from, true);
+}
+function playClose(){
+  if(PL.hidden || !plCur) return; var w = plCur, u = null;
+  Object.keys(plCache).forEach(function(k){ if(plCache[k] === w) u = k; });
+  plMsg(w, 'pause');
+  plFly(w, plFrom, false, function(){
+    PL.hidden = true; PL.classList.remove('kp-dim'); plCur = null; if(FV.hidden) document.documentElement.style.overflow = '';
+    if(u && /vk/.test(($('iframe', w) || {}).src || '')){ w.remove(); delete plCache[u]; }   /* VK паузу снаружи не слушает — убираем, чтобы не играл в фоне */
+  });
+}
+PL.addEventListener('click', function(e){ if(!e.target.closest('.kp-v')) playClose(); });
+$('.kp-x', PL).onclick = function(e){ e.stopPropagation(); playClose(); };
 document.addEventListener('click', function(e){
   var b = e.target.closest('[data-kcplay]'); if(!b) return;
   e.preventDefault(); e.stopPropagation();
   var u = b.dataset.kcplay;
   if(isDisk(u) || !emb(u)){ window.open(u, '_blank', 'noopener'); return; }
-  var w = el('div'); w.innerHTML = embHtml(u, b.classList.contains('v'), true); b.replaceWith(w.firstChild);
+  playOpen(u, b);
 }, true);
 
 /* ---------- сервер ---------- */
@@ -178,18 +227,31 @@ var css = el('style'); css.id = 'kcCss'; css.textContent = [
 '.kc-sto.kc-plus .kc-rg{background:none!important;border:2px dashed #8a7240!important;padding:0!important;box-sizing:border-box}',
 '.kc-sto.kc-plus .kc-rg>span{border:0;display:flex;align-items:center;justify-content:center;color:#ffd23f;font-size:28px;font-weight:600;background:#120f0b}',
 '.kc-sto.kc-plus .kc-rg>span i{position:static!important;font-size:28px!important;font-weight:600;color:#ffd23f}',
-/* папки */
+/* «Актуальное» */
 '.kc-fw{margin:2px 0 14px}',
-'.kc-fw h4{margin:0 0 8px;font:900 13px Montserrat,sans-serif;color:#a29b90;letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;gap:8px}',
+'.kc-fw h4{margin:0 0 8px;font:900 13px Montserrat,sans-serif;color:#a29b90;letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;gap:8px;flex-wrap:wrap}',
 '.kc-fw h4 small{font:700 11px Montserrat,sans-serif;color:#6d675f;text-transform:none;letter-spacing:0}',
-'.kc-fs{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;padding:2px}',
+'.kc-fs{display:flex;gap:12px;overflow-x:auto;scrollbar-width:none;padding:2px}',
 '.kc-fs::-webkit-scrollbar{display:none}',
-'.kc-f{flex:none;width:112px;background:none;border:0;padding:0;color:#e9e4da;cursor:pointer;text-align:left;font-family:Montserrat,sans-serif}',
-'.kc-f .kc-fc{position:relative;display:block;width:112px;height:76px;border-radius:14px;overflow:hidden;background:linear-gradient(150deg,#3a2c16,#120f0b) center/cover no-repeat;border:1.5px solid rgba(255,210,63,.45);box-shadow:0 6px 16px rgba(0,0,0,.35)}',
-'.kc-f .kc-fc i{position:absolute;right:6px;bottom:6px;font-style:normal;background:rgba(0,0,0,.7);color:#ffd23f;border-radius:8px;padding:2px 6px;font:800 11px Montserrat,sans-serif}',
-'.kc-f .kc-fc b{position:absolute;left:0;right:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;font-size:26px}',
-'.kc-f span.kc-ft{display:block;margin-top:6px;font:800 12px/1.25 Montserrat,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#e9e4da}',
-'.kc-f.kc-fnew .kc-fc{background:#120f0b;border:2px dashed #8a7240;box-shadow:none;color:#ffd23f}',
+'.kc-akt .kc-rg{background:linear-gradient(160deg,#fff0b8,#c8901c 55%,#5a4a2c)!important;padding:2.5px}',
+'.kc-akt .kc-rg>span{display:flex!important;align-items:center;justify-content:center}',
+'.kc-akt .kc-akti{position:static!important;font-size:26px!important}',
+'.kc-covp{display:flex;align-items:center;gap:12px;margin:0 0 12px}',
+'.kc-covp .kc-covi{flex:none;width:72px;height:72px;border-radius:50%;border:2px dashed #8a7240;background:#120f0b center/cover no-repeat;display:flex;align-items:center;justify-content:center;color:#ffd23f;font-size:26px;cursor:pointer}',
+'.kc-flash{animation:kcfl 2.2s ease}',
+'@keyframes kcfl{0%,60%{box-shadow:0 0 0 3px #ffd23f,0 0 40px rgba(255,210,63,.55)}100%{box-shadow:none}}',
+/* плеер поверх размытой страницы */
+'#kcPlay{position:fixed;inset:0;z-index:356;display:flex;align-items:center;justify-content:center;background:rgba(6,5,4,.55);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);transition:background .3s,backdrop-filter .3s,-webkit-backdrop-filter .3s}',
+'#kcPlay[hidden]{display:none}',
+'#kcPlay.kp-dim{background:rgba(6,5,4,0);-webkit-backdrop-filter:blur(0);backdrop-filter:blur(0)}',
+'#kcPlay .kp-st{width:100%;display:flex;justify-content:center;pointer-events:none}',
+'#kcPlay .kp-v{pointer-events:auto;position:relative;width:min(94vw,860px);aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:#000;box-shadow:0 0 0 2px rgba(255,210,63,.55),0 30px 80px rgba(0,0,0,.7)}',
+'#kcPlay .kp-v.v{width:auto;height:min(80vh,760px);aspect-ratio:9/16;max-width:94vw}',
+'#kcPlay .kp-v[hidden]{display:none}',
+'#kcPlay .kp-v iframe{position:absolute;inset:0;width:100%;height:100%;border:0}',
+'#kcPlay .kp-x{position:absolute;right:14px;top:calc(14px + env(safe-area-inset-top,0px));width:44px;height:44px;border-radius:50%;border:0;background:rgba(0,0,0,.45);color:#fff;font:700 24px Montserrat,sans-serif;cursor:pointer;transition:opacity .25s}',
+'#kcPlay.kp-dim .kp-x{opacity:0}',
+'#kcPlay:after{content:"Нажми на пустое место — ролик вернётся на место";position:absolute;left:0;right:0;bottom:calc(18px + env(safe-area-inset-bottom,0px));text-align:center;color:rgba(255,255,255,.55);font:700 12px Montserrat,sans-serif;pointer-events:none}',
 /* превью с ▶ */
 '.kc-th{position:relative;display:block;width:100%;aspect-ratio:16/9;margin:10px 0 4px;border:0;padding:0;border-radius:14px;overflow:hidden;background:linear-gradient(150deg,#3a2c16,#0d0b09);cursor:pointer}',
 '.kc-th.v{aspect-ratio:9/16;max-width:340px;margin-left:auto;margin-right:auto}',
@@ -207,31 +269,41 @@ var css = el('style'); css.id = 'kcCss'; css.textContent = [
 '.kc-pvbox .kc-lure{background:linear-gradient(90deg,rgba(255,106,43,.18),rgba(255,210,63,.14));border-color:rgba(255,160,60,.55);color:#ffd23f}',
 '.kc-lurehelp{margin:8px 2px 0;color:#cfc8bd;font:600 12px/1.5 Montserrat,sans-serif}',
 '.kc-lurehelp b{color:#ffd23f}',
-/* папка открыта */
-'#kcFold{position:fixed;inset:0;z-index:345;background:radial-gradient(90% 60% at 50% 20%,#1d1408,#000 75%);display:flex;flex-direction:column;color:#fff;font-family:Montserrat,sans-serif}',
+/* карта «Актуального» */
+'#kcFold{position:fixed;inset:0;z-index:345;background:#06141a;display:flex;flex-direction:column;color:#fff;font-family:Montserrat,sans-serif;overflow:hidden}',
 '#kcFold[hidden]{display:none}',
-'#kcFold .kf-h{display:flex;align-items:center;gap:10px;padding:calc(12px + env(safe-area-inset-top,0px)) 14px 10px}',
-'#kcFold .kf-h b{font:900 19px Montserrat,sans-serif;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
-'#kcFold .kf-h small{display:block;color:#a29b90;font:700 12px Montserrat,sans-serif}',
+'#kcFold .kf-h{position:relative;z-index:3;display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 10px;background:linear-gradient(180deg,rgba(4,10,13,.95),rgba(4,10,13,.6) 70%,transparent)}',
+'#kcFold .kf-av{flex:none;width:42px;height:42px;border-radius:50%;background:#120f0b center/cover no-repeat;box-shadow:0 0 0 2px #ffd23f;display:flex;align-items:center;justify-content:center;font-size:20px}',
+'#kcFold .kf-h b{display:block;font:900 18px Montserrat,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+'#kcFold .kf-h small{display:block;color:#a7c3c8;font:700 12px Montserrat,sans-serif}',
 '#kcFold .kf-h button{height:38px;min-width:38px;border-radius:999px;border:0;background:rgba(255,255,255,.12);color:#fff;font:800 14px Montserrat,sans-serif;cursor:pointer;padding:0 12px}',
 '#kcFold .kf-h .kf-x{font-size:22px;background:none}',
-'#kcFold .kf-sl{flex:1;display:flex;align-items:center;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;padding:0 9vw;scrollbar-width:none}',
-'#kcFold .kf-sl::-webkit-scrollbar{display:none}',
-'.kc-fi{flex:none;width:min(82vw,460px);scroll-snap-align:center}',
-'.kc-fi .kc-fm{position:relative;aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:linear-gradient(150deg,#3a2c16,#0d0b09);box-shadow:0 0 0 2px rgba(255,210,63,.55),0 20px 50px rgba(0,0,0,.6)}',
-'.kc-fi .kc-fm>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}',
-'.kc-fi .kc-fm>button.kc-fp{position:absolute;inset:0;border:0;background:none;cursor:pointer;padding:0}',
-'.kc-fi .kc-fm .kc-emb{margin:0;height:100%;border-radius:0}',
-'.kc-fi .kc-fm .kc-fn{position:absolute;left:12px;top:12px;font:800 11px Montserrat,sans-serif;background:rgba(0,0,0,.7);color:#ffd23f;border-radius:8px;padding:3px 8px}',
-'.kc-fi .kc-fm .kc-fx{position:absolute;right:10px;top:10px;z-index:2;width:34px;height:34px;border-radius:50%;border:0;background:rgba(0,0,0,.7);color:#fff;font:800 15px Montserrat,sans-serif;cursor:pointer}',
-'.kc-fi .kc-fm .kc-fx.sure{background:#e0241b}',
-'.kc-fi .kc-fm .kc-fe{position:absolute;right:52px;top:10px;z-index:2;height:34px;border-radius:17px;border:0;background:rgba(0,0,0,.7);color:#ffd23f;font:800 12px Montserrat,sans-serif;cursor:pointer;padding:0 10px}',
-'.kc-fi>b{display:block;margin:12px 4px 0;font:800 15px/1.35 Montserrat,sans-serif}',
-'.kc-fi.kc-fadd .kc-fm{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:rgba(255,210,63,.06);box-shadow:none;border:2px dashed rgba(255,210,63,.55);color:#ffd23f;font:800 14px Montserrat,sans-serif;cursor:pointer}',
-'.kc-fi.kc-fadd .kc-fm b{font-size:34px;font-weight:600;line-height:1}',
-'#kcFold .kf-dots{display:flex;justify-content:center;gap:6px;padding:12px 0 calc(22px + env(safe-area-inset-bottom,0px))}',
-'#kcFold .kf-dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.3)}',
-'#kcFold .kf-dots i.on{background:#ffd23f}',
+'#kcFold .kf-map{position:absolute;inset:0;touch-action:none;cursor:grab;background:radial-gradient(60% 40% at 30% 20%,rgba(40,120,130,.35),transparent 70%),radial-gradient(50% 35% at 80% 70%,rgba(30,90,110,.35),transparent 70%),linear-gradient(180deg,#0a2a33,#06141a 60%,#040c10)}',
+'#kcFold .kf-map:active{cursor:grabbing}',
+'#kcFold .kf-w{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}',
+'#kcFold .kf-path{position:absolute;left:0;top:0;filter:drop-shadow(0 0 4px rgba(255,200,80,.6))}',
+'#kcFold .kf-wv{position:absolute;width:46px;height:10px;border-top:2px solid rgba(160,220,230,.18);border-radius:50%;pointer-events:none}',
+'#kcFold .kf-is{position:absolute;width:170px;height:170px;border:0;background:none;padding:0;cursor:pointer;transform:rotate(var(--r));-webkit-tap-highlight-color:transparent}',
+'#kcFold .kf-land{position:absolute;left:8px;right:8px;top:52px;height:96px;border-radius:52% 48% 46% 54%/58% 52% 48% 42%;background:radial-gradient(60% 55% at 45% 38%,#e9c77a,#b8893a 55%,#6f5022 85%);box-shadow:0 0 0 7px rgba(120,200,210,.16),0 0 0 15px rgba(120,200,210,.07),0 18px 30px rgba(0,0,0,.55)}',
+'#kcFold .kf-land:after{content:"";position:absolute;left:18%;right:22%;top:10%;height:42%;border-radius:50%;background:radial-gradient(closest-side,#3f7a3a,#2c5a2a 70%,transparent);opacity:.75}',
+'#kcFold .kf-pic{position:absolute;left:35px;top:6px;width:100px;height:100px;border-radius:50%;background:#1b1610 center/cover no-repeat;box-shadow:0 0 0 3px #ffd23f,0 0 22px rgba(255,210,63,.45),0 10px 22px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;color:#ffd23f;font-size:30px;transition:transform .25s}',
+'#kcFold .kf-is.on .kf-pic{transform:scale(1.1);box-shadow:0 0 0 4px #fff0b8,0 0 34px rgba(255,210,63,.8),0 10px 22px rgba(0,0,0,.6)}',
+'#kcFold .kf-num{position:absolute;left:30px;top:2px;width:30px;height:30px;border-radius:50%;background:linear-gradient(180deg,#fff0b8,#ffd23f 50%,#c8901c);color:#1a1205;font:900 14px/30px Montserrat,sans-serif;box-shadow:0 3px 8px rgba(0,0,0,.5)}',
+'#kcFold .kf-lb{position:absolute;left:-10px;right:-10px;top:132px;text-align:center}',
+'#kcFold .kf-lb{display:block;font:900 13px/1.25 Montserrat,sans-serif;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.9)}',
+'#kcFold .kf-new .kf-pic{background:rgba(255,210,63,.08);box-shadow:none;border:2px dashed #ffd23f}',
+'#kcFold .kf-new .kf-land{opacity:.45}',
+'#kcFold .kf-z{position:absolute;z-index:3;right:12px;top:calc(76px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:8px}',
+'#kcFold .kf-z button{width:42px;height:42px;border-radius:12px;border:1px solid rgba(255,210,63,.35);background:rgba(8,16,20,.85);color:#ffd23f;font:900 20px Montserrat,sans-serif;cursor:pointer}',
+'#kcFold .kf-hint{position:absolute;z-index:2;left:0;right:0;bottom:calc(14px + env(safe-area-inset-bottom,0px));margin:0;text-align:center;color:rgba(200,230,235,.6);font:700 11.5px Montserrat,sans-serif;pointer-events:none}',
+'#kcFold .kf-card{position:absolute;z-index:4;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));max-width:520px;margin:0 auto;background:rgba(16,13,10,.96);border:1px solid rgba(255,210,63,.45);border-radius:20px;padding:12px;box-shadow:0 -10px 40px rgba(0,0,0,.6)}',
+'#kcFold .kf-card[hidden]{display:none}',
+'#kcFold .kf-ch{display:flex;align-items:center;gap:8px}',
+'#kcFold .kf-ch span{flex:none;padding:3px 9px;border-radius:20px;background:#ffd23f;color:#1a1205;font:900 10.5px Montserrat,sans-serif;text-transform:uppercase;letter-spacing:.05em}',
+'#kcFold .kf-ch b{flex:1;min-width:0;font:900 15px Montserrat,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+'#kcFold .kf-ch button{flex:none;width:32px;height:32px;border-radius:50%;border:1px solid #2a2622;background:#0d0c0f;color:#a29b90;font-size:17px;cursor:pointer}',
+'#kcFold .kf-card .kc-th,#kcFold .kf-card .kc-emb{margin:10px 0 0}',
+'#kcFold .kf-card .kc-row{margin:10px 0 0}',
 /* кнопки владельца */
 '.kc-own{display:flex!important;align-items:center;gap:10px;width:100%!important;box-sizing:border-box;margin:0 0 12px!important;padding:14px!important;border-radius:18px!important;border:1.5px dashed rgba(255,210,63,.5)!important;background:rgba(255,210,63,.06)!important;color:#ffd23f!important;font:800 14px Montserrat,sans-serif!important;cursor:pointer;text-align:left;box-shadow:none!important}',
 '.kc-own b{width:34px;height:34px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:600}',
@@ -481,9 +553,12 @@ function mountStories(){
   var up = $('#ek-upl');
   if(up){ up.textContent = 'Сторис снимаются только здесь, в приложении: живой кружочек до 1 минуты. Видны 24 часа, потом исчезают.'; if(OWNER){ up.hidden = false; up.style.removeProperty('display'); } }
 }
-/* ---------- папки по темам (вместо «Актуального») ---------- */
+/* ---------- «Актуальное» = карта с островками (Андрей 17.11 11:18) ----------
+   Кружки «Актуального» под сторис: обложку хозяин грузит с телефона. Нажал — открывается карта (приближать, отдалять, двигать),
+   на ней островки: каждый островок — ролик со стены (первый — «Моё начало» и т.д.). Нажал островок — превью, «Смотреть»,
+   «К посту на стене». Ролики в «Актуальное» добавляются кнопкой «⭐ В Актуальное» у поста или ссылкой. */
 var FOLD_ON = PAGE === 'kanal';
-function fCover(f){ for(var i = 0; i < (f.items || []).length; i++) if(f.items[i].th) return f.items[i].th; return ''; }
+function fCover(f){ if(f.cover) return f.cover; for(var i = 0; i < (f.items || []).length; i++) if(f.items[i].th) return f.items[i].th; return ''; }
 function mountFolders(){
   if(!FOLD_ON) return;
   if(!fBox){
@@ -493,106 +568,172 @@ function mountFolders(){
   }
   if(!D.folders.length && !OWNER){ fBox.hidden = true; return; }
   fBox.hidden = false;
-  var h = '<h4>Папки' + (OWNER && !D.folders.length ? '<small>собери лучшие ролики по темам</small>' : '') + '</h4><div class="kc-fs">';
-  if(OWNER) h += '<button type="button" class="kc-f kc-fnew"><span class="kc-fc"><b>＋</b></span><span class="kc-ft">Новая папка</span></button>';
-  D.folders.forEach(function(f, i){ var c = fCover(f); h += '<button type="button" class="kc-f" data-fi="' + i + '"><span class="kc-fc"' + (c ? ' style="background-image:url(\'' + esc(c) + '\')"' : '') + '>' + (c ? '' : '<b>📁</b>') + '<i>' + (f.items || []).length + '</i></span><span class="kc-ft">' + esc(f.title) + '</span></button>'; });
+  var h = '<h4>Актуальное' + (OWNER && !D.folders.length ? '<small>карты твоих тем: «Похудение», «Отзывы»…</small>' : '') + '</h4><div class="kc-fs">';
+  if(OWNER) h += stoBtn('kc-plus kc-fnew', '', 'Новое', '＋');
+  D.folders.forEach(function(f, i){ var c = fCover(f); h += '<button type="button" class="kc-sto kc-akt" data-fi="' + i + '"><span class="kc-rg"><span' + (c ? ' style="background-image:url(\'' + esc(c) + '\')"' : '') + '>' + (c ? '' : '<i class="kc-akti">🗺</i>') + '</span></span><span class="kc-t">' + esc(f.title) + '</span></button>'; });
   fBox.innerHTML = h + '</div>';
   var n = $('.kc-fnew', fBox); if(n) n.onclick = function(){ foldName(null); };
-  $$('[data-fi]', fBox).forEach(function(b){ b.onclick = function(){ foldOpen(D.folders[+b.dataset.fi]); }; });
-}
-/* название папки: новая или переименовать */
-function foldName(f, then){
-  var b = openSheet(f ? 'Переименовать папку' : 'Новая папка', 'Папка — подборка роликов по одной теме. Например «Моё похудение», «Отзывы», «Как я начинал». Гости листают её вбок, не ищут по всей стене.',
-    '<input type="text" maxlength="24" placeholder="Название папки"><button type="button" class="kc-big kc-gold">' + (f ? 'Сохранить' : 'Создать папку') + '</button>');
-  var ti = $('input', b); ti.value = f ? f.title : ''; setTimeout(function(){ try{ ti.focus(); }catch(e){} }, 60);
-  $('.kc-big', b).onclick = function(){
-    var t = ti.value.trim(); if(!t) return toast('Напиши название папки');
-    API.fold(PLACE, {id:f ? f.id : '', title:t, items:f ? f.items : []}).then(function(nf){ closeSheet(); toast(f ? 'Сохранено' : 'Папка «' + t + '» создана'); return reload().then(function(){ if(then) then(nf); else if(!f) foldOpen(fById(nf.id)); }); }, function(r){ toast(errText(r)); });
-  };
+  $$('[data-fi]', fBox).forEach(function(b){ b.onclick = function(){ foldOpen(D.folders[+b.dataset.fi], -1, b); }; });
 }
 function fById(id){ for(var i = 0; i < D.folders.length; i++) if(D.folders[i].id === id) return D.folders[i]; return null; }
-/* добавить ролик в папку (с превью) */
+function fSave(f, patch){ var x = {id:f ? f.id : '', title:f ? f.title : '', cover:f ? f.cover || '' : '', items:f ? f.items || [] : []}; for(var k in patch) x[k] = patch[k]; return API.fold(PLACE, x); }
+/* новое «Актуальное» / изменить: название + обложка кружка с телефона */
+function foldName(f, then){
+  var cov = f ? f.cover || '' : '';
+  var b = openSheet(f ? 'Изменить «' + f.title + '»' : 'Новое «Актуальное»', 'Это карта одной темы: «Похудение», «Отзывы», «Как я начинал». На ней островки — твои ролики по порядку. Гость открывает и путешествует по ним.',
+    '<div class="kc-covp"><span class="kc-covi"' + (cov ? ' style="background-image:url(\'' + esc(cov) + '\')"' : '') + '>' + (cov ? '' : '＋') + '</span><button type="button" class="kc-chip">📷 Обложка кружка с телефона</button></div>' +
+    '<input type="text" maxlength="24" placeholder="Название, например «Похудение»"><button type="button" class="kc-big kc-gold">' + (f ? 'Сохранить' : 'Создать') + '</button>');
+  var ti = $('input', b); ti.value = f ? f.title : '';
+  var up = function(){ pick('image/*').then(function(fs){ var fl = fs[0]; if(!fl) return; var ci = $('.kc-covi', b); ci.textContent = '…'; busy = true;
+    readImg(fl).then(function(i){ var x = shrink(i, 640, .86); return API.photo(x.b64, x.mime, 'p'); }).then(function(u){ busy = false; cov = u; ci.textContent = ''; ci.style.backgroundImage = 'url(\'' + u + '\')'; }, function(r){ busy = false; ci.textContent = '＋'; toast(errText(r)); }); }); };
+  $('.kc-covp .kc-chip', b).onclick = up; $('.kc-covi', b).onclick = up;
+  $('.kc-big', b).onclick = function(){
+    var t = ti.value.trim(); if(!t) return toast('Напиши название');
+    fSave(f, {title:t, cover:cov}).then(function(nf){ closeSheet(); toast(f ? 'Сохранено' : '«' + t + '» создано'); return reload().then(function(){ if(then) then(nf); else if(!f) foldOpen(fById(nf.id)); }); }, function(r){ toast(errText(r)); });
+  };
+}
+/* добавить ролик-островок (с превью) */
 function foldAdd(f, pre){
   pre = pre || {};
-  var b = openSheet('В папку «' + f.title + '»', 'Ссылка на ролик в Rutube, VK Видео или на Яндекс Диске. Главное в папке — чёткое превью: его видят первым.',
-    '<input type="url" inputmode="url" placeholder="Ссылка: rutube.ru/video/… · vkvideo.ru/… · disk.yandex.ru/…"><input type="text" class="kc-t1" maxlength="80" placeholder="Название (подтянется само)">' + PV_HTML +
-    '<button type="button" class="kc-big kc-gold">Добавить в папку</button>');
+  var n = (f.items || []).length;
+  var b = openSheet('Островок ' + (n + 1) + ' в «' + f.title + '»', 'Ссылка на ролик в Rutube, VK Видео или на Яндекс Диске. Главное — чёткое превью: его видно на карте.',
+    '<input type="url" inputmode="url" placeholder="Ссылка: rutube.ru/video/… · vkvideo.ru/… · disk.yandex.ru/…"><input type="text" class="kc-t1" maxlength="80" placeholder="' + (n ? 'Название островка' : 'Название, например «Моё начало»') + '">' + PV_HTML +
+    '<button type="button" class="kc-big kc-gold">Поставить островок</button>');
   var li = $('input[type=url]', b), ti = $('.kc-t1', b); li.value = pre.l || ''; ti.value = pre.t || '';
   var pv = prevPicker(b, function(){ return li.value.trim(); }, function(){ return ti.value.trim(); }, function(m){ if(m.title && !ti.value.trim()) ti.value = m.title; }, pre.th);
   var go = $('.kc-big', b);
   go.onclick = function(){
     var l = li.value.trim(); if(!VID_RE.test(l)) return toast('Нужна ссылка на ролик Rutube, VK Видео или Яндекс Диска');
-    if((f.items || []).some(function(x){ return x.l === l; })) return toast('Этот ролик уже в папке');
-    go.disabled = true; go.textContent = 'Добавляю…';
-    var items = (f.items || []).concat([{l:l, t:ti.value.trim() || pv.title() || 'Ролик', th:pv.th()}]);
-    API.fold(PLACE, {id:f.id, title:f.title, items:items}).then(function(){ closeSheet(); toast('Добавлено в «' + f.title + '»'); return reload().then(function(){ var nf = fById(f.id); if(nf && !FV.hidden) foldOpen(nf, items.length - 1); }); }, function(r){ go.disabled = false; go.textContent = 'Добавить в папку'; toast(errText(r)); });
+    if((f.items || []).some(function(x){ return x.l === l; })) return toast('Этот ролик уже на карте');
+    go.disabled = true; go.textContent = 'Ставлю…';
+    var items = (f.items || []).concat([{l:l, t:ti.value.trim() || pv.title() || 'Ролик', th:pv.th(), p:pre.p || ''}]);
+    fSave(f, {items:items}).then(function(){ closeSheet(); toast('Островок «' + (items[items.length - 1].t) + '» на карте'); return reload().then(function(){ var nf = fById(f.id); if(nf && !FV.hidden) foldOpen(nf, items.length - 1); }); }, function(r){ go.disabled = false; go.textContent = 'Поставить островок'; toast(errText(r)); });
   };
 }
-/* «📁 В папку» у поста: выбрать папку или создать новую */
+/* «⭐ В Актуальное» у поста: выбрать карту или создать новую */
 function toFolder(item){
-  var h = D.folders.map(function(f, i){ var has = (f.items || []).some(function(x){ return x.l === item.l; }); return '<button type="button" class="kc-chip' + (has ? ' on' : '') + '" data-i="' + i + '"' + (has ? ' disabled' : '') + '>📁 ' + esc(f.title) + (has ? ' ✓' : '') + '</button>'; }).join('');
-  var b = openSheet('В какую папку?', 'Ролик появится в папке с превью. Сам пост на стене останется.', '<div class="kc-row" style="flex-direction:column">' + h + '<button type="button" class="kc-chip kc-nf">＋ Новая папка</button></div>');
+  var h = D.folders.map(function(f, i){ var has = (f.items || []).some(function(x){ return x.l === item.l; }); return '<button type="button" class="kc-chip' + (has ? ' on' : '') + '" data-i="' + i + '"' + (has ? ' disabled' : '') + '>⭐ ' + esc(f.title) + (has ? ' ✓' : '') + '</button>'; }).join('');
+  var b = openSheet('В какое «Актуальное»?', 'Ролик станет новым островком на карте. Пост на стене останется, островок будет вести к нему.', '<div class="kc-row" style="flex-direction:column">' + h + '<button type="button" class="kc-chip kc-nf">＋ Новое «Актуальное»</button></div>');
   $$('[data-i]', b).forEach(function(c){ c.onclick = function(){ foldAdd(D.folders[+c.dataset.i], item); }; });
   $('.kc-nf', b).onclick = function(){ foldName(null, function(nf){ foldAdd(fById(nf.id) || nf, item); }); };
 }
-/* открытая папка: превью листаются вбок */
+
+/* ---- карта ---- */
 var FV = el('div'); FV.id = 'kcFold'; FV.hidden = true; FV.setAttribute('role', 'dialog');
-FV.innerHTML = '<div class="kf-h"><div style="flex:1;min-width:0"><b></b><small></small></div><button type="button" class="kf-o" aria-label="Меню папки">⋯</button><button type="button" class="kf-x" aria-label="Закрыть">×</button></div><div class="kf-sl"></div><div class="kf-dots"></div>';
+FV.innerHTML = '<div class="kf-h"><span class="kf-av"></span><div style="flex:1;min-width:0"><b></b><small></small></div><button type="button" class="kf-o" aria-label="Меню">⋯</button><button type="button" class="kf-x" aria-label="Закрыть">×</button></div>' +
+  '<div class="kf-map"><div class="kf-w"></div></div><div class="kf-z"><button type="button" data-z="1.35" aria-label="Приблизить">＋</button><button type="button" data-z="0.74" aria-label="Отдалить">－</button><button type="button" data-z="0" aria-label="Вся карта">⤢</button></div>' +
+  '<div class="kf-card" hidden></div><p class="kf-hint">Двигай карту пальцем, разводи двумя — приближение. Нажми на островок.</p>';
 document.body.appendChild(FV);
-var fcur = null;
-function foldOpen(f, at){
-  if(!f) return; fcur = f;
-  var it = f.items || [];
-  $('.kf-h b', FV).textContent = f.title; $('.kf-h small', FV).textContent = chName() + ' · ' + it.length + ' ' + (it.length % 10 === 1 && it.length % 100 !== 11 ? 'ролик' : (it.length % 10 >= 2 && it.length % 10 <= 4 && (it.length % 100 < 10 || it.length % 100 >= 20)) ? 'ролика' : 'роликов');
-  $('.kf-o', FV).hidden = !OWNER;
-  var h = it.map(function(x, i){
-    return '<div class="kc-fi" data-k="' + i + '"><div class="kc-fm">' + (x.th ? '<img alt="" src="' + esc(x.th) + '" onerror="this.style.opacity=0">' : '') + '<button type="button" class="kc-fp" data-kcplay="' + esc(x.l) + '" aria-label="Смотреть"><span class="kc-pl"></span></button><span class="kc-fn">' + vidName(x.l) + '</span>' +
-      (OWNER ? '<button type="button" class="kc-fe" data-e="' + i + '">Превью</button><button type="button" class="kc-fx" data-x="' + i + '" aria-label="Убрать из папки">✕</button>' : '') + '</div><b>' + esc(x.t || 'Ролик') + '</b></div>';
-  }).join('');
-  if(OWNER) h += '<div class="kc-fi kc-fadd"><div class="kc-fm" role="button" tabindex="0"><b>＋</b>Добавить ролик</div><b>&nbsp;</b></div>';
-  if(!it.length && !OWNER) h = '<p class="kc-empty" style="margin:auto">Тут пока пусто</p>';
-  var sl = $('.kf-sl', FV); sl.innerHTML = h;
-  var n = $$('.kc-fi', sl).length, dots = $('.kf-dots', FV);
-  dots.innerHTML = n > 1 ? $$('.kc-fi', sl).map(function(_, i){ return '<i' + (i ? '' : ' class="on"') + '></i>'; }).join('') : '';
-  sl.onscroll = function(){ var w = sl.firstElementChild ? sl.firstElementChild.getBoundingClientRect().width + 14 : 1, k = Math.round(sl.scrollLeft / w); $$('i', dots).forEach(function(d, j){ d.classList.toggle('on', j === k); }); };
-  var add = $('.kc-fadd .kc-fm', sl); if(add) add.onclick = function(){ foldAdd(fcur); };
-  $$('[data-x]', sl).forEach(function(x){ x.onclick = function(e){ e.stopPropagation();
-    if(!x.classList.contains('sure')){ x.classList.add('sure'); x.textContent = '?'; setTimeout(function(){ if(x.isConnected){ x.classList.remove('sure'); x.textContent = '✕'; } }, 3000); return; }
-    var k = +x.dataset.x, items = fcur.items.filter(function(_, j){ return j !== k; });
-    API.fold(PLACE, {id:fcur.id, title:fcur.title, items:items}).then(function(){ toast('Убрано из папки'); return reload().then(function(){ foldOpen(fById(fcur.id), Math.max(0, k - 1)); }); }, function(r){ toast(errText(r)); }); }; });
-  $$('[data-e]', sl).forEach(function(x){ x.onclick = function(e){ e.stopPropagation(); foldThumb(fcur, +x.dataset.e); }; });
-  FV.hidden = false; document.documentElement.style.overflow = 'hidden';
-  if(at){ var c = $$('.kc-fi', sl)[at]; if(c) setTimeout(function(){ sl.scrollLeft = c.offsetLeft - (sl.clientWidth - c.offsetWidth) / 2; }, 30); } else sl.scrollLeft = 0;
+var fcur = null, MP = {x:0, y:0, s:1, W:0, H:0, pos:[]}, mapW = $('.kf-w', FV), mapB = $('.kf-map', FV);
+function islandPos(n){
+  /* островки змейкой сверху вниз: слева, справа, слева… со своим лёгким «дрожанием» */
+  var P = [], seed = 7;
+  function rnd(){ seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+  for(var i = 0; i < n; i++){ var side = i % 2 ? 1 : -1; P.push({x:250 + side * (78 + rnd() * 42), y:170 + i * 205 + (rnd() - .5) * 34, r:(rnd() - .5) * 10}); }
+  return P;
 }
-function foldClose(){ $('.kf-sl', FV).innerHTML = ''; FV.hidden = true; document.documentElement.style.overflow = ''; }
+function mapApply(anim){ mapW.style.transition = anim ? 'transform .45s cubic-bezier(.2,.8,.3,1)' : 'none'; mapW.style.transform = 'translate(' + MP.x + 'px,' + MP.y + 'px) scale(' + MP.s + ')'; }
+function mapFit(k, anim){
+  var bw = mapB.clientWidth, bh = mapB.clientHeight;
+  if(k >= 0 && MP.pos[k]){ MP.s = Math.min(1.15, bw / 360); MP.x = bw / 2 - MP.pos[k].x * MP.s; MP.y = bh * 0.42 - MP.pos[k].y * MP.s; }
+  else { MP.s = Math.max(0.35, Math.min(1.1, bw / MP.W, bh / MP.H)); MP.x = (bw - MP.W * MP.s) / 2; MP.y = Math.max(10, (bh - MP.H * MP.s) / 2); }
+  mapApply(anim);
+}
+function mapZoom(f, cx, cy, anim){
+  var s2 = Math.max(0.3, Math.min(2.6, MP.s * f)); if(cx == null){ cx = mapB.clientWidth / 2; cy = mapB.clientHeight / 2; }
+  MP.x = cx - (cx - MP.x) * s2 / MP.s; MP.y = cy - (cy - MP.y) * s2 / MP.s; MP.s = s2; mapApply(anim);
+}
+(function(){ /* двигать пальцем, два пальца — масштаб, колесо мыши — масштаб */
+  var pts = {}, last = null, moved = 0, pinch = 0;
+  mapB.addEventListener('pointerdown', function(e){ pts[e.pointerId] = {x:e.clientX, y:e.clientY}; moved = 0; last = null; pinch = 0; });
+  mapB.addEventListener('pointermove', function(e){
+    if(!pts[e.pointerId]) return; var pv = pts[e.pointerId]; pts[e.pointerId] = {x:e.clientX, y:e.clientY};
+    var ks = Object.keys(pts), r = mapB.getBoundingClientRect();
+    if(ks.length >= 2){ var a = pts[ks[0]], c = pts[ks[1]], d = Math.hypot(a.x - c.x, a.y - c.y); if(pinch) mapZoom(d / pinch, (a.x + c.x) / 2 - r.left, (a.y + c.y) / 2 - r.top); pinch = d; moved = 99; return; }
+    var dx = e.clientX - pv.x, dy = e.clientY - pv.y; moved += Math.abs(dx) + Math.abs(dy); if(moved > 6 && !last){ last = 1; try{ mapB.setPointerCapture(e.pointerId); }catch(x){} } MP.x += dx; MP.y += dy; mapApply(false);
+  });
+  function up(e){ delete pts[e.pointerId]; pinch = 0; }
+  mapB.addEventListener('pointerup', up); mapB.addEventListener('pointercancel', up);
+  mapB.addEventListener('click', function(e){ if(moved > 8){ e.stopPropagation(); e.preventDefault(); } }, true);
+  mapB.addEventListener('wheel', function(e){ e.preventDefault(); var r = mapB.getBoundingClientRect(); mapZoom(e.deltaY < 0 ? 1.12 : 0.89, e.clientX - r.left, e.clientY - r.top); }, {passive:false});
+})();
+$$('.kf-z button', FV).forEach(function(b){ b.onclick = function(){ var z = +b.dataset.z; if(z) mapZoom(z, null, null, true); else mapFit(-1, true); }; });
+function foldOpen(f, at, from){
+  if(!f) return; fcur = f;
+  var it = f.items || [], n = it.length, P = islandPos(n + (OWNER ? 1 : 0)); MP.pos = P;
+  MP.W = 500; MP.H = Math.max(520, 170 + (P.length - 1) * 205 + 200);
+  var av = $('.kf-av', FV), c = fCover(f); av.style.backgroundImage = c ? 'url(\'' + c + '\')' : ''; av.textContent = c ? '' : '🗺';
+  $('.kf-h b', FV).textContent = f.title; $('.kf-h small', FV).textContent = chName() + ' · ' + n + ' ' + (n % 10 === 1 && n % 100 !== 11 ? 'островок' : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) ? 'островка' : 'островков');
+  $('.kf-o', FV).hidden = !OWNER;
+  /* тропинка между островками */
+  var path = '';
+  for(var i = 1; i < P.length; i++){ var a = P[i - 1], q = P[i], my = (a.y + q.y) / 2; path += 'M' + a.x + ' ' + (a.y + 40) + ' C' + a.x + ' ' + (my + 30) + ' ' + q.x + ' ' + (my - 30) + ' ' + q.x + ' ' + (q.y - 50) + ' '; }
+  var deco = ''; for(var d = 0; d < Math.round(MP.H / 120); d++){ var dx = (d * 137) % 460 + 20, dy = (d * 89) % MP.H; deco += '<i class="kf-wv" style="left:' + dx + 'px;top:' + dy + 'px"></i>'; }
+  var h = '<svg class="kf-path" width="' + MP.W + '" height="' + MP.H + '" viewBox="0 0 ' + MP.W + ' ' + MP.H + '"><path d="' + path + '" fill="none" stroke="url(#kfG)" stroke-width="4" stroke-dasharray="2 12" stroke-linecap="round"/><defs><linearGradient id="kfG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0b8"/><stop offset="1" stop-color="#e9a23b"/></linearGradient></defs></svg>' + deco;
+  it.forEach(function(x, k){
+    var p = P[k];
+    h += '<button type="button" class="kf-is" data-k="' + k + '" style="left:' + (p.x - 85) + 'px;top:' + (p.y - 85) + 'px;--r:' + p.r + 'deg"><span class="kf-land"></span><span class="kf-pic"' + (x.th ? ' style="background-image:url(\'' + esc(x.th) + '\')"' : '') + '>' + (x.th ? '' : '▶') + '</span><span class="kf-num">' + (k + 1) + '</span><span class="kf-lb">' + esc(x.t || 'Ролик') + '</span></button>';
+  });
+  if(OWNER){ var p2 = P[n]; h += '<button type="button" class="kf-is kf-new" style="left:' + (p2.x - 85) + 'px;top:' + (p2.y - 85) + 'px;--r:0deg"><span class="kf-land"></span><span class="kf-pic">＋</span><span class="kf-lb">' + (n ? 'Новый островок' : 'Первый островок: «Моё начало»') + '</span></button>'; }
+  if(!n && !OWNER) h += '<p class="kc-empty" style="position:absolute;left:0;right:0;top:200px;text-align:center">Тут пока пусто</p>';
+  mapW.style.width = MP.W + 'px'; mapW.style.height = MP.H + 'px'; mapW.innerHTML = h;
+  $$('.kf-is[data-k]', mapW).forEach(function(b){ b.onclick = function(){ islandCard(+b.dataset.k); }; });
+  var nw = $('.kf-new', mapW); if(nw) nw.onclick = function(){ foldAdd(fcur); };
+  $('.kf-card', FV).hidden = true;
+  var wasHidden = FV.hidden; FV.hidden = false; document.documentElement.style.overflow = 'hidden';
+  mapFit(at != null && at >= 0 ? at : (n ? 0 : -1), false);
+  if(wasHidden && from && FV.animate){ var r = from.getBoundingClientRect(); FV.animate([{clipPath:'circle(' + (r.width / 2) + 'px at ' + (r.left + r.width / 2) + 'px ' + (r.top + r.height / 2) + 'px)'}, {clipPath:'circle(150% at ' + (r.left + r.width / 2) + 'px ' + (r.top + r.height / 2) + 'px)'}], {duration:520, easing:'cubic-bezier(.3,.7,.3,1)'}); }
+  if(at != null && at >= 0 && it[at]) setTimeout(function(){ islandCard(at); }, 60);
+}
+function islandCard(k){
+  var x = fcur.items[k]; if(!x) return; var cd = $('.kf-card', FV);
+  $$('.kf-is', mapW).forEach(function(b){ b.classList.toggle('on', +b.dataset.k === k && b.dataset.k != null); });
+  var onWall = x.p && document.querySelector('#ek-lenta [data-post="' + (window.CSS && CSS.escape ? CSS.escape(x.p) : x.p) + '"]');
+  cd.innerHTML = '<div class="kf-ch"><span>Островок ' + (k + 1) + '</span><b>' + esc(x.t || 'Ролик') + '</b><button type="button" class="kf-cx" aria-label="Скрыть">×</button></div>' + thumbHtml(x.l, x.th || '') +
+    '<div class="kc-row">' + (onWall ? '<button type="button" class="kc-chip kf-wall">⬇ К посту на стене</button>' : '') +
+    (k > 0 ? '<button type="button" class="kc-chip kf-prev">← ' + (k) + '</button>' : '') + (k < fcur.items.length - 1 ? '<button type="button" class="kc-chip kf-next">' + (k + 2) + ' →</button>' : '') + '</div>' +
+    (OWNER ? '<div class="kc-row"><button type="button" class="kc-chip kf-th">🖼 Превью</button><button type="button" class="kc-chip kf-rm" style="color:#ff8a70">Убрать островок</button></div>' : '');
+  cd.hidden = false;
+  mapFit(k, true);
+  $('.kf-cx', cd).onclick = function(){ cd.hidden = true; $$('.kf-is', mapW).forEach(function(b){ b.classList.remove('on'); }); };
+  var pr = $('.kf-prev', cd), nx = $('.kf-next', cd); if(pr) pr.onclick = function(){ islandCard(k - 1); }; if(nx) nx.onclick = function(){ islandCard(k + 1); };
+  var w = $('.kf-wall', cd); if(w) w.onclick = function(){ foldClose(); var a = onWall; setTimeout(function(){ a.scrollIntoView({behavior:'smooth', block:'center'}); a.classList.add('kc-flash'); setTimeout(function(){ a.classList.remove('kc-flash'); }, 2200); }, 80); };
+  var t = $('.kf-th', cd); if(t) t.onclick = function(){ foldThumb(fcur, k); };
+  var rm = $('.kf-rm', cd); if(rm) rm.onclick = function(){
+    if(rm.dataset.sure !== '1'){ rm.dataset.sure = '1'; rm.textContent = 'Точно убрать? Нажми ещё раз'; return; }
+    var items = fcur.items.filter(function(_, j){ return j !== k; });
+    fSave(fcur, {items:items}).then(function(){ toast('Островок убран'); return reload().then(function(){ foldOpen(fById(fcur.id), Math.max(0, k - 1)); }); }, function(r){ toast(errText(r)); });
+  };
+}
+function foldClose(){ mapW.innerHTML = ''; $('.kf-card', FV).hidden = true; FV.hidden = true; document.documentElement.style.overflow = ''; }
 $('.kf-x', FV).onclick = foldClose;
 $('.kf-o', FV).onclick = function(){
   var f = fcur; if(!f) return;
-  var b = openSheet('Папка «' + f.title + '»', '', '<button type="button" class="kc-big kc-gold kf-add">＋ Добавить ролик</button><button type="button" class="kc-big kf-ren" style="background:#1f1b16;color:#fff;margin-top:10px">✎ Переименовать</button><button type="button" class="kc-big kf-del" style="background:#1b1416;color:#ff8a70;border:1px solid #4a2620;margin-top:10px">Удалить папку</button>');
+  var b = openSheet('«' + f.title + '»', '', '<button type="button" class="kc-big kc-gold kf-add">＋ Новый островок</button><button type="button" class="kc-big kf-ren" style="background:#1f1b16;color:#fff;margin-top:10px">✎ Название и обложка</button><button type="button" class="kc-big kf-del" style="background:#1b1416;color:#ff8a70;border:1px solid #4a2620;margin-top:10px">Удалить «Актуальное»</button>');
   $('.kf-add', b).onclick = function(){ foldAdd(f); };
   $('.kf-ren', b).onclick = function(){ foldName(f, function(){ foldOpen(fById(f.id)); }); };
-  var dl = $('.kf-del', b); dl.onclick = function(){ if(dl.dataset.sure !== '1'){ dl.dataset.sure = '1'; dl.textContent = 'Точно удалить? Посты на стене останутся'; return; } API.folddel(f.id).then(function(){ closeSheet(); foldClose(); toast('Папка удалена'); reload(); }, function(r){ toast(errText(r)); }); };
+  var dl = $('.kf-del', b); dl.onclick = function(){ if(dl.dataset.sure !== '1'){ dl.dataset.sure = '1'; dl.textContent = 'Точно удалить? Посты на стене останутся'; return; } API.folddel(f.id).then(function(){ closeSheet(); foldClose(); toast('Удалено'); reload(); }, function(r){ toast(errText(r)); }); };
 };
-/* поменять превью у ролика в папке */
+/* поменять превью у островка */
 function foldThumb(f, k){
   var x = f.items[k]; if(!x) return;
-  var b = openSheet('Превью', esc(x.t || 'Ролик') + ' · ' + vidName(x.l), PV_HTML + '<button type="button" class="kc-big kc-gold">Сохранить</button>');
+  var b = openSheet('Превью островка', esc(x.t || 'Ролик') + ' · ' + vidName(x.l), PV_HTML + '<button type="button" class="kc-big kc-gold">Сохранить</button>');
   var pv = prevPicker(b, function(){ return x.l; }, function(){ return x.t; }, null, x.th);
   $('.kc-big', b).onclick = function(){
-    var items = f.items.map(function(y, j){ return j === k ? {l:y.l, t:y.t, th:pv.th()} : y; });
-    API.fold(PLACE, {id:f.id, title:f.title, items:items}).then(function(){ closeSheet(); toast('Превью сохранено'); return reload().then(function(){ foldOpen(fById(f.id), k); }); }, function(r){ toast(errText(r)); });
+    var items = f.items.map(function(y, j){ return j === k ? {l:y.l, t:y.t, th:pv.th(), p:y.p || ''} : y; });
+    fSave(f, {items:items}).then(function(){ closeSheet(); toast('Превью сохранено'); return reload().then(function(){ foldOpen(fById(f.id), k); }); }, function(r){ toast(errText(r)); });
   };
 }
-/* кнопки «📁 В папку» у постов с роликом (и у своих постов Pro из kanal-posty.js) */
+/* кнопки «⭐ В Актуальное» у постов с роликом (и у своих постов Pro из kanal-posty.js) */
 function folderBtns(){
   if(!FOLD_ON || !OWNER) return;
   $$('#ek-lenta article').forEach(function(a){
     if(a.querySelector('.kc-tofold')) return;
     var link = a.dataset.kclink || (($('a.kp-vid', a) || {}).href) || '';
     if(!link || !VID_RE.test(link)) return;
-    var t = a.dataset.kctitle || (($('p', a) || {}).textContent || '').trim().slice(0, 80), th = a.dataset.kcth || '';
-    var bt = el('button', 'kc-tofold', '📁 В папку'); bt.type = 'button';
-    bt.onclick = function(e){ e.preventDefault(); e.stopPropagation(); toFolder({l:link, t:t, th:th}); };
+    var t = a.dataset.kctitle || (($('p', a) || {}).textContent || '').trim().slice(0, 80), th = a.dataset.kcth || '', pid = a.dataset.post || '';
+    var bt = el('button', 'kc-tofold', '⭐ В Актуальное'); bt.type = 'button';
+    bt.onclick = function(e){ e.preventDefault(); e.stopPropagation(); toFolder({l:link, t:t, th:th, p:pid}); };
     var bar = $('.ek-act', a) || $('.ek-bar', a); if(bar) a.insertBefore(bt, bar); else a.appendChild(bt);
   });
 }
@@ -603,10 +744,12 @@ function watchLenta(){ var L = $('#ek-lenta'); if(!L || fObs || !window.Mutation
 var PV_HTML = '<div class="kc-pvbox"><div class="kc-pvi">Вставь ссылку, и превью подтянется само</div><div class="kc-row"><button type="button" class="kc-chip kc-own-pv">📷 Своё превью</button><button type="button" class="kc-chip kc-lure">✨ Сделать в LURE</button></div><p class="kc-lurehelp" hidden></p></div>';
 var LURE = 'https://lure.eaglesteam.ru/';
 function lurePrompt(title, vert){
-  title = title || 'мой ролик';
-  return 'Сделай яркую обложку-превью для ролика «' + title + '». Формат ' + (vert ? '9:16 (вертикальный)' : '16:9 (горизонтальный)') + '. ' +
-    'Основа — кадр из ролика, который я прикрепил: сохрани моё лицо, позу и одежду, сделай свет ярче и контрастнее, фон чище и сочнее. ' +
-    'Добавь крупный жирный заголовок «' + title + '» (2–4 слова, читается даже на маленьком экране телефона). Контрастные цвета, эмоция на лице, без мелкого текста, без логотипов и водяных знаков.';
+  /* Андрей 17.11 11:23: промпт уже вставлен, человеку остаётся только написать надпись и прикрепить свою картинку */
+  return 'Надпись на обложке: «' + (title || 'НАПИШИ ЗДЕСЬ СВОЮ НАДПИСЬ') + '»\n\n' +
+    'Сделай из прикреплённой картинки яркую обложку-превью для ролика. Формат ' + (vert ? '9:16 (вертикальный)' : '16:9 (горизонтальный)') + '. ' +
+    'Улучши качество: чёткость, свет, контраст, сочные цвета, чистый фон. Сохрани лицо, позу и одежду человека как на картинке. ' +
+    'Надпись сверху — крупный жирный красивый шрифт, 2–4 слова, легко читается даже на маленьком экране телефона, с объёмом и лёгким свечением. ' +
+    'Без мелкого текста, без логотипов и водяных знаков.';
 }
 function prevPicker(b, getLink, getTitle, onMeta, th0){
   var box = $('.kc-pvbox', b), img = $('.kc-pvi', box), help = $('.kc-lurehelp', box), li = $('input[type=url]', b);
@@ -635,7 +778,7 @@ function prevPicker(b, getLink, getTitle, onMeta, th0){
     copyText(pr).catch(function(){});
     window.open(LURE + '#img&p=' + encodeURIComponent(pr), '_blank', 'noopener');
     help.hidden = false;
-    help.innerHTML = 'LURE открылся с готовым промптом. <b>1.</b> Сделай скриншот самого яркого кадра ролика и прикрепи его в LURE. <b>2.</b> Нажми «Создать картинку» и скачай её. <b>3.</b> Вернись сюда и нажми «📷 Своё превью».';
+    help.innerHTML = 'LURE открылся, промпт уже вставлен. <b>1.</b> В первой строке напиши свою надпись. <b>2.</b> Прикрепи картинку: скриншот яркого кадра ролика или своё фото. <b>3.</b> «Создать картинку» → скачай. <b>4.</b> Вернись сюда и нажми «📷 Своё превью».';
   };
   paint(); if(getLink()) look();
   return {th:function(){ return own || auto; }, title:function(){ return title; }};
@@ -846,7 +989,7 @@ function vClose(){
     else if(dy > 80 && dy > Math.abs(dx)){ e.preventDefault(); vClose(); } });
 })();
 $('.kv-x', V).onclick = vClose;
-document.addEventListener('keydown', function(e){ if(e.key === 'Escape'){ if(!R.hidden) rClose(); else if(!V.hidden) vClose(); else if(!FV.hidden) foldClose(); else if(!$('#kcPlayer').hidden) closePlayer(); else if(sheet.classList.contains('on')) closeSheet(); } });
+document.addEventListener('keydown', function(e){ if(e.key === 'Escape'){ if(!R.hidden) rClose(); else if(!PL.hidden) playClose(); else if(!V.hidden) vClose(); else if(!FV.hidden) foldClose(); else if(!$('#kcPlayer').hidden) closePlayer(); else if(sheet.classList.contains('on')) closeSheet(); } });
 function copyText(t){
   if(navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(t).catch(function(){ return copy2(t); });
   return copy2(t);

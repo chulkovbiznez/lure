@@ -7,8 +7,9 @@
 // Сторис: только кружочек, снятый камерой в приложении (t=vid, circle=1), до 60 секунд, 480p.
 //   Живут 24 часа и потом не видны НИКОМУ (архива и «Актуального» нет — решение Андрея 17.11 11:02).
 //   Файлы сторис лежат в папке бакета k/s/ — правило бакета само стирает их через 2 дня.
-// Папки (folder): вместо «Актуального». Тематические подборки ссылок со стены («Моё похудение»):
-//   { title, items: [{ l: ссылка, t: название, th: превью }] }. Превью — с Rutube / VK / Яндекс Диска или своё (k/p/).
+// «Актуальное» (kind folder) = карта темы («Похудение») с островками-роликами со стены (Андрей 17.11 11:18):
+//   { title, cover: обложка кружка (с телефона, k/p/), items: [{ l: ссылка, t: название, th: превью, p: id поста на стене }] }.
+//   Превью — с Rutube / VK / Яндекс Диска или своё (k/p/).
 // Посты, ролики и уроки — только ссылкой на VK Видео / Rutube / Яндекс Диск (+ своё превью th, не обязательно).
 // Уроки Pro: гость и FREE получают только обложку и название (без видео и текста).
 // Фото (обложка сторис k/s/, своё превью k/p/): POST kc_img (base64 до 2,6 млн знаков) → Storage.put в бакет сайта.
@@ -90,9 +91,10 @@ function kcFoldClean_(x) {
   var items = (Array.isArray(x.items) ? x.items : []).map(function (i) {
     i = i && typeof i === 'object' ? i : {};
     var l = kcLink_(i.l);
-    return l ? { l: l, t: kcStr_(i.t, 80).replace(/\s+/g, ' ').trim(), th: kcThumb_(i.th) } : null;
+    var pid = String(i.p || '');
+    return l ? { l: l, t: kcStr_(i.t, 80).replace(/\s+/g, ' ').trim(), th: kcThumb_(i.th), p: /^[A-Za-z0-9_-]{1,48}$/.test(pid) ? pid : '' } : null;
   }).filter(function (i) { if (!i || seen[i.l]) return false; seen[i.l] = 1; return true; }).slice(0, KC_FOLDER_ITEMS);
-  return title ? { title: title, items: items } : null;
+  return title ? { title: title, cover: kcThumb_(x.cover), items: items } : null;
 }
 function kcRows_() {
   var d = kcSheet_().getDataRange().getValues(), out = [];
@@ -148,7 +150,7 @@ function kcList_(p, me, U) {
     var it = x.j;
     it.id = x.id; it.at = x.at;
     if (x.kind === 'story') { if (now - x.at < KC_DAY) out.stories.push(it); }
-    else if (x.kind === 'folder') out.folders.push({ id: x.id, at: x.at, title: kcStr_(it.title, 24), items: Array.isArray(it.items) ? it.items : [] });
+    else if (x.kind === 'folder') out.folders.push({ id: x.id, at: x.at, title: kcStr_(it.title, 24), cover: it.cover || '', items: Array.isArray(it.items) ? it.items : [] });
     else if (x.kind === 'post') out.posts.push(it);
     else if (x.kind === 'rolik') out.roliki.push(it);
     else if (x.kind === 'urok') out.uroki.push(it.pro && !pro ? { id: it.id, at: it.at, title: it.title, sub: it.sub, cat: it.cat, th: it.th || '', pro: 1, locked: 1 } : it);
