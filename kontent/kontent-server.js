@@ -1,4 +1,4 @@
-// ===================== KONTENT v2 (2026-11-17) =====================
+// ===================== KONTENT v3 (2026-11-17) =====================
 // Задание 68: загрузка в Канал (kanal.html) и Обучение (obuchenie.html). Страничная часть — файл /eg-kontent.js.
 // Места (place):
 //   kanal, obuchenie, uroki — пишут только владельцы (11111, 23933), смотрят все (гости тоже);
@@ -14,14 +14,13 @@
 // Уроки Pro: гость и FREE получают только обложку и название (без видео и текста).
 // Фото (обложка сторис k/s/, своё превью k/p/): POST kc_img (base64 до 2,6 млн знаков) → Storage.put в бакет сайта.
 // Видео сторис: GET kc_upurl — одноразовая подписанная ссылка (15 минут), браузер сам кладёт файл PUT прямо в бакет
-//   app.eaglesteam.ru (через функцию видео не пройдёт: лимит запроса ~3,5 МБ). Подпись SigV4 считается здесь же
-//   (свой SHA-256, без библиотек) статическим ключом сервисного аккаунта из переменных функции: имена переменных
-//   ищутся сами, значения никуда не выводятся. Лимит размера: владелец 100 МБ, Pro 40 МБ (проверка при выдаче ссылки).
+//   app.eaglesteam.ru (через функцию видео не пройдёт: лимит запроса ~3,5 МБ). Подпись SigV4 делает index.js
+//   (Storage.presign, ключ KEY_ID/KEY_SECRET виден только ему), значения никуда не выводятся. Лимит размера: владелец 100 МБ, Pro 40 МБ (проверка при выдаче ссылки).
 // Действия:
 //   GET  kc_list&place=            → { stories, folders, posts, roliki, uroki }  (без входа; с sess — видно Pro-уроки)
 //   GET  kc_upurl&place=&mime=&size= → { put, url, mime }                   (вход; право писать в place)
 //   GET  kc_meta&u=                → { img, title, d, kind }                 (вход, Pro; превью и название ролика по ссылке)
-//   GET  kc_diag                   → { proc, key, idn, skn, pub }           (только владелец: найден ли ключ — без значений)
+//   GET  kc_diag                   → { presign, key, pub }           (только владелец: найден ли ключ — без значений)
 //   POST type=kc_img  place, data, mime, use(s|p) → { url }   (s — обложка сторис, p — своё превью)
 //   POST type=kc_add  place, kind, json        → { item }
 //   POST type=kc_del  id                       → {}
@@ -121,9 +120,8 @@ function kontent_(action, e, p) {
 
   if (action === 'kc_diag') {
     if (!kcOwner_(me)) return jsonOut_({ ok: false, error: 'owner' });
-    var k = kcKey_(), pr = false;
-    try { pr = typeof process !== 'undefined' && !!process.env; } catch (err) { pr = false; }
-    return jsonOut_({ ok: true, proc: pr, key: !!k, idn: k ? k.idn : '', skn: k ? k.skn : '', pub: Storage.url('k/') });
+    var pu = kcPresign_('k/s/kanal/_diag.webm');
+    return jsonOut_({ ok: true, presign: kcPresignOk_(), key: /^https:\/\/[^?]+\/k\/s\/kanal\/_diag\.webm\?X-Amz-Algorithm=AWS4-HMAC-SHA256&/.test(pu), pub: Storage.url('k/') });
   }
   if (action === 'kc_upurl') return kcUpUrl_(p, me, U);
   if (action === 'kc_meta') return kcMeta_(p, me, U);
@@ -168,10 +166,10 @@ function kcUpUrl_(p, me, U) {
   if (size < 1) return jsonOut_({ ok: false, error: 'type' });
   if (size > max) return jsonOut_({ ok: false, error: 'big', max: max });
   if (!kcOwner_(me) && !kcRate_('KCU_' + me, KC_PRO_UPLOADS_DAY, 86400)) return jsonOut_({ ok: false, error: 'limit' });
-  var k = kcKey_();
-  if (!k) return jsonOut_({ ok: false, error: 'no_key' });
   var key = 'k/s/' + place + '/' + Utilities.getUuid().replace(/-/g, '').slice(0, 20) + '.' + ext;
-  return jsonOut_({ ok: true, put: kcPresign_(key, k), url: Storage.url(key), mime: mime });
+  var put = kcPresign_(key);
+  if (!put) return jsonOut_({ ok: false, error: 'no_key' });
+  return jsonOut_({ ok: true, put: put, url: Storage.url(key), mime: mime });
 }
 
 function kcImg_(p, me, U) {
@@ -264,62 +262,9 @@ function kcMeta_(p, me, U) {
   return jsonOut_(out);
 }
 
-// ---- статический ключ сервисного аккаунта: ищем в переменных функции (значения не выводятся никогда) ----
-function kcEnv_() { try { return (typeof process !== 'undefined' && process && process.env) || {}; } catch (err) { return {}; } }
-function kcKey_() {
-  var env = kcEnv_(), id = '', sk = '', idn = '', skn = '';
-  ['KC_AK', 'AK', 'AWS_ACCESS_KEY_ID', 'ACCESS_KEY_ID', 'S3_ACCESS_KEY_ID', 'S3_KEY_ID', 'S3_ACCESS_KEY', 'STORAGE_KEY_ID', 'STORAGE_ACCESS_KEY', 'SA_KEY_ID', 'YC_ACCESS_KEY_ID'].forEach(function (n) {
-    var v = String(env[n] || ''); if (!id && /^[A-Za-z0-9_-]{16,80}$/.test(v)) { id = v; idn = n; }
-  });
-  ['KC_SK', 'SK', 'AWS_SECRET_ACCESS_KEY', 'SECRET_ACCESS_KEY', 'S3_SECRET_ACCESS_KEY', 'S3_SECRET_KEY', 'S3_SECRET', 'STORAGE_SECRET_KEY', 'STORAGE_SECRET', 'SA_SECRET_KEY', 'YC_SECRET_ACCESS_KEY'].forEach(function (n) {
-    var v = String(env[n] || ''); if (!sk && /^[A-Za-z0-9_+\/=-]{24,100}$/.test(v)) { sk = v; skn = n; }
-  });
-  Object.keys(env).forEach(function (n) {
-    var v = String(env[n] || '');
-    if (!id && /KEY|ID|ACCESS/i.test(n) && !/SECRET/i.test(n) && /^YCA[A-Za-z0-9_-]{10,60}$/.test(v)) { id = v; idn = n; }
-    if (!sk && /SECRET/i.test(n) && /^YC[A-Za-z0-9_+\/=-]{24,100}$/.test(v)) { sk = v; skn = n; }
-  });
-  return id && sk ? { id: id, sk: sk, idn: idn, skn: skn } : null;
-}
-// ---- подпись ссылки S3 (SigV4, query string, как у LURE media-saver), свой SHA-256 без библиотек ----
-function kcU8_(s) { s = unescape(encodeURIComponent(s)); var a = []; for (var i = 0; i < s.length; i++) a.push(s.charCodeAt(i)); return a; }
-function kcHex_(a) { var h = ''; for (var i = 0; i < a.length; i++) h += (a[i] < 16 ? '0' : '') + a[i].toString(16); return h; }
-var KC_K256 = [0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2];
-function kcSha_(m) {
-  var H = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19], l = m.length, b = m.slice(), w = [], i, j;
-  b.push(0x80); while (b.length % 64 !== 56) b.push(0);
-  var bits = l * 8; for (i = 7; i >= 0; i--) b.push(i > 3 ? 0 : (bits >>> (i * 8)) & 255);
-  var r = function (x, n) { return (x >>> n) | (x << (32 - n)); };
-  for (i = 0; i < b.length; i += 64) {
-    for (j = 0; j < 64; j++) {
-      if (j < 16) w[j] = (b[i + j * 4] << 24) | (b[i + j * 4 + 1] << 16) | (b[i + j * 4 + 2] << 8) | b[i + j * 4 + 3];
-      else { var s0 = r(w[j - 15], 7) ^ r(w[j - 15], 18) ^ (w[j - 15] >>> 3), s1 = r(w[j - 2], 17) ^ r(w[j - 2], 19) ^ (w[j - 2] >>> 10); w[j] = (w[j - 16] + s0 + w[j - 7] + s1) | 0; }
-    }
-    var a = H[0], c1 = H[1], c = H[2], d = H[3], e = H[4], f = H[5], g = H[6], h = H[7];
-    for (j = 0; j < 64; j++) {
-      var t1 = (h + (r(e, 6) ^ r(e, 11) ^ r(e, 25)) + ((e & f) ^ (~e & g)) + KC_K256[j] + w[j]) | 0;
-      var t2 = ((r(a, 2) ^ r(a, 13) ^ r(a, 22)) + ((a & c1) ^ (a & c) ^ (c1 & c))) | 0;
-      h = g; g = f; f = e; e = (d + t1) | 0; d = c; c = c1; c1 = a; a = (t1 + t2) | 0;
-    }
-    H[0] = (H[0] + a) | 0; H[1] = (H[1] + c1) | 0; H[2] = (H[2] + c) | 0; H[3] = (H[3] + d) | 0; H[4] = (H[4] + e) | 0; H[5] = (H[5] + f) | 0; H[6] = (H[6] + g) | 0; H[7] = (H[7] + h) | 0;
-  }
-  var out = []; for (i = 0; i < 8; i++) out.push((H[i] >>> 24) & 255, (H[i] >>> 16) & 255, (H[i] >>> 8) & 255, H[i] & 255);
-  return out;
-}
-function kcHmac_(k, m) {
-  if (k.length > 64) k = kcSha_(k);
-  var ik = [], ok = [], i;
-  for (i = 0; i < 64; i++) { var x = k[i] || 0; ik.push(x ^ 0x36); ok.push(x ^ 0x5c); }
-  return kcSha_(ok.concat(kcSha_(ik.concat(m))));
-}
-function kcPresign_(key, k, now) {
-  var d = (now || new Date()).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, ''), day = d.slice(0, 8), scope = day + '/ru-central1/s3/aws4_request';
-  var enc = function (x) { return encodeURIComponent(x).replace(/[!'()*]/g, function (c) { return '%' + c.charCodeAt(0).toString(16).toUpperCase(); }); };
-  var q = 'X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=' + enc(k.id + '/' + scope) + '&X-Amz-Date=' + d + '&X-Amz-Expires=900&X-Amz-SignedHeaders=host';
-  var path = ('/' + KC_BUCKET + '/' + key).split('/').map(enc).join('/');
-  var creq = ['PUT', path, q, 'host:' + KC_HOST + '\n', 'host', 'UNSIGNED-PAYLOAD'].join('\n');
-  var sts = ['AWS4-HMAC-SHA256', d, scope, kcHex_(kcSha_(kcU8_(creq)))].join('\n');
-  var sig = kcHmac_(kcHmac_(kcHmac_(kcHmac_(kcHmac_(kcU8_('AWS4' + k.sk), kcU8_(day)), kcU8_('ru-central1')), kcU8_('s3')), kcU8_('aws4_request')), kcU8_(sts));
-  return 'https://' + KC_HOST + path + '?' + q + '&X-Amz-Signature=' + kcHex_(sig);
-}
-// =================== end of block KONTENT v2 ===================
+// ---- подписанная ссылка для загрузки видео сторис ----
+// server.js работает в vm без process.env: ключ хранилища видит только index.js. Ссылку делает index.js —
+// Storage.presign(key, sec) (добавлен заданием 68 v8, только ключи k/s/…, PUT, до 15 минут). Сам ключ сюда не попадает.
+function kcPresignOk_() { try { return !!(typeof Storage !== 'undefined' && Storage && typeof Storage.presign === 'function'); } catch (err) { return false; } }
+function kcPresign_(key) { try { return kcPresignOk_() ? String(Storage.presign(key, 900) || '') : ''; } catch (err) { return ''; } }
+// =================== end of block KONTENT v3 ===================
