@@ -577,14 +577,18 @@ $('pIn').oninput=function(){var v=this.value.replace(/\D/g,'').slice(0,4);if(v!=
 $('pCode').oninput=function(){var v=this.value.replace(/\D/g,'').slice(0,6);if(v!==this.value)this.value=v;if(v.length===6)$('pIn').focus()};
 $('pForgot').onclick=function(){var b=this;b.disabled=true;post('/api/pin/rec_request').then(function(r){b.disabled=false;if(!r.ok){pinErr(r);return}showPin('rec','Код отправлен на '+(r.emailHint||'твою почту')+'. Введи его и придумай новый ПИН.')}).catch(function(){b.disabled=false;netErr()})};
 $('pOut').onclick=function(){post('/api/logout').then(showLogin,showLogin)};
-/* Промпт из «Карт EAGLES» (08.11.2026): ссылка lure.eaglesteam.ru/#img&p=<промпт>. Промпт держим в sessionStorage,
-   чтобы он дожил до конца входа и ввода ПИН в этой же вкладке; адрес сразу чистим до #img. */
-var PF=null;(function(){var h=location.hash,i=h.indexOf('&p=');
-  if(i>0){try{PF=decodeURIComponent(h.slice(i+3)).slice(0,4000)}catch(e){PF=null}try{if(PF)sessionStorage.setItem('lure_pf',PF)}catch(e){}history.replaceState(null,'','#'+h.slice(1,i))}
-  if(!PF)try{PF=sessionStorage.getItem('lure_pf')}catch(e){}})();
+/* Промпт снаружи (08.11.2026, модель+формат 17.11.2026): lure.eaglesteam.ru/#img&m=<модель>&ar=<формат>&p=<промпт>.
+   m и ar необязательны, p всегда последний. Держим в sessionStorage, чтобы дожило до конца входа и ПИН; адрес сразу чистим до #img. */
+var PF=null,PFM='',PFA='';(function(){var h=location.hash,i=h.indexOf('&p=');
+  if(i>0){var q=h.slice(1,i).split('&'),tab=q[0];q.slice(1).forEach(function(x){var kv=x.split('=');if(kv[0]==='m')PFM=String(kv[1]||'').replace(/[^a-z0-9_-]/gi,'').slice(0,24);if(kv[0]==='ar')PFA=String(decodeURIComponent(kv[1]||'')).replace(/[^a-z0-9:]/gi,'').slice(0,6)});
+    try{PF=decodeURIComponent(h.slice(i+3)).slice(0,4000)}catch(e){PF=null}
+    try{if(PF)sessionStorage.setItem('lure_pf',JSON.stringify({p:PF,m:PFM,ar:PFA}))}catch(e){}history.replaceState(null,'','#'+tab)}
+  if(!PF)try{var s=sessionStorage.getItem('lure_pf');if(s){if(s.charAt(0)==='{'){s=JSON.parse(s);PF=s.p||null;PFM=s.m||'';PFA=s.ar||''}else PF=s}}catch(e){}})();
 function usePF(){if(!PF||!ME||!ME.access)return;var t=PF;PF=null;try{sessionStorage.removeItem('lure_pf')}catch(e){}
-  if(curTab()!=='img')go('img');$('imgP').value=t;MOPT.img.ar='1:1';mgrow($('imgP'));if(MC)drawOpts('img');
-  toast('Промпт из Карт EAGLES готов. Выбери модель и нажми «Создать картинку»')}
+  if(curTab()!=='img')go('img');$('imgP').value=t;MOPT.img.ar=PFA||'1:1';mgrow($('imgP'));
+  loadCat(function(){var L=MC.img||[],m=PFM&&L.filter(function(x){return x.k===PFM})[0];
+    if(m){MSEL.img=m.k;ls(key('mk_img'),m.k)}if(curTab()==='img')mediaName();drawOpts('img')});
+  toast(PFM?'Промпт уже вставлен, модель и формат выбраны. Впиши свою надпись в первой строке, прикрепи картинку и нажми «Создать картинку»':'Промпт готов. Выбери модель и нажми «Создать картинку»')}
 function afterLogin(m){sss(1);post('/api/pin/state').then(function(s){if(s.ok&&!s.has)showPin('set');else start(m)}).catch(function(){start(m)})}
 function boot(){get('/api/me').then(function(r){if(!r.ok){showLogin();return}
   if(!r.locked&&ssg()){start(r.me);return}
@@ -671,7 +675,8 @@ function loadModels(){get('/api/models').then(function(r){if(!r.ok){if(r.error==
 var DESC=[[/opus/i,'Самая умная, для сложных задач'],[/sonnet/i,'Отличная на каждый день'],[/haiku/i,'Быстрая и недорогая'],[/gpt/i,'Универсальная от OpenAI'],[/gemini.*pro/i,'Сильная от Google'],[/flash/i,'Быстрая и самая дешёвая']];
 function desc(id){for(var i=0;i<DESC.length;i++)if(DESC[i][0].test(id))return DESC[i][1];return ''}
 function drawModels(){setTimeout(priceHint,0);var sel=ls(key('model'));var m=MODELS.filter(function(x){return x.id===sel})[0];
-  $('mName').textContent=m?pretty(m.id):'LURE';
+  /* 17.11: чатовые модели приходят позже каталога картинок — на вкладках Изображения/Видео/Звук имя модели не перетирать */
+  if(isMedia(curTab())){if(MC)mediaName()}else $('mName').textContent=m?pretty(m.id):'LURE';
   $('mlistSel').innerHTML=MODELS.map(function(x){return '<button class="opt'+(x.id===sel?' on':'')+(isBest(x.id)?' best':'')+'" data-m="'+esc(x.id)+'" role="option"><span><b>'+esc(pretty(x.id))+(isBest(x.id)?'<em class="tagb">ЛУЧШАЯ</em>':'')+'</b><small>'+esc(desc(x.id))+' · ≈ '+rub(typical(x))+' за ответ</small></span><i></i></button>'}).join('');
   [].forEach.call($('mlistSel').querySelectorAll('[data-m]'),function(b){b.onclick=function(){ls(key('model'),b.dataset.m);$('mpanel').hidden=true;drawModels()}})}
 $('mPick').onclick=function(e){e.stopPropagation();var t=curTab();if(isMedia(t)){if(!MC)return;drawMediaModels(t)}else drawModels();$('mpanel').hidden=!$('mpanel').hidden};
