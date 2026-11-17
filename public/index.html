@@ -19,6 +19,7 @@
 --f:"Montserrat","Montserrat EK",system-ui,-apple-system,"Segoe UI",sans-serif;--g:"EAGLES Gold","Montserrat EK","Arial Black",sans-serif;color-scheme:dark}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--f);height:100%}
+html,body{overflow-x:clip}/* 17.11: на экране загрузки страница становилась шире экрана (до 447 px при 412) — телефон менял масштаб, и орёл прыгал вправо вниз */
 button,input,textarea,select{font:inherit;color:inherit}
 button{cursor:pointer;border:0;background:none;padding:0}
 a{color:var(--gold)}
