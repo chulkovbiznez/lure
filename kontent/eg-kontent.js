@@ -581,12 +581,19 @@ function fSave(f, patch){ var x = {id:f ? f.id : '', title:f ? f.title : '', cov
 function foldName(f, then){
   var cov = f ? f.cover || '' : '';
   var b = openSheet(f ? 'Изменить «' + f.title + '»' : 'Новое «Актуальное»', 'Это карта одной темы: «Похудение», «Отзывы», «Как я начинал». На ней островки — твои ролики по порядку. Гость открывает и путешествует по ним.',
-    '<div class="kc-covp"><span class="kc-covi"' + (cov ? ' style="background-image:url(\'' + esc(cov) + '\')"' : '') + '>' + (cov ? '' : '＋') + '</span><button type="button" class="kc-chip">📷 Обложка кружка с телефона</button></div>' +
+    '<div class="kc-covp"><span class="kc-covi"' + (cov ? ' style="background-image:url(\'' + esc(cov) + '\')"' : '') + '>' + (cov ? '' : '＋') + '</span><span style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:0"><button type="button" class="kc-chip kc-covup">📷 Своя обложка</button><button type="button" class="kc-chip kc-covlure" style="color:#ffd23f">✨ Сделать в LURE</button></span></div><p class="kc-covh" hidden style="margin:-4px 0 12px;color:#a29b90;font:600 12px/1.45 Montserrat,sans-serif"></p>' +
     '<input type="text" maxlength="24" placeholder="Название, например «Похудение»"><button type="button" class="kc-big kc-gold">' + (f ? 'Сохранить' : 'Создать') + '</button>');
   var ti = $('input', b); ti.value = f ? f.title : '';
   var up = function(){ pick('image/*').then(function(fs){ var fl = fs[0]; if(!fl) return; var ci = $('.kc-covi', b); ci.textContent = '…'; busy = true;
     readImg(fl).then(function(i){ var x = shrink(i, 640, .86); return API.photo(x.b64, x.mime, 'p'); }).then(function(u){ busy = false; cov = u; ci.textContent = ''; ci.style.backgroundImage = 'url(\'' + u + '\')'; }, function(r){ busy = false; ci.textContent = '＋'; toast(errText(r)); }); }); };
-  $('.kc-covp .kc-chip', b).onclick = up; $('.kc-covi', b).onclick = up;
+  $('.kc-covup', b).onclick = up; $('.kc-covi', b).onclick = up;
+  /* Андрей 17.11 13:13: обложку тоже можно сделать в LURE — сразу GPT Image 1:1 с промптом */
+  $('.kc-covlure', b).onclick = function(){
+    var pr = lureCoverPrompt(ti.value.trim()); copyText(pr).catch(function(){});
+    window.open(LURE + '#img&m=gpt26&ar=1%3A1&p=' + encodeURIComponent(pr), '_blank', 'noopener');
+    var h = $('.kc-covh', b); h.hidden = false;
+    h.innerHTML = 'LURE открылся: модель GPT Image, формат 1:1 и промпт уже стоят. <b>1.</b> В первой строке проверь название. <b>2.</b> Прикрепи своё фото или кадр. <b>3.</b> «Создать картинку» → скачай. <b>4.</b> Вернись сюда и нажми «📷 Своя обложка».';
+  };
   $('.kc-big', b).onclick = function(){
     var t = ti.value.trim(); if(!t) return toast('Напиши название');
     fSave(f, {title:t, cover:cov}).then(function(nf){ closeSheet(); toast(f ? 'Сохранено' : '«' + t + '» создано'); return reload().then(function(){ if(then) then(nf); else if(!f) foldOpen(fById(nf.id)); }); }, function(r){ toast(errText(r)); });
@@ -745,6 +752,13 @@ function watchLenta(){ var L = $('#ek-lenta'); if(!L || fObs || !window.Mutation
 /* ---------- превью ролика: само с Rutube / VK / Яндекс Диска, своё или «Сделать в LURE» ---------- */
 var PV_HTML = '<div class="kc-pvbox"><div class="kc-pvi">Вставь ссылку, и превью подтянется само</div><div class="kc-row"><button type="button" class="kc-chip kc-own-pv">📷 Своё превью</button><button type="button" class="kc-chip kc-lure">✨ Сделать в LURE</button></div><p class="kc-lurehelp" hidden></p></div>';
 var LURE = 'https://lure.eaglesteam.ru/';
+function lureCoverPrompt(title){
+  return 'Надпись на обложке: «' + (title || 'НАПИШИ ЗДЕСЬ НАЗВАНИЕ ТЕМЫ') + '»\n\n' +
+    'Сделай из прикреплённой картинки обложку для круглого значка темы в канале. Формат 1:1 (квадрат), всё важное в центре, края обрежутся кругом. ' +
+    'Улучши качество: чёткость, свет, контраст, сочные цвета, простой красивый фон. Сохрани лицо и черты человека как на картинке. ' +
+    'Надпись по центру внизу — 1–2 слова, крупный жирный красивый шрифт, легко читается на маленьком кружке, с объёмом и лёгким золотым свечением. ' +
+    'Без мелкого текста, без логотипов и водяных знаков.';
+}
 function lurePrompt(title, vert){
   /* Андрей 17.11 11:23: промпт уже вставлен, человеку остаётся только написать надпись и прикрепить свою картинку */
   return 'Надпись на обложке: «' + (title || 'НАПИШИ ЗДЕСЬ СВОЮ НАДПИСЬ') + '»\n\n' +
