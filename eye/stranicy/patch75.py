@@ -1,6 +1,6 @@
-# Задание 75 (v4): внутри EYE (chat.html) вместо большого логотипа с иконками и «МЕССЕНДЖЕР» ставится чистый логотип Андрея ƎVE
-# (золото, тонкая тёмная обводка, без свечения). Картинка eve-logo-chistyj.webp (600x209).
-# Запуск: python3 patch75.py chat-do-75.html eve-logo-chistyj.webp chat-v75.html
+# Задание 75 (v5): внутри EYE (chat.html) вместо большого логотипа с иконками и «МЕССЕНДЖЕР» ставится логотип Андрея EYE
+# (золотые буквы E-Y-E, 4K). Картинка eye-logo-4k.webp (600x186).
+# Запуск: python3 patch75.py chat-do-75.html eye-logo-4k.webp chat-v75.html
 import sys, re, base64
 src, logo, dst = sys.argv[1:4]
 h = open(src, encoding='utf-8').read()
@@ -9,7 +9,7 @@ pat = re.compile(r'<div class="eye-logo"><img src="data:image/[a-z]+;base64,[A-Z
 m = pat.findall(h)
 if len(m) != 1: sys.exit('СТОП: логотип EYE найден %d раз (нужно 1)' % len(m))
 b = base64.b64encode(open(logo, 'rb').read()).decode()
-new = '<div class="eye-logo eye-logo75"><img src="data:image/webp;base64,' + b + '" alt="EYE" width="600" height="209">'
+new = '<div class="eye-logo eye-logo75"><img src="data:image/webp;base64,' + b + '" alt="EYE" width="600" height="186">'
 h = h.replace(m[0], new)
 css = '<style id="eye-logo75">#chHome .eye-logo75 img{width:min(52vw,210px)!important;filter:drop-shadow(0 4px 12px rgba(255,150,30,.25))!important}#chHome .eye-logo75{margin:6px 0 14px!important}</style>'
 if h.count('</head>') != 1: sys.exit('СТОП: </head> не один')
