@@ -1,4 +1,5 @@
-/* EYE v6 (17.11.2026) — кнопка «Заявки» вверху страницы EYE: список людей, которые зовут в друзья (Принять / Отклонить); цифра на «Звонках» = только пропущенные звонки;
+/* EYE v6.1 (17.11.2026) — при первом входе на страницу EYE: карточка «Разреши доступ к камере и микрофону» (крестик) + сразу запрос телефона.
+   EYE v6 (17.11.2026) — кнопка «Заявки» вверху страницы EYE: список людей, которые зовут в друзья (Принять / Отклонить); цифра на «Звонках» = только пропущенные звонки;
    плитка на главной Профиля с логотипом из страницы не перезаписывается.
    EYE v5 (16.11.2026) — EYE открывается обычной страницей /chat.html с нижним меню (как Контакты, Обучение), без окна с золотой рамкой поверх Профиля.
    EYE v4.2 (16.11.2026) — пункт EYE в нижнем меню теперь стоит прямо в страницах (сразу 5 пунктов, без «подскока»); eye.js только оживляет его.
@@ -146,6 +147,12 @@
     '.eye-reqs .h{display:flex;align-items:center;justify-content:space-between;margin:0 2px 10px;font:900 16px/1.2 Montserrat,sans-serif;color:#ffd23f}' +
     '.eye-reqs .h button{width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#a29b90;font:800 15px/1 Montserrat,sans-serif;cursor:pointer}' +
     '.eye-reqs .eye-req{margin:0 0 8px}.eye-reqs .eye-empty{margin:4px 0 6px}.eye-reqs .eye-wait{margin-top:10px}' +
+    '.eye-perm{position:fixed;left:12px;right:12px;bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:2147482300;max-width:500px;margin:0 auto;padding:16px 16px 14px;border-radius:20px;background:linear-gradient(180deg,#2a1d0c,#141008);border:1.5px solid #ffd23f;box-shadow:0 18px 40px rgba(0,0,0,.6),0 0 24px rgba(255,210,63,.25);color:#f4f4f2;font-family:Montserrat,system-ui,sans-serif}' +
+    '.eye-perm .k{font:900 15px/1.25 Montserrat,sans-serif;color:#ffd23f;padding-right:34px}.eye-perm p{margin:8px 0 0;font:600 13px/1.45 Montserrat,sans-serif;color:#e8e1d4}' +
+    '.eye-perm .x{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#c9c1b4;font:800 15px/1 Montserrat,sans-serif;cursor:pointer}' +
+    '.eye-perm .go{display:block;width:100%;height:46px;margin-top:12px;border:0;border-radius:14px;background:linear-gradient(135deg,#ffd23f,#ff9a2b);color:#1a0d04;font:900 15px Montserrat,sans-serif;cursor:pointer}' +
+    '.eye-perm .ar{display:block;margin:10px auto 0;width:28px;height:28px;color:#ffd23f;animation:eyeArr 1.1s ease-in-out infinite}@keyframes eyeArr{0%,100%{transform:translateY(0)}50%{transform:translateY(7px)}}' +
+    '.eye-perm.ok{border-color:#46de82}.eye-perm.ok .k{color:#46de82}' +
     '.eye-calls .eye-req{margin:0 0 8px}.eye-calls .eye-add{margin-top:0}.eye-note{margin:14px 2px 0;font:600 11px/1.45 Montserrat,sans-serif;color:#6d675f}';
   function addCss() { if (document.getElementById('eye-css')) return; var s = document.createElement('style'); s.id = 'eye-css'; s.textContent = css; document.head.appendChild(s); }
 
@@ -1006,7 +1013,49 @@
     cardEl.querySelector('[data-a="ok"]').onclick = function () { markSeen(id); frDo('fr_add', id, nm); };
   }
 
-  function render() { placeButton(); badges(); reqCard(); }
+  /* ---------- v6.1: первый вход в EYE — попросить камеру и микрофон сразу ---------- */
+  var permDone = false;
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k) { try { localStorage.setItem(k, '1'); } catch (e) {} }
+  function permCard() {
+    if (permDone || TOPW || !document.getElementById('chHome')) return; permDone = true;
+    if (lsGet('eye_perm_ok') || lsGet('eye_perm_seen')) return;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+    function both(fn) {
+      if (!navigator.permissions || !navigator.permissions.query) return fn(false);
+      Promise.all([navigator.permissions.query({ name: 'camera' }), navigator.permissions.query({ name: 'microphone' })])
+        .then(function (r) { fn(r[0].state === 'granted' && r[1].state === 'granted'); }).catch(function () { fn(false); });
+    }
+    both(function (granted) {
+      if (granted) { lsSet('eye_perm_ok'); return; }
+      addCss();
+      var d = document.createElement('div'); d.className = 'eye-perm'; d.setAttribute('role', 'dialog');
+      d.innerHTML = '<button type="button" class="x" aria-label="Закрыть">✕</button>' +
+        '<div class="k">⚠️ Внимание! Разреши доступ к камере и микрофону</div>' +
+        '<p>Сейчас телефон спросит разрешение — нажми «Разрешить». Если отказаться, звонки в EYE работать не будут, а включать камеру и звук потом придётся долго, через настройки телефона.</p>' +
+        '<button type="button" class="go">Разрешить доступ</button>' +
+        '<svg class="ar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v15M5 12l7 7 7-7"/></svg>';
+      document.body.appendChild(d);
+      function close() { lsSet('eye_perm_seen'); d.remove(); }
+      function ask() {
+        navigator.mediaDevices.getUserMedia({ audio: true, video: true }).then(function (st) {
+          st.getTracks().forEach(function (t) { t.stop(); });
+          lsSet('eye_perm_ok'); d.className = 'eye-perm ok';
+          d.innerHTML = '<div class="k">✓ Готово! Камера и микрофон разрешены</div><p>Теперь можно звонить друзьям в EYE.</p>';
+          setTimeout(function () { d.remove(); }, 2200);
+        }).catch(function (e) {
+          var p = d.querySelector('p'); if (!p) return;
+          if (e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')) p.textContent = CAMHELP;
+          else if (e && e.name === 'NotFoundError') p.textContent = 'Не нашёл камеру или микрофон на этом устройстве. Звонить без них не получится.';
+        });
+      }
+      d.querySelector('.x').onclick = close;
+      d.querySelector('.go').onclick = ask;
+      ask();   // сразу вызываем запрос телефона
+    });
+  }
+
+  function render() { placeButton(); badges(); reqCard(); permCard(); }
 
   /* ---------- запуск ---------- */
   // Окно чата внутри Профиля (iframe того же сайта, где тоже подключён EYE): своё соединение не открываем,
