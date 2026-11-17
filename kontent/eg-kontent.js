@@ -215,6 +215,15 @@ function upMedia(file, prog, maxSec){
     return cov.then(function(cu){ return API.video(file, prog).then(function(u){ return {t:'vid', u:u, c:cu, d:Math.round(p.dur), r:p.h > p.w ? 'v' : 'h'}; }); });
   });
 }
+/* круглое превью (Андрей 17.11 18:27): любую картинку режем в кружок — PNG 1:1, прозрачные уголки, тонкая золотая рамка */
+function circlePng(img, size){
+  size = size || 640; var c = document.createElement('canvas'); c.width = c.height = size; var g = c.getContext('2d');
+  var w = img.naturalWidth || img.width, h = img.naturalHeight || img.height, m = Math.min(w, h), r = size / 2;
+  g.save(); g.beginPath(); g.arc(r, r, r - 2, 0, Math.PI * 2); g.closePath(); g.clip();
+  g.drawImage(img, (w - m) / 2, (h - m) / 2, m, m, 0, 0, size, size); g.restore();
+  g.beginPath(); g.arc(r, r, r - 3, 0, Math.PI * 2); g.lineWidth = 3; g.strokeStyle = '#ffd23f'; g.stroke();
+  var d = c.toDataURL('image/png'); return {b64:d.slice(d.indexOf(',') + 1), mime:'image/png'};
+}
 function errText(r){
   r = r || {};
   return r.error === 'long' ? 'Сторис — до ' + STORY_SEC + ' секунд. Обрежь видео или добавь его постом' :
@@ -621,14 +630,14 @@ function foldName(f, then){
     '<input type="text" maxlength="24" placeholder="Название, например «Похудение»"><button type="button" class="kc-big kc-gold">' + (f ? 'Сохранить' : 'Создать') + '</button>');
   var ti = $('input', b); ti.value = f ? f.title : '';
   var up = function(){ pick('image/*').then(function(fs){ var fl = fs[0]; if(!fl) return; var ci = $('.kc-covi', b); ci.textContent = '…'; busy = true;
-    readImg(fl).then(function(i){ var x = shrink(i, 640, .86); return API.photo(x.b64, x.mime, 'p'); }).then(function(u){ busy = false; cov = u; ci.textContent = ''; ci.style.backgroundImage = 'url(\'' + u + '\')'; }, function(r){ busy = false; ci.textContent = '＋'; toast(errText(r)); }); }); };
+    readImg(fl).then(function(i){ var x = circlePng(i, 640); return API.photo(x.b64, x.mime, 'p'); }).then(function(u){ busy = false; cov = u; ci.textContent = ''; ci.style.backgroundImage = 'url(\'' + u + '\')'; }, function(r){ busy = false; ci.textContent = '＋'; toast(errText(r)); }); }); };
   $('.kc-covup', b).onclick = up; $('.kc-covi', b).onclick = up;
   /* Андрей 17.11 13:13: обложку тоже можно сделать в LURE — сразу GPT Image 1:1 с промптом */
   $('.kc-covlure', b).onclick = function(){
     var pr = lureCoverPrompt(ti.value.trim()); copyText(pr).catch(function(){});
     window.open(LURE + '#img&m=gpt26&ar=1%3A1&p=' + encodeURIComponent(pr), '_blank', 'noopener');
     var h = $('.kc-covh', b); h.hidden = false;
-    h.innerHTML = 'LURE открылся: модель GPT Image, формат 1:1 и промпт уже стоят. <b>1.</b> В первой строке проверь название. <b>2.</b> Прикрепи своё фото или кадр. <b>3.</b> «Создать картинку» → скачай. <b>4.</b> Вернись сюда и нажми «📷 Своя обложка».';
+    h.innerHTML = 'LURE открылся: модель GPT Image, формат 1:1 и промпт уже стоят. <b>1.</b> В первой строке проверь название. <b>2.</b> Прикрепи своё фото или кадр. <b>3.</b> «Создать картинку» → скачай. <b>4.</b> Вернись сюда и нажми «📷 Своя обложка» — сайт сам сделает из неё ровный кружок с золотой рамкой.';
   };
   $('.kc-big', b).onclick = function(){
     var t = ti.value.trim(); if(!t) return toast('Напиши название');
@@ -816,8 +825,8 @@ var PV_HTML = '<div class="kc-pvbox"><div class="kc-pvi">Вставь ссылк
 var LURE = 'https://lure.eaglesteam.ru/';
 function lureCoverPrompt(title){
   return 'Надпись на обложке: «' + (title || 'НАПИШИ ЗДЕСЬ НАЗВАНИЕ ТЕМЫ') + '»\n\n' +
-    'Сделай из прикреплённой картинки обложку для круглого значка темы в канале. Формат 1:1 (квадрат). ' +
-    'ВАЖНО: картинка будет показана КРУГОМ (как сторис) — углы и края квадрата обрежутся. Представь круг, вписанный в квадрат: лицо, голова и вся надпись целиком внутри центрального круга, с запасом от его края (примерно в середине 70% ширины). В углах только фон, ничего важного. Фон залей до самых краёв квадрата, без белых полей и без своей рамки по краю. ' +
+    'Сделай из прикреплённой картинки круглую обложку для значка темы в канале. ' +
+    'Сделай готовый КРУЖОК: формат 1:1, PNG. Сама картинка — круг, вписанный в квадрат, по краю круга тонкая аккуратная золотая рамка. Всё снаружи круга (уголки) — прозрачное, а если прозрачность нельзя — ровный чистый чёрный цвет. Лицо, голова и вся надпись целиком внутри круга, с запасом от рамки. ' +
     'Улучши качество: чёткость, свет, контраст, сочные цвета, простой красивый фон. Сохрани лицо и черты человека как на картинке. ' +
     'Надпись в нижней части центрального круга (не у самого края) — 1–2 слова, крупный жирный красивый шрифт, легко читается на маленьком кружке, с объёмом и лёгким золотым свечением. ' +
     'Без мелкого текста, без логотипов и водяных знаков.';
@@ -832,8 +841,8 @@ function lurePrompt(title, vert){
 }
 function lureIslandPrompt(title){
   return 'Надпись на обложке: «' + (title || 'НАПИШИ ЗДЕСЬ НАЗВАНИЕ ОСТРОВКА') + '»\n\n' +
-    'Сделай из прикреплённой картинки обложку для круглого островка на карте темы в канале. Формат 1:1 (квадрат). ' +
-    'ВАЖНО: картинка будет показана КРУГОМ (как сторис) — углы и края квадрата обрежутся. Представь круг, вписанный в квадрат: лицо, голова и вся надпись целиком внутри центрального круга, с запасом от его края (примерно в середине 70% ширины). В углах только фон, ничего важного. Фон залей до самых краёв квадрата, без белых полей и без своей рамки по краю. ' +
+    'Сделай из прикреплённой картинки круглое превью для островка на карте темы в канале. ' +
+    'Сделай готовый КРУЖОК: формат 1:1, PNG. Сама картинка — круг, вписанный в квадрат, по краю круга тонкая аккуратная золотая рамка. Всё снаружи круга (уголки) — прозрачное, а если прозрачность нельзя — ровный чистый чёрный цвет. Лицо, голова и вся надпись целиком внутри круга, с запасом от рамки. ' +
     'Улучши качество: чёткость, свет, контраст, сочные цвета, простой красивый фон. Сохрани лицо и черты человека как на картинке. ' +
     'Надпись в нижней части центрального круга (не у самого края) — 1–3 слова, крупный жирный красивый шрифт, легко читается на маленьком кружке, с объёмом и лёгким золотым свечением. ' +
     'Без мелкого текста, без логотипов и водяных знаков.';
@@ -861,7 +870,7 @@ function prevPicker(b, getLink, getTitle, onMeta, th0, o){
   $('.kc-own-pv', box).onclick = function(){
     pick('image/*').then(function(fs){ var f = fs[0]; if(!f) return;
       img.textContent = 'Загружаю превью…'; busy = true;
-      readImg(f).then(function(i){ var x = shrink(i, 1280, .86); return API.photo(x.b64, x.mime, 'p'); })
+      readImg(f).then(function(i){ var x = o.sq ? circlePng(i, 640) : shrink(i, 1280, .86); return API.photo(x.b64, x.mime, 'p'); })
         .then(function(u){ busy = false; own = u; paint(); toast('Превью готово'); }, function(r){ busy = false; paint(); toast(errText(r)); });
     });
   };
@@ -872,7 +881,7 @@ function prevPicker(b, getLink, getTitle, onMeta, th0, o){
     /* сразу GPT Image и нужный формат (Андрей 17.11): #img&m=gpt26&ar=16:9&p=… (островок — 1:1) */
     window.open(LURE + '#img&m=gpt26&ar=' + encodeURIComponent(ar) + '&p=' + encodeURIComponent(pr), '_blank', 'noopener');
     help.hidden = false;
-    help.innerHTML = 'LURE открылся: модель GPT Image, формат ' + ar + ' и промпт уже стоят. <b>1.</b> В первой строке проверь название ролика. <b>2.</b> Прикрепи картинку: скриншот яркого кадра ролика или своё фото. <b>3.</b> «Создать картинку» → скачай. <b>4.</b> Вернись сюда и нажми «📷 Своё превью».';
+    help.innerHTML = 'LURE открылся: модель GPT Image, формат ' + ar + ' и промпт уже стоят. <b>1.</b> В первой строке проверь название ролика. <b>2.</b> Прикрепи картинку: скриншот яркого кадра ролика или своё фото. <b>3.</b> «Создать картинку» → скачай. <b>4.</b> Вернись сюда и нажми «📷 Своё превью»' + (o.sq ? ' — сайт сам сделает ровный кружок с золотой рамкой.' : '.') + '';
   };
   paint(); if(getLink()) look();
   return {th:function(){ return own || auto; }, title:function(){ return title; }, redraw:function(){ last = null; look(); paint(); }};
