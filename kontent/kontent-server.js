@@ -1,4 +1,4 @@
-// ===================== KONTENT v3 (2026-11-17) =====================
+// ===================== KONTENT v4 (2026-11-17) =====================
 // Задание 68: загрузка в Канал (kanal.html) и Обучение (obuchenie.html). Страничная часть — файл /eg-kontent.js.
 // Места (place):
 //   kanal, obuchenie, uroki — пишут только владельцы (11111, 23933), смотрят все (гости тоже);
@@ -10,6 +10,9 @@
 // «Актуальное» (kind folder) = карта темы («Похудение») с островками-роликами со стены (Андрей 17.11 11:18):
 //   { title, cover: обложка кружка (с телефона, k/p/), items: [{ l: ссылка, t: название, th: превью, p: id поста на стене }] }.
 //   Превью — с Rutube / VK / Яндекс Диска или своё (k/p/).
+//   v4 (Андрей 17.11 16:10): островком может быть и СВОЯ сторис-кружок: { s: 1, u: видео k/a/, c: кадр, d, m, t, th }.
+//   Сторис живёт 24 часа, поэтому её видео КОПИРУЕТСЯ в вечную папку k/a/ (kc_keep даёт подписанную ссылку, браузер
+//   сам берёт файл сторис и кладёт копию). Папку k/a/ правило «срок жизни» не трогает.
 // Посты, ролики и уроки — только ссылкой на VK Видео / Rutube / Яндекс Диск (+ своё превью th, не обязательно).
 // Уроки Pro: гость и FREE получают только обложку и название (без видео и текста).
 // Фото (обложка сторис k/s/, своё превью k/p/): POST kc_img (base64 до 2,6 млн знаков) → Storage.put в бакет сайта.
@@ -20,7 +23,8 @@
 //   GET  kc_list&place=            → { stories, folders, posts, roliki, uroki }  (без входа; с sess — видно Pro-уроки)
 //   GET  kc_upurl&place=&mime=&size= → { put, url, mime }                   (вход; право писать в place)
 //   GET  kc_meta&u=                → { img, title, d, kind }                 (вход, Pro; превью и название ролика по ссылке)
-//   GET  kc_diag                   → { presign, key, pub }           (только владелец: найден ли ключ — без значений)
+//   GET  kc_keep&place=&id=        → { put, url, src, mime }  (вход; право писать в place; сторис из place → копия в k/a/)
+//   GET  kc_diag                   → { presign, key, keyA, pub }     (только владелец: найден ли ключ — без значений)
 //   POST type=kc_img  place, data, mime, use(s|p) → { url }   (s — обложка сторис, p — своё превью)
 //   POST type=kc_add  place, kind, json        → { item }
 //   POST type=kc_del  id                       → {}
@@ -89,10 +93,15 @@ function kcFoldClean_(x) {
   var title = kcStr_(x.title, 24).replace(/\s+/g, ' ').trim(), seen = {};
   var items = (Array.isArray(x.items) ? x.items : []).map(function (i) {
     i = i && typeof i === 'object' ? i : {};
+    var tt = kcStr_(i.t, 80).replace(/\s+/g, ' ').trim();
+    if (Number(i.s) === 1) {   // своя сторис-кружок (копия в k/a/)
+      var su = kcMedia_(i.u);
+      return su && su.indexOf(Storage.url('k/a/')) === 0 ? { s: 1, l: '', u: su, c: kcMedia_(i.c), d: kcNum_(i.d, KC_STORY_SEC + 1), m: i.m ? 1 : 0, t: tt, th: kcThumb_(i.th), p: '' } : null;
+    }
     var l = kcLink_(i.l);
     var pid = String(i.p || '');
-    return l ? { l: l, t: kcStr_(i.t, 80).replace(/\s+/g, ' ').trim(), th: kcThumb_(i.th), p: /^[A-Za-z0-9_-]{1,48}$/.test(pid) ? pid : '' } : null;
-  }).filter(function (i) { if (!i || seen[i.l]) return false; seen[i.l] = 1; return true; }).slice(0, KC_FOLDER_ITEMS);
+    return l ? { l: l, t: tt, th: kcThumb_(i.th), p: /^[A-Za-z0-9_-]{1,48}$/.test(pid) ? pid : '' } : null;
+  }).filter(function (i) { var k = i && (i.l || i.u); if (!k || seen[k]) return false; seen[k] = 1; return true; }).slice(0, KC_FOLDER_ITEMS);
   return title ? { title: title, cover: kcThumb_(x.cover), items: items } : null;
 }
 function kcRows_() {
@@ -121,8 +130,10 @@ function kontent_(action, e, p) {
   if (action === 'kc_diag') {
     if (!kcOwner_(me)) return jsonOut_({ ok: false, error: 'owner' });
     var pu = kcPresign_('k/s/kanal/_diag.webm');
-    return jsonOut_({ ok: true, presign: kcPresignOk_(), key: /^https:\/\/[^?]+\/k\/s\/kanal\/_diag\.webm\?X-Amz-Algorithm=AWS4-HMAC-SHA256&/.test(pu), pub: Storage.url('k/') });
+    var pa = kcPresign_('k/a/kanal/_diag.webm');
+    return jsonOut_({ ok: true, presign: kcPresignOk_(), key: /^https:\/\/[^?]+\/k\/s\/kanal\/_diag\.webm\?X-Amz-Algorithm=AWS4-HMAC-SHA256&/.test(pu), keyA: /^https:\/\/[^?]+\/k\/a\/kanal\/_diag\.webm\?X-Amz-Algorithm=AWS4-HMAC-SHA256&/.test(pa), pub: Storage.url('k/') });
   }
+  if (action === 'kc_keep') return kcKeep_(p, me, U);
   if (action === 'kc_upurl') return kcUpUrl_(p, me, U);
   if (action === 'kc_meta') return kcMeta_(p, me, U);
   if (action === 'kc_img') return kcImg_(p, me, U);
@@ -170,6 +181,23 @@ function kcUpUrl_(p, me, U) {
   var put = kcPresign_(key);
   if (!put) return jsonOut_({ ok: false, error: 'no_key' });
   return jsonOut_({ ok: true, put: put, url: Storage.url(key), mime: mime });
+}
+
+// сторис → островок «Актуального»: копия видео в вечную папку k/a/ (Андрей 17.11 16:10)
+function kcKeep_(p, me, U) {
+  var place = kcPlace_(p.place);
+  if (!kcCan_(me, place, U)) return jsonOut_({ ok: false, error: 'owner' });
+  var id = kcId_(p.id), x = id ? kcFind_(id) : null;
+  if (!x || x.kind !== 'story' || x.place !== place) return jsonOut_({ ok: false, error: 'not_found' });
+  if (Date.now() - x.at > 36 * 36e5) return jsonOut_({ ok: false, error: 'gone' });   // файл сторис стирается через 2 дня
+  var src = kcMedia_(x.j.u), m = /\.(mp4|webm|mov)$/i.exec(src);
+  if (!src || src.indexOf(Storage.url('k/s/')) !== 0 || !m) return jsonOut_({ ok: false, error: 'not_found' });
+  var ext = m[1].toLowerCase(), mime = { mp4: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime' }[ext];
+  if (!kcOwner_(me) && !kcRate_('KCU_' + me, KC_PRO_UPLOADS_DAY, 86400)) return jsonOut_({ ok: false, error: 'limit' });
+  var key = 'k/a/' + place + '/' + Utilities.getUuid().replace(/-/g, '').slice(0, 20) + '.' + ext;
+  var put = kcPresign_(key);
+  if (!put) return jsonOut_({ ok: false, error: 'no_key' });
+  return jsonOut_({ ok: true, put: put, url: Storage.url(key), src: src, mime: mime });
 }
 
 function kcImg_(p, me, U) {
@@ -264,7 +292,7 @@ function kcMeta_(p, me, U) {
 
 // ---- подписанная ссылка для загрузки видео сторис ----
 // server.js работает в vm без process.env: ключ хранилища видит только index.js. Ссылку делает index.js —
-// Storage.presign(key, sec) (добавлен заданием 68 v8, только ключи k/s/…, PUT, до 15 минут). Сам ключ сюда не попадает.
+// Storage.presign(key, sec) (добавлен заданием 68 v8; с задания 72 — ключи k/s/… и k/a/…, PUT, до 15 минут). Сам ключ сюда не попадает.
 function kcPresignOk_() { try { return !!(typeof Storage !== 'undefined' && Storage && typeof Storage.presign === 'function'); } catch (err) { return false; } }
 function kcPresign_(key) { try { return kcPresignOk_() ? String(Storage.presign(key, 900) || '') : ''; } catch (err) { return ''; } }
-// =================== end of block KONTENT v3 ===================
+// =================== end of block KONTENT v4 ===================

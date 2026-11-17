@@ -1,4 +1,4 @@
-/* EAGLES · Загрузка контента в Канал и Обучение · eg-kontent.js v5 · 17.11.2026 (задание 68)
+/* EAGLES · Загрузка контента в Канал и Обучение · eg-kontent.js v6 · 17.11.2026 (задание 68, правка 72)
    Одна добавка на две страницы: kanal.html (канал Андрея и свой канал Pro ?u=ID) и obuchenie.html.
    - Сторис ТОЛЬКО съёмкой в приложении: кружочек с камеры до 60 с, 480p (из галереи нельзя — живая жизнь, не реклама).
      Живут 24 часа и исчезают совсем (архива нет, Андрей 17.11 11:02).
@@ -6,6 +6,9 @@
    - «Актуальное» = КАРТА (Андрей 17.11 11:18): кружки под сторис, обложку хозяин грузит с телефона. Нажал — карта темы
      («Похудение»): двигать, приближать, отдалять; на ней островки по порядку («Моё начало» и дальше), каждый — ролик со стены.
      Нажал островок — превью, смотреть, «⬇ К посту на стене». Ролик на карту: кнопка «⭐ В Актуальное» у поста или ссылкой.
+     v6 (Андрей 17.11 16:10): островок может быть и своей сторис-кружком (выбрать из живых сторис, ссылкой на сторис
+     или «⭐ В Актуальное» в меню ⋯ сторис) — её видео копируется навсегда (kc_keep → папка k/a/).
+     Превью островка — квадрат 1:1 (островок круглый), «Сделать в LURE» для островка тоже 1:1.
      Канал Андрея и свой канал Pro (в Обучении «Актуального» нет).
    - Превью: само подтягивается с Rutube, VK Видео или Яндекс Диска (сервер kc_meta). Можно поставить своё:
      «📷 Своё превью» или «✨ Сделать в LURE» — LURE открывается с готовым промптом (название ролика + твой кадр).
@@ -152,6 +155,24 @@ var API = window.KC_API || {
       });
     });
   },
+  /* сторис → островок: копия видео в вечную папку k/a/ и кадра в k/p/ */
+  keep: function(x, prog){
+    return API.call('kc_keep', {place:PLACE, id:x.id}).then(function(r){
+      return fetch(r.src, {cache:'no-store'}).then(function(q){ if(!q.ok) throw {error:'gone'}; return q.blob(); }).then(function(blob){
+        return new Promise(function(ok, no){
+          var xh = new XMLHttpRequest(); xh.open('PUT', r.put); xh.setRequestHeader('Content-Type', r.mime);
+          xh.upload.onprogress = function(e){ if(e.lengthComputable && prog) prog(e.loaded / e.total); };
+          xh.onload = function(){ xh.status >= 200 && xh.status < 300 ? ok(r.url) : no({error:'put_' + xh.status}); };
+          xh.onerror = function(){ no({error:'net'}); }; xh.send(blob);
+        });
+      });
+    }).then(function(u){
+      if(!x.c) return {u:u, c:''};
+      return fetch(x.c).then(function(q){ return q.blob(); }).then(function(bl){ return new Promise(function(ok){ var fr = new FileReader(); fr.onload = function(){ ok(String(fr.result || '')); }; fr.onerror = function(){ ok(''); }; fr.readAsDataURL(bl); }); })
+        .then(function(d){ var m = /^data:(image\/(?:webp|jpeg|png));base64,(.+)$/.exec(d); return m ? API.photo(m[2], m[1], 'p') : ''; })
+        .then(function(c){ return {u:u, c:c}; }, function(){ return {u:u, c:''}; });
+    });
+  },
   add: function(place, kind, item){ return API.call('kc_add', {place:place, kind:kind, json:JSON.stringify(item)}, true).then(function(r){ return r.item; }); },
   del: function(id){ return API.call('kc_del', {id:id}, true); },
   fold: function(place, f){ return API.call('kc_fold', {place:place, json:JSON.stringify(f)}, true).then(function(r){ return r.folder; }); },
@@ -264,6 +285,20 @@ var css = el('style'); css.id = 'kcCss'; css.textContent = [
 '.kc-pvbox{border:1px solid #2a2622;border-radius:16px;padding:10px;margin:0 0 10px;background:#0d0c0f}',
 '.kc-pvbox .kc-pvi{position:relative;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:linear-gradient(150deg,#3a2c16,#0d0b09);display:flex;align-items:center;justify-content:center;color:#a29b90;font:700 12.5px/1.4 Montserrat,sans-serif;text-align:center;padding:0 14px;box-sizing:border-box}',
 '.kc-pvbox .kc-pvi img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}',
+'.kc-pvbox.sq .kc-pvi{aspect-ratio:1/1;width:62%;max-width:240px;margin:0 auto;border-radius:50%;box-shadow:0 0 0 3px #ffd23f,0 0 22px rgba(255,210,63,.35)}',
+'.kc-pvbox.sq .kc-pvi i{left:50%;top:auto;bottom:10px;transform:translateX(-50%);white-space:nowrap}',
+'.kc-isub{margin:2px 0 8px;color:#a29b90;font:700 12px/1.4 Montserrat,sans-serif}',
+'.kc-isto{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 10px}',
+'.kc-istb{flex:0 0 auto;border:0;background:none;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;color:#a29b90;font:700 11px Montserrat,sans-serif}',
+'.kc-istb span{width:66px;height:66px;border-radius:50%;background:#1b1610 center/cover no-repeat;box-shadow:0 0 0 2px #3a3226;display:flex;align-items:center;justify-content:center;color:#ff5a4f;font-size:22px;transition:box-shadow .2s,transform .2s}',
+'.kc-istb.on span{box-shadow:0 0 0 3px #ffd23f,0 0 18px rgba(255,210,63,.6);transform:scale(1.06)}',
+'.kc-istb.on small{color:#ffd23f}',
+'#kcFold .kf-stop{position:relative;display:block;width:150px;height:150px;margin:10px auto 0;border:0;padding:0;border-radius:50%;background:none;cursor:pointer}',
+'#kcFold .kf-stop span{position:absolute;inset:0;border-radius:50%;background:#1b1610 center/cover no-repeat;box-shadow:0 0 0 3px #ffd23f,0 0 26px rgba(255,210,63,.45)}',
+'#kcFold .kf-stop i{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(0,0,0,.55)}',
+'#kcFold .kf-stop i:after{content:"";position:absolute;left:18px;top:14px;border-left:14px solid #ffd23f;border-top:9px solid transparent;border-bottom:9px solid transparent}',
+'#kcFold .kf-stop em{position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);white-space:nowrap;font:800 11px Montserrat,sans-serif;font-style:normal;background:#000;color:#ffd23f;border-radius:8px;padding:2px 8px}',
+'#kcFold .kf-sto{box-shadow:0 0 0 3px #ffd23f,0 0 0 6px rgba(255,90,79,.55),0 0 22px rgba(255,210,63,.45),0 10px 22px rgba(0,0,0,.6)}',
 '.kc-pvbox .kc-pvi i{position:absolute;left:8px;top:8px;font-style:normal;background:rgba(0,0,0,.7);color:#ffd23f;border-radius:8px;padding:2px 8px;font:800 11px Montserrat,sans-serif;z-index:1}',
 '.kc-pvbox .kc-row{margin:10px 0 0}',
 '.kc-pvbox .kc-lure{background:linear-gradient(90deg,rgba(255,106,43,.18),rgba(255,210,63,.14));border-color:rgba(255,160,60,.55);color:#ffd23f}',
@@ -558,7 +593,8 @@ function mountStories(){
    на ней островки: каждый островок — ролик со стены (первый — «Моё начало» и т.д.). Нажал островок — превью, «Смотреть»,
    «К посту на стене». Ролики в «Актуальное» добавляются кнопкой «⭐ В Актуальное» у поста или ссылкой. */
 var FOLD_ON = PAGE === 'kanal';
-function fCover(f){ if(f.cover) return f.cover; for(var i = 0; i < (f.items || []).length; i++) if(f.items[i].th) return f.items[i].th; return ''; }
+function fCover(f){ if(f.cover) return f.cover; for(var i = 0; i < (f.items || []).length; i++) if(f.items[i].th || f.items[i].c) return f.items[i].th || f.items[i].c; return ''; }
+function isPic(x){ return x.th || (x.s ? x.c : '') || ''; }
 function mountFolders(){
   if(!FOLD_ON) return;
   if(!fBox){
@@ -599,28 +635,53 @@ function foldName(f, then){
     fSave(f, {title:t, cover:cov}).then(function(nf){ closeSheet(); toast(f ? 'Сохранено' : '«' + t + '» создано'); return reload().then(function(){ if(then) then(nf); else if(!f) foldOpen(fById(nf.id)); }); }, function(r){ toast(errText(r)); });
   };
 }
-/* добавить ролик-островок (с превью) */
+/* добавить островок: ролик по ссылке (Rutube / VK / Диск) или своя сторис-кружок (Андрей 17.11 16:10) */
+function storyFromLink(l){
+  var m = /^https:\/\/[^\/]*eaglesteam\.ru\/kanal\.html\?(.*)$/i.exec(String(l || '').trim()); if(!m) return null;
+  var q; try{ q = new URLSearchParams(m[1]); }catch(e){ return null; }
+  var id = q.get('s') || ''; if(!id) return null;
+  if((q.get('u') || '') !== CHID) return {id:id, other:1};
+  for(var i = 0; i < D.stories.length; i++) if(D.stories[i].id === id) return D.stories[i];
+  return {id:id, gone:1};
+}
 function foldAdd(f, pre){
   pre = pre || {};
-  var n = (f.items || []).length;
-  var b = openSheet('Островок ' + (n + 1) + ' в «' + f.title + '»', 'Ссылка на ролик в Rutube, VK Видео или на Яндекс Диске. Главное — чёткое превью: его видно на карте.',
-    '<input type="url" inputmode="url" placeholder="Ссылка: rutube.ru/video/… · vkvideo.ru/… · disk.yandex.ru/…"><input type="text" class="kc-t1" maxlength="80" placeholder="' + (n ? 'Название островка' : 'Название, например «Моё начало»') + '">' + PV_HTML +
-    '<button type="button" class="kc-big kc-gold">Поставить островок</button>');
+  var n = (f.items || []).length, sto = pre.sto || null;
+  var live = D.stories.filter(function(x){ return x.circle && x.u; });
+  var chips = live.length ? '<p class="kc-isub">Твоя сторис — нажми, и она станет островком навсегда:</p><div class="kc-isto">' + live.map(function(x, i){ return '<button type="button" class="kc-istb" data-si="' + i + '"><span' + (x.c ? ' style="background-image:url(\'' + esc(x.c) + '\')"' : '') + '>' + (x.c ? '' : '●') + '</span><small>' + esc(when(x.at)) + '</small></button>'; }).join('') + '</div><p class="kc-isub">или ссылка на ролик / на сторис:</p>' : '';
+  var b = openSheet('Островок ' + (n + 1) + ' в «' + f.title + '»', 'Ролик из Rutube, VK Видео, Яндекс Диска или твоя сторис-кружок. Главное — чёткое превью: его видно на карте в кружке.',
+    chips + '<input type="url" inputmode="url" placeholder="Ссылка: сторис из канала · rutube.ru/… · vkvideo.ru/… · disk.yandex.ru/…"><input type="text" class="kc-t1" maxlength="80" placeholder="' + (n ? 'Название островка' : 'Название, например «Моё начало»') + '">' + PV_HTML +
+    '<div class="kc-bar"><b></b></div><button type="button" class="kc-big kc-gold">Поставить островок</button>');
   var li = $('input[type=url]', b), ti = $('.kc-t1', b); li.value = pre.l || ''; ti.value = pre.t || '';
-  var pv = prevPicker(b, function(){ return li.value.trim(); }, function(){ return ti.value.trim(); }, function(m){ if(m.title && !ti.value.trim()) ti.value = m.title; }, pre.th);
+  var pv = prevPicker(b, function(){ return sto ? '' : li.value.trim(); }, function(){ return ti.value.trim(); }, function(m){ if(m.title && !ti.value.trim()) ti.value = m.title; }, pre.th, {sq:1, sto:function(){ return sto; }});
+  function setSto(x){
+    sto = x || null;
+    $$('.kc-istb', b).forEach(function(c){ c.classList.toggle('on', !!sto && live[+c.dataset.si] === sto); });
+    if(sto && li.value.trim() && !storyFromLink(li.value)) li.value = '';
+    pv.redraw();
+  }
+  $$('.kc-istb', b).forEach(function(c){ c.onclick = function(){ var x = live[+c.dataset.si]; setSto(sto === x ? null : x); }; });
+  li.addEventListener('input', function(){ var x = storyFromLink(li.value); if(x && !x.gone && !x.other) setSto(x); else if(sto) setSto(null); });
+  if(sto) setSto(sto); else if(pre.l){ var x0 = storyFromLink(pre.l); if(x0 && !x0.gone && !x0.other) setSto(x0); }
   var go = $('.kc-big', b);
   go.onclick = function(){
-    var l = li.value.trim(); if(!VID_RE.test(l)) return toast('Нужна ссылка на ролик Rutube, VK Видео или Яндекс Диска');
-    if((f.items || []).some(function(x){ return x.l === l; })) return toast('Этот ролик уже на карте');
-    go.disabled = true; go.textContent = 'Ставлю…';
-    var items = (f.items || []).concat([{l:l, t:ti.value.trim() || pv.title() || 'Ролик', th:pv.th(), p:pre.p || ''}]);
-    fSave(f, {items:items}).then(function(){ closeSheet(); toast('Островок «' + (items[items.length - 1].t) + '» на карте'); return reload().then(function(){ var nf = fById(f.id); if(nf && !FV.hidden) foldOpen(nf, items.length - 1); }); }, function(r){ go.disabled = false; go.textContent = 'Поставить островок'; toast(errText(r)); });
+    var l = li.value.trim();
+    if(!sto && l){ var sx = storyFromLink(l); if(sx) return toast(sx.other ? 'Это сторис другого канала. Можно ставить только свои' : 'Эта сторис уже исчезла: в «Актуальное» её можно взять в первые сутки'); }
+    if(!sto && !VID_RE.test(l)) return toast('Выбери свою сторис или вставь ссылку на ролик Rutube, VK Видео или Яндекс Диска');
+    if(!sto && (f.items || []).some(function(x){ return x.l === l; })) return toast('Этот ролик уже на карте');
+    go.disabled = true; go.textContent = sto ? 'Сохраняю сторис навсегда…' : 'Ставлю…'; busy = !!sto;
+    var made = sto ? API.keep(sto, progBar(b)).then(function(k){ return {s:1, l:'', u:k.u, c:k.c, d:sto.d || 0, m:sto.m ? 1 : 0, t:ti.value.trim() || 'Сторис', th:pv.th(), p:''}; })
+      : Promise.resolve({l:l, t:ti.value.trim() || pv.title() || 'Ролик', th:pv.th(), p:pre.p || ''});
+    made.then(function(it){
+      busy = false; var items = (f.items || []).concat([it]);
+      return fSave(f, {items:items}).then(function(){ closeSheet(); toast('Островок «' + it.t + '» на карте'); return reload().then(function(){ var nf = fById(f.id); if(nf) foldOpen(nf, items.length - 1); }); });
+    }).catch(function(r){ busy = false; go.disabled = false; go.textContent = 'Поставить островок'; toast(r && r.error === 'gone' ? 'Эта сторис уже исчезла: в «Актуальное» её можно взять в первые сутки' : errText(r)); });
   };
 }
 /* «⭐ В Актуальное» у поста: выбрать карту или создать новую */
 function toFolder(item){
-  var h = D.folders.map(function(f, i){ var has = (f.items || []).some(function(x){ return x.l === item.l; }); return '<button type="button" class="kc-chip' + (has ? ' on' : '') + '" data-i="' + i + '"' + (has ? ' disabled' : '') + '>⭐ ' + esc(f.title) + (has ? ' ✓' : '') + '</button>'; }).join('');
-  var b = openSheet('В какое «Актуальное»?', 'Ролик станет новым островком на карте. Пост на стене останется, островок будет вести к нему.', '<div class="kc-row" style="flex-direction:column">' + h + '<button type="button" class="kc-chip kc-nf">＋ Новое «Актуальное»</button></div>');
+  var h = D.folders.map(function(f, i){ var has = !item.sto && (f.items || []).some(function(x){ return x.l === item.l; }); return '<button type="button" class="kc-chip' + (has ? ' on' : '') + '" data-i="' + i + '"' + (has ? ' disabled' : '') + '>⭐ ' + esc(f.title) + (has ? ' ✓' : '') + '</button>'; }).join('');
+  var b = openSheet('В какое «Актуальное»?', (item.sto ? 'Сторис станет островком на карте и останется там навсегда (в ряду сторис она исчезнет через 24 часа, как обычно).' : 'Ролик станет новым островком на карте. Пост на стене останется, островок будет вести к нему.'), '<div class="kc-row" style="flex-direction:column">' + h + '<button type="button" class="kc-chip kc-nf">＋ Новое «Актуальное»</button></div>');
   $$('[data-i]', b).forEach(function(c){ c.onclick = function(){ foldAdd(D.folders[+c.dataset.i], item); }; });
   $('.kc-nf', b).onclick = function(){ foldName(null, function(nf){ foldAdd(fById(nf.id) || nf, item); }); };
 }
@@ -679,7 +740,7 @@ function foldOpen(f, at, from){
   var h = '<svg class="kf-path" width="' + MP.W + '" height="' + MP.H + '" viewBox="0 0 ' + MP.W + ' ' + MP.H + '"><path d="' + path + '" fill="none" stroke="url(#kfG)" stroke-width="4" stroke-dasharray="2 12" stroke-linecap="round"/><defs><linearGradient id="kfG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0b8"/><stop offset="1" stop-color="#e9a23b"/></linearGradient></defs></svg>' + deco;
   it.forEach(function(x, k){
     var p = P[k];
-    h += '<button type="button" class="kf-is" data-k="' + k + '" style="left:' + (p.x - 85) + 'px;top:' + (p.y - 85) + 'px;--r:' + p.r + 'deg"><span class="kf-land"></span><span class="kf-pic"' + (x.th ? ' style="background-image:url(\'' + esc(x.th) + '\')"' : '') + '>' + (x.th ? '' : '▶') + '</span><span class="kf-num">' + (k + 1) + '</span><span class="kf-lb">' + esc(x.t || 'Ролик') + '</span></button>';
+    h += '<button type="button" class="kf-is" data-k="' + k + '" style="left:' + (p.x - 85) + 'px;top:' + (p.y - 85) + 'px;--r:' + p.r + 'deg"><span class="kf-land"></span><span class="kf-pic' + (x.s ? ' kf-sto' : '') + '"' + (isPic(x) ? ' style="background-image:url(\'' + esc(isPic(x)) + '\')"' : '') + '>' + (isPic(x) ? '' : '▶') + '</span><span class="kf-num">' + (k + 1) + '</span><span class="kf-lb">' + esc(x.t || 'Ролик') + '</span></button>';
   });
   if(OWNER){ var p2 = P[n]; h += '<button type="button" class="kf-is kf-new" style="left:' + (p2.x - 85) + 'px;top:' + (p2.y - 85) + 'px;--r:0deg"><span class="kf-land"></span><span class="kf-pic">＋</span><span class="kf-lb">' + (n ? 'Новый островок' : 'Первый островок: «Моё начало»') + '</span></button>'; }
   if(!n && !OWNER) h += '<p class="kc-empty" style="position:absolute;left:0;right:0;top:200px;text-align:center">Тут пока пусто</p>';
@@ -696,7 +757,7 @@ function islandCard(k){
   var x = fcur.items[k]; if(!x) return; var cd = $('.kf-card', FV);
   $$('.kf-is', mapW).forEach(function(b){ b.classList.toggle('on', +b.dataset.k === k && b.dataset.k != null); });
   var onWall = x.p && document.querySelector('#ek-lenta [data-post="' + (window.CSS && CSS.escape ? CSS.escape(x.p) : x.p) + '"]');
-  cd.innerHTML = '<div class="kf-ch"><span>Островок ' + (k + 1) + '</span><b>' + esc(x.t || 'Ролик') + '</b><button type="button" class="kf-cx" aria-label="Скрыть">×</button></div>' + thumbHtml(x.l, x.th || '') +
+  cd.innerHTML = '<div class="kf-ch"><span>Островок ' + (k + 1) + '</span><b>' + esc(x.t || 'Ролик') + '</b><button type="button" class="kf-cx" aria-label="Скрыть">×</button></div>' + (x.s ? '<button type="button" class="kf-stop"><span' + (isPic(x) ? ' style="background-image:url(\'' + esc(isPic(x)) + '\')"' : '') + '></span><i></i><em>Сторис · ' + dur(x.d) + '</em></button>' : thumbHtml(x.l, x.th || '')) +
     '<div class="kc-row">' + (onWall ? '<button type="button" class="kc-chip kf-wall">⬇ К посту на стене</button>' : '') +
     (k > 0 ? '<button type="button" class="kc-chip kf-prev">← ' + (k) + '</button>' : '') + (k < fcur.items.length - 1 ? '<button type="button" class="kc-chip kf-next">' + (k + 2) + ' →</button>' : '') + '</div>' +
     (OWNER ? '<div class="kc-row"><button type="button" class="kc-chip kf-th">🖼 Превью</button><button type="button" class="kc-chip kf-rm" style="color:#ff8a70">Убрать островок</button></div>' : '');
@@ -706,6 +767,7 @@ function islandCard(k){
   var pr = $('.kf-prev', cd), nx = $('.kf-next', cd); if(pr) pr.onclick = function(){ islandCard(k - 1); }; if(nx) nx.onclick = function(){ islandCard(k + 1); };
   var w = $('.kf-wall', cd); if(w) w.onclick = function(){ foldClose(); var a = onWall; setTimeout(function(){ a.scrollIntoView({behavior:'smooth', block:'center'}); a.classList.add('kc-flash'); setTimeout(function(){ a.classList.remove('kc-flash'); }, 2200); }, 80); };
   var t = $('.kf-th', cd); if(t) t.onclick = function(){ foldThumb(fcur, k); };
+  var sp = $('.kf-stop', cd); if(sp) sp.onclick = function(){ view([{id:'', keep:fcur.title, circle:1, t:'vid', u:x.u, c:x.c, d:x.d, m:x.m, at:0}], 0, sp); };
   var rm = $('.kf-rm', cd); if(rm) rm.onclick = function(){
     if(rm.dataset.sure !== '1'){ rm.dataset.sure = '1'; rm.textContent = 'Точно убрать? Нажми ещё раз'; return; }
     var items = fcur.items.filter(function(_, j){ return j !== k; });
@@ -726,10 +788,10 @@ $('.kf-o', FV).onclick = function(){
 /* поменять превью у островка */
 function foldThumb(f, k){
   var x = f.items[k]; if(!x) return;
-  var b = openSheet('Превью островка', esc(x.t || 'Ролик') + ' · ' + vidName(x.l), PV_HTML + '<button type="button" class="kc-big kc-gold">Сохранить</button>');
-  var pv = prevPicker(b, function(){ return x.l; }, function(){ return x.t; }, null, x.th);
+  var b = openSheet('Превью островка', esc(x.t || 'Ролик') + ' · ' + (x.s ? 'сторис' : vidName(x.l)), PV_HTML + '<button type="button" class="kc-big kc-gold">Сохранить</button>');
+  var pv = prevPicker(b, function(){ return x.s ? '' : x.l; }, function(){ return x.t; }, null, x.th, {sq:1, sto:function(){ return x.s ? x : null; }});
   $('.kc-big', b).onclick = function(){
-    var items = f.items.map(function(y, j){ return j === k ? {l:y.l, t:y.t, th:pv.th(), p:y.p || ''} : y; });
+    var items = f.items.map(function(y, j){ if(j !== k) return y; var z = {}; for(var q in y) z[q] = y[q]; z.th = pv.th(); return z; });
     fSave(f, {items:items}).then(function(){ closeSheet(); toast('Превью сохранено'); return reload().then(function(){ foldOpen(fById(f.id), k); }); }, function(r){ toast(errText(r)); });
   };
 }
@@ -767,10 +829,22 @@ function lurePrompt(title, vert){
     'Надпись сверху — крупный жирный красивый шрифт, 2–4 слова, легко читается даже на маленьком экране телефона, с объёмом и лёгким свечением. ' +
     'Без мелкого текста, без логотипов и водяных знаков.';
 }
-function prevPicker(b, getLink, getTitle, onMeta, th0){
+function lureIslandPrompt(title){
+  return 'Надпись на обложке: «' + (title || 'НАПИШИ ЗДЕСЬ НАЗВАНИЕ ОСТРОВКА') + '»\n\n' +
+    'Сделай из прикреплённой картинки обложку для круглого островка на карте темы в канале. Формат 1:1 (квадрат), всё важное в центре, края обрежутся кругом. ' +
+    'Улучши качество: чёткость, свет, контраст, сочные цвета, простой красивый фон. Сохрани лицо и черты человека как на картинке. ' +
+    'Надпись по центру внизу — 1–3 слова, крупный жирный красивый шрифт, легко читается на маленьком кружке, с объёмом и лёгким золотым свечением. ' +
+    'Без мелкого текста, без логотипов и водяных знаков.';
+}
+function prevPicker(b, getLink, getTitle, onMeta, th0, o){
+  o = o || {};
   var box = $('.kc-pvbox', b), img = $('.kc-pvi', box), help = $('.kc-lurehelp', box), li = $('input[type=url]', b);
   var auto = '', own = th0 || '', title = '', last = '', seq = 0;
+  /* островок круглый — превью квадрат 1:1 (Андрей 17.11 16:10) */
+  if(o.sq) box.classList.add('sq');
   function paint(){
+    var st = o.sto && o.sto();
+    if(st && !own){ img.innerHTML = st.c ? '<i>Кадр сторис</i><img alt="" src="' + esc(st.c) + '" onerror="this.style.opacity=0">' : 'Сторис без кадра. Поставь своё превью'; return; }
     var u = own || auto, l = getLink();
     if(u) img.innerHTML = '<i>' + (own ? 'Твоё превью' : 'Превью ' + vidName(l)) + '</i><img alt="" src="' + esc(u) + '" onerror="this.style.opacity=0">';
     else img.innerHTML = l && VID_RE.test(l) ? (isDisk(l) || /vk|youtu/i.test(l) ? 'Своего превью у этого ролика не нашлось. Поставь своё: так ролик смотрят чаще' : 'Ищу превью…') : 'Вставь ссылку, и превью подтянется само';
@@ -790,15 +864,16 @@ function prevPicker(b, getLink, getTitle, onMeta, th0){
     });
   };
   $('.kc-lure', box).onclick = function(){
-    var t = getTitle() || title, l = getLink(), vert = /shorts|clip/i.test(l), pr = lurePrompt(t, vert);
+    var t = getTitle() || title, l = getLink(), vert = !o.sq && /shorts|clip/i.test(l), pr = o.sq ? lureIslandPrompt(t) : lurePrompt(t, vert);
+    var ar = o.sq ? '1:1' : vert ? '9:16' : '16:9';
     copyText(pr).catch(function(){});
-    /* сразу GPT Image и нужный формат (Андрей 17.11): #img&m=gpt26&ar=16:9&p=… */
-    window.open(LURE + '#img&m=gpt26&ar=' + (vert ? '9%3A16' : '16%3A9') + '&p=' + encodeURIComponent(pr), '_blank', 'noopener');
+    /* сразу GPT Image и нужный формат (Андрей 17.11): #img&m=gpt26&ar=16:9&p=… (островок — 1:1) */
+    window.open(LURE + '#img&m=gpt26&ar=' + encodeURIComponent(ar) + '&p=' + encodeURIComponent(pr), '_blank', 'noopener');
     help.hidden = false;
-    help.innerHTML = 'LURE открылся: модель GPT Image, формат ' + (vert ? '9:16' : '16:9') + ' и промпт уже стоят. <b>1.</b> В первой строке проверь название ролика. <b>2.</b> Прикрепи картинку: скриншот яркого кадра ролика или своё фото. <b>3.</b> «Создать картинку» → скачай. <b>4.</b> Вернись сюда и нажми «📷 Своё превью».';
+    help.innerHTML = 'LURE открылся: модель GPT Image, формат ' + ar + ' и промпт уже стоят. <b>1.</b> В первой строке проверь название ролика. <b>2.</b> Прикрепи картинку: скриншот яркого кадра ролика или своё фото. <b>3.</b> «Создать картинку» → скачай. <b>4.</b> Вернись сюда и нажми «📷 Своё превью».';
   };
   paint(); if(getLink()) look();
-  return {th:function(){ return own || auto; }, title:function(){ return title; }};
+  return {th:function(){ return own || auto; }, title:function(){ return title; }, redraw:function(){ last = null; look(); paint(); }};
 }
 /* ---------- запись кружочка: только камера приложения, без галереи ---------- */
 var R = el('div'); R.id = 'kcRec'; R.hidden = true; R.setAttribute('role', 'dialog');
@@ -940,9 +1015,10 @@ function view(list, start, from){
   V.hidden = false; document.documentElement.style.overflow = 'hidden'; vShow();
 }
 function vShow(){
-  cancelAnimationFrame(vraf); var x = vl[vi]; markSeen(x.id); vpaused = false; $('.kv-m', V).hidden = true;
+  cancelAnimationFrame(vraf); var x = vl[vi]; if(x.id) markSeen(x.id); vpaused = false; $('.kv-m', V).hidden = true;
   $('.kv-bars', V).innerHTML = vl.map(function(_, i){ return '<i><b style="width:' + (i < vi ? 100 : 0) + '%"></b></i>'; }).join('');
-  $('.kv-w', V).textContent = when(x.at) + ' · исчезнет через ' + Math.max(1, Math.ceil((DAY - (Date.now() - x.at)) / 36e5)) + ' ч';
+  $('.kv-w', V).textContent = x.keep ? '⭐ Актуальное · ' + x.keep : when(x.at) + ' · исчезнет через ' + Math.max(1, Math.ceil((DAY - (Date.now() - x.at)) / 36e5)) + ' ч';
+  $('.kv-o', V).hidden = !!x.keep;
   var b = $('.kv-b', V), med;
   if(x.circle) med = '<div class="kv-cw"><div class="kv-circ"><video playsinline autoplay src="' + esc(x.u) + '"' + (x.c ? ' poster="' + esc(x.c) + '"' : '') + (x.m ? ' class="mir"' : '') + '></video></div>' +
     '<svg class="kv-ring" viewBox="0 0 100 100"><defs><linearGradient id="kvGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3c4"/><stop offset=".5" stop-color="#ffd23f"/><stop offset="1" stop-color="#e9a23b"/></linearGradient></defs><circle class="tr" cx="50" cy="50" r="48.5"/><circle class="pr" cx="50" cy="50" r="48.5" pathLength="100"/></svg><canvas class="kv-sp"></canvas></div>';
@@ -996,7 +1072,7 @@ function sparks(wrap){
 function vNext(){ if(vi < vl.length - 1){ vi++; vShow(); } else vClose(); }
 function vClose(){
   if(V.hidden || vclosing) return; vclosing = true; var v = $('.kv-b video', V); if(v) v.pause();
-  fly($('.kv-b .kv-cw', V), false, function(){ cancelAnimationFrame(vraf); $('.kv-b', V).innerHTML = ''; V.hidden = true; V.classList.remove('kv-out'); vclosing = false; document.documentElement.style.overflow = ''; mountStories(); });
+  fly($('.kv-b .kv-cw', V), false, function(){ cancelAnimationFrame(vraf); $('.kv-b', V).innerHTML = ''; V.hidden = true; V.classList.remove('kv-out'); vclosing = false; document.documentElement.style.overflow = FV.hidden ? '' : 'hidden'; mountStories(); });
 }
 /* свайп вбок: влево — следующая, вправо — назад; вниз — свернуть в аватарку */
 (function(){ var sx = 0, sy = 0, on = false;
@@ -1024,12 +1100,14 @@ $('.kv-o', V).onclick = function(){
   vpaused = true; var v = $('.kv-b video', V); if(v) v.pause();
   var h = '<button type="button" data-share="1">🔗 Поделиться ссылкой</button>';
   if(OWNER){
+    if(FOLD_ON && x.circle) h += '<button type="button" data-fold="1">⭐ В Актуальное (навсегда)</button>';
     h += '<button type="button" class="red" data-del="1">🗑 Удалить сторис</button>';
   } else if(MOD) h += '<button type="button" class="red" data-del="1">🗑 Убрать сторис (модерация)</button>';
   m.innerHTML = h; m.hidden = false;
   m.onclick = function(e){
     var t = e.target.closest('button'); if(!t) return;
     if(t.dataset.share){ m.hidden = true; vResume(); return shareStory(x); }
+    if(t.dataset.fold){ m.hidden = true; vClose(); return setTimeout(function(){ toFolder({sto:x, t:''}); }, 450); }
     if(t.dataset.del){ if(t.dataset.sure !== '1'){ t.dataset.sure = '1'; t.textContent = 'Точно удалить? Нажми ещё раз'; return; } return API.del(x.id).then(function(){ toast('Сторис удалена'); vClose(); reload(); }); }
   };
 };
