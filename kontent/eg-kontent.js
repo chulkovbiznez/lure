@@ -429,9 +429,9 @@ var css = el('style'); css.id = 'kcCss'; css.textContent = [
 '.learn-page .kc-plan.kc-off .lt b{color:#8d857a}',
 '.learn-page .kc-plan .kc-lk{border-color:rgba(255,255,255,.25);color:#cfc8bd}',
 /* листы (снизу) */
-'.kc-dim{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .2s}',
+'.kc-dim{position:fixed;inset:0;z-index:370;background:rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .2s}',
 '.kc-dim.on{opacity:1;pointer-events:auto}',
-'.kc-sheet{position:fixed;z-index:301;left:0;right:0;bottom:0;max-height:92vh;overflow:auto;transform:translateY(105%);transition:transform .25s;background:#141217;border-top:1px solid rgba(255,210,63,.35);border-radius:22px 22px 0 0;padding:10px 16px calc(18px + env(safe-area-inset-bottom,0px));color:#f4f4f2;font-family:Montserrat,sans-serif;max-width:560px;margin:0 auto}',
+'.kc-sheet{position:fixed;z-index:371;left:0;right:0;bottom:0;max-height:92vh;overflow:auto;transform:translateY(105%);transition:transform .25s;background:#141217;border-top:1px solid rgba(255,210,63,.35);border-radius:22px 22px 0 0;padding:10px 16px calc(18px + env(safe-area-inset-bottom,0px));color:#f4f4f2;font-family:Montserrat,sans-serif;max-width:560px;margin:0 auto}',
 '.kc-sheet.on{transform:none}',
 '.kc-sheet .kc-grab{width:44px;height:5px;border-radius:9px;background:#3a332b;margin:0 auto 12px}',
 '.kc-sheet h2{display:flex;align-items:center;margin:0 0 6px;font:900 19px Montserrat,sans-serif}',
@@ -620,7 +620,7 @@ function toFolder(item){
 
 /* ---- карта ---- */
 var FV = el('div'); FV.id = 'kcFold'; FV.hidden = true; FV.setAttribute('role', 'dialog');
-FV.innerHTML = '<div class="kf-h"><span class="kf-av"></span><div style="flex:1;min-width:0"><b></b><small></small></div><button type="button" class="kf-o" aria-label="Меню">⋯</button><button type="button" class="kf-x" aria-label="Закрыть">×</button></div>' +
+FV.innerHTML = '<div class="kf-h"><span class="kf-av"></span><div style="flex:1;min-width:0"><b></b><small></small></div><button type="button" class="kf-ed" aria-label="Изменить название и обложку">✎</button><button type="button" class="kf-o" aria-label="Меню">⋯</button><button type="button" class="kf-x" aria-label="Закрыть">×</button></div>' +
   '<div class="kf-map"><div class="kf-w"></div></div><div class="kf-z"><button type="button" data-z="1.35" aria-label="Приблизить">＋</button><button type="button" data-z="0.74" aria-label="Отдалить">－</button><button type="button" data-z="0" aria-label="Вся карта">⤢</button></div>' +
   '<div class="kf-card" hidden></div><p class="kf-hint">Двигай карту пальцем, разводи двумя — приближение. Нажми на островок.</p>';
 document.body.appendChild(FV);
@@ -664,7 +664,7 @@ function foldOpen(f, at, from){
   MP.W = 500; MP.H = Math.max(520, 170 + (P.length - 1) * 205 + 200);
   var av = $('.kf-av', FV), c = fCover(f); av.style.backgroundImage = c ? 'url(\'' + c + '\')' : ''; av.textContent = c ? '' : '🗺';
   $('.kf-h b', FV).textContent = f.title; $('.kf-h small', FV).textContent = chName() + ' · ' + n + ' ' + (n % 10 === 1 && n % 100 !== 11 ? 'островок' : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) ? 'островка' : 'островков');
-  $('.kf-o', FV).hidden = !OWNER;
+  $('.kf-o', FV).hidden = !OWNER; $('.kf-ed', FV).hidden = !OWNER;
   /* тропинка между островками */
   var path = '';
   for(var i = 1; i < P.length; i++){ var a = P[i - 1], q = P[i], my = (a.y + q.y) / 2; path += 'M' + a.x + ' ' + (a.y + 40) + ' C' + a.x + ' ' + (my + 30) + ' ' + q.x + ' ' + (my - 30) + ' ' + q.x + ' ' + (q.y - 50) + ' '; }
@@ -707,6 +707,8 @@ function islandCard(k){
 }
 function foldClose(){ mapW.innerHTML = ''; $('.kf-card', FV).hidden = true; FV.hidden = true; document.documentElement.style.overflow = ''; }
 $('.kf-x', FV).onclick = foldClose;
+/* видная кнопка ✎: название и обложка (Андрей 17.11) */
+$('.kf-ed', FV).onclick = function(){ var f = fcur; if(f) foldName(f, function(){ foldOpen(fById(f.id)); }); };
 $('.kf-o', FV).onclick = function(){
   var f = fcur; if(!f) return;
   var b = openSheet('«' + f.title + '»', '', '<button type="button" class="kc-big kc-gold kf-add">＋ Новый островок</button><button type="button" class="kc-big kf-ren" style="background:#1f1b16;color:#fff;margin-top:10px">✎ Название и обложка</button><button type="button" class="kc-big kf-del" style="background:#1b1416;color:#ff8a70;border:1px solid #4a2620;margin-top:10px">Удалить «Актуальное»</button>');
