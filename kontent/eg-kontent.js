@@ -776,9 +776,10 @@ function prevPicker(b, getLink, getTitle, onMeta, th0){
   $('.kc-lure', box).onclick = function(){
     var t = getTitle() || title, l = getLink(), vert = /shorts|clip/i.test(l), pr = lurePrompt(t, vert);
     copyText(pr).catch(function(){});
-    window.open(LURE + '#img&p=' + encodeURIComponent(pr), '_blank', 'noopener');
+    /* сразу GPT Image и нужный формат (Андрей 17.11): #img&m=gpt26&ar=16:9&p=… */
+    window.open(LURE + '#img&m=gpt26&ar=' + (vert ? '9%3A16' : '16%3A9') + '&p=' + encodeURIComponent(pr), '_blank', 'noopener');
     help.hidden = false;
-    help.innerHTML = 'LURE открылся, промпт уже вставлен. <b>1.</b> В первой строке напиши свою надпись. <b>2.</b> Прикрепи картинку: скриншот яркого кадра ролика или своё фото. <b>3.</b> «Создать картинку» → скачай. <b>4.</b> Вернись сюда и нажми «📷 Своё превью».';
+    help.innerHTML = 'LURE открылся: модель GPT Image, формат ' + (vert ? '9:16' : '16:9') + ' и промпт уже стоят. <b>1.</b> В первой строке проверь название ролика. <b>2.</b> Прикрепи картинку: скриншот яркого кадра ролика или своё фото. <b>3.</b> «Создать картинку» → скачай. <b>4.</b> Вернись сюда и нажми «📷 Своё превью».';
   };
   paint(); if(getLink()) look();
   return {th:function(){ return own || auto; }, title:function(){ return title; }};
