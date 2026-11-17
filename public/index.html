@@ -675,7 +675,8 @@ function loadModels(){get('/api/models').then(function(r){if(!r.ok){if(r.error==
 var DESC=[[/opus/i,'Самая умная, для сложных задач'],[/sonnet/i,'Отличная на каждый день'],[/haiku/i,'Быстрая и недорогая'],[/gpt/i,'Универсальная от OpenAI'],[/gemini.*pro/i,'Сильная от Google'],[/flash/i,'Быстрая и самая дешёвая']];
 function desc(id){for(var i=0;i<DESC.length;i++)if(DESC[i][0].test(id))return DESC[i][1];return ''}
 function drawModels(){setTimeout(priceHint,0);var sel=ls(key('model'));var m=MODELS.filter(function(x){return x.id===sel})[0];
-  $('mName').textContent=m?pretty(m.id):'LURE';
+  /* 17.11: чатовые модели приходят позже каталога картинок — на вкладках Изображения/Видео/Звук имя модели не перетирать */
+  if(isMedia(curTab())){if(MC)mediaName()}else $('mName').textContent=m?pretty(m.id):'LURE';
   $('mlistSel').innerHTML=MODELS.map(function(x){return '<button class="opt'+(x.id===sel?' on':'')+(isBest(x.id)?' best':'')+'" data-m="'+esc(x.id)+'" role="option"><span><b>'+esc(pretty(x.id))+(isBest(x.id)?'<em class="tagb">ЛУЧШАЯ</em>':'')+'</b><small>'+esc(desc(x.id))+' · ≈ '+rub(typical(x))+' за ответ</small></span><i></i></button>'}).join('');
   [].forEach.call($('mlistSel').querySelectorAll('[data-m]'),function(b){b.onclick=function(){ls(key('model'),b.dataset.m);$('mpanel').hidden=true;drawModels()}})}
 $('mPick').onclick=function(e){e.stopPropagation();var t=curTab();if(isMedia(t)){if(!MC)return;drawMediaModels(t)}else drawModels();$('mpanel').hidden=!$('mpanel').hidden};
