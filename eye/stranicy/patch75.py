@@ -1,5 +1,5 @@
 # Задание 75 (v3): внутри EYE (chat.html) вместо большого логотипа с иконками и «МЕССЕНДЖЕР» ставится логотип Андрея ƎVE
-# (обе E симметричны, придвинуты к V). Картинка eve-logo-andrey.webp (600x220).
+# (обе E симметричны, сближенный вариант Андрея). Картинка eve-logo-andrey.webp (600x221).
 # Запуск: python3 patch75.py chat-do-75.html eve-logo-andrey.webp chat-v75.html
 import sys, re, base64
 src, logo, dst = sys.argv[1:4]
@@ -9,7 +9,7 @@ pat = re.compile(r'<div class="eye-logo"><img src="data:image/[a-z]+;base64,[A-Z
 m = pat.findall(h)
 if len(m) != 1: sys.exit('СТОП: логотип EYE найден %d раз (нужно 1)' % len(m))
 b = base64.b64encode(open(logo, 'rb').read()).decode()
-new = '<div class="eye-logo eye-logo75"><img src="data:image/webp;base64,' + b + '" alt="EYE" width="600" height="220">'
+new = '<div class="eye-logo eye-logo75"><img src="data:image/webp;base64,' + b + '" alt="EYE" width="600" height="221">'
 h = h.replace(m[0], new)
 css = '<style id="eye-logo75">#chHome .eye-logo75 img{width:min(52vw,210px)!important;filter:drop-shadow(0 4px 12px rgba(255,150,30,.25))!important}#chHome .eye-logo75{margin:6px 0 14px!important}</style>'
 if h.count('</head>') != 1: sys.exit('СТОП: </head> не один')
