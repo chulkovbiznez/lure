@@ -1,0 +1,44 @@
+<!-- lureDesk95: широкая версия LURE для ноутбука (18.11.2026, задание 95). Только экран от 1200 точек, телефон не меняется. -->
+<style id="lureDesk95">
+@media (min-width:1200px){
+#app:not([hidden]){padding-left:232px}
+.nav{top:0;bottom:0;right:auto;width:232px;border-top:0!important;border-right:1px solid rgba(255,210,63,.12);padding:22px 14px;background:#08080a!important;-webkit-backdrop-filter:none;backdrop-filter:none}
+.nav div{display:flex;flex-direction:column;gap:4px;max-width:none;margin:0}
+.nav div:before{content:"";display:block;height:34px;margin:2px 10px 22px;background:url(/lure-word.webp) left center/auto 28px no-repeat}
+.nav button{display:flex;align-items:center;justify-content:flex-start;gap:14px;padding:12px 14px;border-radius:12px;font:600 15px var(--f)!important;text-align:left}
+.nav button:hover{background:rgba(255,255,255,.04);color:#cfc6b8}
+.nav .on{background:rgba(255,210,63,.08)}
+.nav .on:before{top:10px!important;bottom:10px;left:0!important;right:auto!important;width:3px;height:auto!important;border-radius:0 3px 3px 0!important}
+main{padding-bottom:24px}
+#app .wrap,.top .sub{max-width:880px}
+#chat{height:calc(100dvh - 100px)!important}
+.top .brand .word{display:none}
+#dOpen{display:none!important}
+.toast{left:calc(50% + 116px);bottom:28px}
+.mpanel{left:calc(50% + 116px)}
+body[data-tab=chat] #app:not([hidden]){padding-left:532px}
+body[data-tab=chat] .mpanel,body[data-tab=chat] .toast{left:calc(50% + 266px)}
+body[data-tab=chat]:not(.locked) #app:not([hidden])~#dlgs{display:block!important;position:fixed;top:0;bottom:0;left:232px;right:auto;width:300px;z-index:15;background:#0b0a0c}
+body[data-tab=chat]:not(.locked) #app:not([hidden])~#dlgs>div{max-width:none;max-height:none;height:100%;border:0!important;border-right:1px solid #1d1a1e!important;border-radius:0;background:#0b0a0c;padding:22px 12px 20px}
+#dlgs .dl{padding:11px 10px;border-radius:12px;border-bottom:0;margin-bottom:2px;cursor:pointer}
+#dlgs .dl:hover{background:rgba(255,255,255,.04)}
+#dlgs .dl.ld-on{background:rgba(255,210,63,.09)}
+#dlgs .dl.ld-on button.t{color:var(--gold)}
+}
+</style>
+<script id="lureDesk95js">
+(function(){
+var mq=window.matchMedia?matchMedia('(min-width:1200px)'):{matches:false},first=false,tries={},last=0;
+function $(i){return document.getElementById(i)}
+function vis(){var a=$('app'),b=document.body;return a&&!a.hidden&&b&&!b.classList.contains('locked')&&b.dataset.tab==='chat'}
+function cur(){var v='';try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(/^lure_.+_cur$/.test(k)){v=localStorage.getItem(k);if(k!=='lure_x_cur')break}}}catch(e){}return v||''}
+function load(){var o=$('dOpen'),d=$('dlgs');if(!o||!d)return;last=Date.now();o.click();d.hidden=true}
+function mark(){var c=cur(),L=$('dList'),has=false;if(!L)return has;[].forEach.call(L.querySelectorAll('.dl'),function(r){var b=r.querySelector('[data-o]'),on=!!(b&&c&&b.getAttribute('data-o')===c);r.classList.toggle('ld-on',on);if(on)has=true});return has}
+function tick(){if(!mq.matches||!vis())return;
+  if(!first){first=true;load();return}
+  var c=cur(),has=mark(),m=$('mlist');
+  if(c&&!has&&m&&m.children.length>1&&Date.now()-last>8000&&(tries[c]||0)<4){tries[c]=(tries[c]||0)+1;load()}}
+document.addEventListener('click',function(e){var r=e.target&&e.target.closest&&e.target.closest('#dlgs .dl');if(r&&!e.target.closest('[data-x]')&&mq.matches){var b=r.querySelector('button.t');if(b&&e.target!==b)b.click()}setTimeout(mark,50)},true);
+setInterval(tick,2000);
+})();
+</script>
