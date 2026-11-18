@@ -346,6 +346,12 @@ body[data-tab=img] #dNew2,body[data-tab=video] #dNew2,body[data-tab=sound] #dNew
 .send{background:linear-gradient(180deg,#ffe7a0,#ffd23f 45%,#c8901c);box-shadow:0 6px 18px rgba(255,190,60,.25)}
 .send svg{fill:#1a1205}
 .gi .bar i{background:linear-gradient(90deg,#ffe08a,#ffd23f)}
+/* Возврат в Карты (18.11.2026, задание 82) */
+.top .wrap>.back.tokarty{width:auto;max-width:48vw;height:32px;gap:2px;padding:0 11px 0 5px;border:.5px solid rgba(233,162,59,.6)!important;border-radius:999px;color:var(--gold1);font:700 12.5px/1 var(--f);white-space:nowrap;text-decoration:none;background:#15110b}
+.top .wrap>.back.tokarty svg{width:17px;height:17px}
+.top .wrap>.back.tokarty~.bal{width:auto;min-width:56px}
+#vKarty{margin-top:8px;text-decoration:none}
+.bkpulse{animation:bkP 1s ease-in-out 4}@keyframes bkP{50%{box-shadow:0 0 0 4px rgba(255,210,63,.5),0 0 24px rgba(255,170,40,.6)}}
 </style>
 </head>
 <body>
@@ -468,6 +474,7 @@ body[data-tab=img] #dNew2,body[data-tab=video] #dNew2,body[data-tab=sound] #dNew
     <input type="file" id="refFile" accept="image/jpeg,image/png,image/webp" multiple hidden>
     <div class="viewer" id="viewer" hidden><div class="vbox"><div id="vMedia"></div><p id="vInfo" class="muted"></p>
       <div class="flex"><a class="btn" id="vDl" target="_blank" rel="noopener" download>Скачать</a><button class="btn2" id="vRef" type="button">✏️ Изменить</button><button class="btn2" id="vRefV" type="button">🎬 В видео</button><button class="btn2" id="vDel" type="button">Удалить</button></div>
+      <a class="btn" id="vKarty" href="https://app.eaglesteam.ru/karty.html#iz-lure" hidden>← Вернуться в карты</a>
       <button class="btn2" id="vClose" type="button" style="margin-top:8px;width:100%">Закрыть</button></div></div>
 
     <!-- Кошелёк -->
@@ -587,6 +594,14 @@ $('pIn').oninput=function(){var v=this.value.replace(/\D/g,'').slice(0,4);if(v!=
 $('pCode').oninput=function(){var v=this.value.replace(/\D/g,'').slice(0,6);if(v!==this.value)this.value=v;if(v.length===6)$('pIn').focus()};
 $('pForgot').onclick=function(){var b=this;b.disabled=true;post('/api/pin/rec_request').then(function(r){b.disabled=false;if(!r.ok){pinErr(r);return}showPin('rec','Код отправлен на '+(r.emailHint||'твою почту')+'. Введи его и придумай новый ПИН.')}).catch(function(){b.disabled=false;netErr()})};
 $('pOut').onclick=function(){post('/api/logout').then(showLogin,showLogin)};
+/* Возврат в Карты (18.11.2026, задание 82): пришли из Карт (#...&back=karty) — помним до 6 часов в этой вкладке */
+var KARTYU='https://app.eaglesteam.ru/karty.html#iz-lure',BKK=(function(){var h=location.hash,v=null;
+  try{if(/[#&]back=karty(&|$)/.test(h))sessionStorage.setItem('lure_back',String(Date.now()));else if(!h||h==='#')sessionStorage.removeItem('lure_back');v=sessionStorage.getItem('lure_back')}catch(e){}
+  return v&&Date.now()-(+v)<6*3600e3?1:0})();
+function bkOff(){try{sessionStorage.removeItem('lure_back')}catch(e){}}
+(function(){if(!BKK)return;var a=document.querySelector('.top .back');if(a){a.href=KARTYU;a.classList.add('tokarty');a.setAttribute('aria-label','Вернуться в карты');
+  a.innerHTML='<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span>Вернуться в карты</span>';a.addEventListener('click',bkOff)}
+  var v=document.getElementById('vKarty');if(v){v.hidden=false;v.addEventListener('click',bkOff)}})();
 /* Промпт снаружи (08.11.2026, модель+формат 17.11.2026): lure.eaglesteam.ru/#img&m=<модель>&ar=<формат>&p=<промпт>.
    m и ar необязательны, p всегда последний. Держим в sessionStorage, чтобы дожило до конца входа и ПИН; адрес сразу чистим до #img. */
 var PF=null,PFM='',PFA='';(function(){var h=location.hash,i=h.indexOf('&p=');
@@ -598,6 +613,7 @@ function usePF(){if(!PF||!ME||!ME.access)return;var t=PF;PF=null;try{sessionStor
   if(curTab()!=='img')go('img');$('imgP').value=t;MOPT.img.ar=PFA||'1:1';mgrow($('imgP'));
   loadCat(function(){var L=MC.img||[],m=PFM&&L.filter(function(x){return x.k===PFM})[0];
     if(m){MSEL.img=m.k;ls(key('mk_img'),m.k)}if(curTab()==='img')mediaName();drawOpts('img')});
+  if(BKK){toast('Промпт для Карт готов, формат 1:1. Выбери модель и нажми «Создать картинку». Потом нажми на картинку → «Скачать» → «Вернуться в карты»');return}
   toast(PFM?'Промпт уже вставлен, модель и формат выбраны. Впиши свою надпись в первой строке, прикрепи картинку и нажми «Создать картинку»':'Промпт готов. Выбери модель и нажми «Создать картинку»')}
 function afterLogin(m){sss(1);post('/api/pin/state').then(function(s){if(s.ok&&!s.has)showPin('set');else start(m)}).catch(function(){start(m)})}
 function boot(){get('/api/me').then(function(r){if(!r.ok){showLogin();return}
@@ -824,7 +840,7 @@ $('vDel').onclick=function(){if(!VX||!confirm('Удалить из галере�
 $('vDl').onclick=function(e){if(!VX||!VX.url)return;e.preventDefault();var u=VX.url,b=this,bt=b.textContent;b.textContent='Скачиваю…';
   fetch(u).then(function(r){if(!r.ok)throw 0;return r.blob()}).then(function(bl){var ext=(bl.type.split('/')[1]||(VX.kind==='img'?'png':'mp4')).replace('jpeg','jpg').replace('quicktime','mov').replace('mpeg','mp3').split(';')[0];
     var o=URL.createObjectURL(bl),a=document.createElement('a');a.href=o;a.download='LURE-'+(VX.id||Date.now())+'.'+ext;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(o)},60000);
-    b.textContent=bt;toast('Скачано ✓ Файл в «Загрузках»')}).catch(function(){b.textContent=bt;window.open(u,'_blank','noopener')})};
+    b.textContent=bt;if(BKK){toast('Скачано ✓ Теперь «Вернуться в карты»');var k=$('vKarty');k.classList.remove('bkpulse');void k.offsetWidth;k.classList.add('bkpulse');return}toast('Скачано ✓ Файл в «Загрузках»')}).catch(function(){b.textContent=bt;window.open(u,'_blank','noopener')})};
 function toRef(t){if(!VX)return;var u=VX.url;vClose();fetch(u).then(function(r){return r.blob()}).then(shrink).then(function(s){if(curTab()!==t)go(t);loadCat(function(){var m=mModel(t);if(m&&REFS[t].length<m.refs){REFS[t].push(s);drawRefs(t);toast(t==='video'?'Картинка добавлена в видео как кадр':'Добавлено в референсы')}else toast('У этой модели больше фото не добавить')})}).catch(function(){toast('Не получилось взять фото')})}
 $('vRef').onclick=function(){toRef('img')};$('vRefV').onclick=function(){toRef('video')};
 function mgrow(e){var t=e.target||e,cs=getComputedStyle(t),lh=parseFloat(cs.lineHeight),pad=parseFloat(cs.paddingTop)+parseFloat(cs.paddingBottom),max=lh*12+pad+2,min=lh*4+pad+2;t.style.height='auto';var h=Math.max(min,t.scrollHeight);t.style.height=Math.min(h,max)+'px';t.style.overflowY=h>max?'auto':'hidden'}
@@ -838,7 +854,7 @@ function create(t){var m=mModel(t),o=MOPT[t],b=$(t+'Go'),pr=$(t+'P').value.trim(
   .then(function(vurl){b.textContent=bt;return post('/api/media/create',{k:m.k,prompt:pr,ar:o.ar,res:o.res,q:o.q,dur:o.dur,audio:o.audio,refs:REFS[t].slice(0,maxRefs(t)),vurl:vurl,vdur:MV&&MV.dur,orient:o.orient,vrefs:X.v,arefs:X.a,rrefs:X.r})},function(e){b.textContent=bt;throw e})
   .then(function(r){b.disabled=false;
     if(!r.ok){if(r.error==='auth'){showLogin();return}if(r.error==='no_money'){toast(ERR.no_money);go('wallet');return}toast(err(r.error,r));return}
-    GAL[t].unshift(r.job);drawGal(t);poll();toast(t==='img'?'Рисую. Картинка появится ниже.':'Снимаю. Видео появится ниже через несколько минут.')}).catch(function(e){b.disabled=false;if(e&&e.error){toast(e.error==='upload_failed'?'Файл не загрузился (код '+(e.code||'нет ответа')+'). Попробуй ещё раз.':err(e.error,e));return}toast('Нет связи. Если включён VPN, выключи его.')})}
+    GAL[t].unshift(r.job);drawGal(t);poll();if(BKK&&t==='img'){$('imgP').value='';mgrow($('imgP'));toast('Рисую. Когда появится — нажми на неё → «Скачать» → «Вернуться в карты»');return}toast(t==='img'?'Рисую. Картинка появится ниже.':'Снимаю. Видео появится ниже через несколько минут.')}).catch(function(e){b.disabled=false;if(e&&e.error){toast(e.error==='upload_failed'?'Файл не загрузился (код '+(e.code||'нет ответа')+'). Попробуй ещё раз.':err(e.error,e));return}toast('Нет связи. Если включён VPN, выключи его.')})}
 $('imgGo').onclick=function(){create('img')};$('soundGo').onclick=function(){createSnd()};$('videoGo').onclick=function(){create('video')};
 function mediaTab(t){setTimeout(function(){mgrow($(t+'P'))},0);loadCat(function(){if(curTab()!==t)return;mediaName();drawOpts(t);if(MC&&!MC.ready)$(t+'Price').textContent='скоро'});loadGal()}
 
