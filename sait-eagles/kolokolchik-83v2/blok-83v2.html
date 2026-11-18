@@ -189,14 +189,30 @@
       waitTouch = function () { var k = 0; (function g2() { if (canPlay() || k++ > 15) return sequence(true); setTimeout(g2, 100); })(); };
     })();
   }
-  function load(first) {
+  /* сразу показываем по копии на телефоне (без ожидания сервера), потом уточняем с сервера */
+  var CKEY = 'egBell-cache-' + ID, rung = false;
+  function fromCache() {
+    try { var c = JSON.parse(LS(CKEY) || 'null'); if (c && c.d === TODAY && Array.isArray(c.K) && Array.isArray(c.P)) return c; } catch (e) {}
+    var k = kartyList(LS('karty-v1-' + ID)), p = kandList(LS('eaglesfree_kandidaty_' + ID));
+    return (LS('karty-v1-' + ID) || LS('eaglesfree_kandidaty_' + ID)) ? { K: k, P: p } : null;
+  }
+  function render() {
+    (function wait() {
+      if (pinOpen()) return setTimeout(wait, 200);
+      var first = !rung && (K.length + P.length) > 0; if (first) rung = true;
+      show(first);
+    })();
+  }
+  function load(fresh) {
+    if (!fresh) { var c = fromCache(); if (c) { K = c.K; P = c.P; render(); } }
     Promise.all([getKarty(), getKand()]).then(function (r) {
       K = kartyList(r[0]); P = kandList(r[1]);
-      (function wait() { if (pinOpen()) return setTimeout(wait, 300); setTimeout(function () { show(first); }, first ? 350 : 0); })();
+      LSset(CKEY, JSON.stringify({ d: TODAY, K: K, P: P }));
+      render();
     });
   }
-  function start() { load(true); document.addEventListener('visibilitychange', function () { if (!document.hidden) { TODAY = iso(new Date()); load(false); } }); }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+  function start() { load(false); document.addEventListener('visibilitychange', function () { if (!document.hidden) { TODAY = iso(new Date()); load(true); } }); }
+  if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
 })();
 </script>
 <!-- /egBell2 -->
