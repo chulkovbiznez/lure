@@ -93,3 +93,7 @@ html.egd #bnApp .bn-tree{min-height:420px}
 /* 94: Маркетинг-план и документы — левое меню, текст шире */
 html.egd .egd-own .egd-it svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 }
+@media (min-width:1200px){
+/* 94 v2: левая колонка стоит на месте при прокрутке (у .mk-page/.bn-page/.rl-page был overflow:hidden, он ломал sticky) */
+html.egd .mk-page,html.egd .bn-page,html.egd .rl-page{overflow:visible!important;overflow-x:clip!important}
+}
