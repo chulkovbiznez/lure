@@ -34,4 +34,7 @@ html.egd #loggedInBlock .cbrow>*{height:100%!important}
 html.egd #loggedInBlock #pfnGame{grid-column:span 12}
 html.egd #loggedInBlock #binarBlock,html.egd #loggedInBlock #partnersBlock,html.egd #loggedInBlock #planBox{grid-column:span 4}
 html.egd #loggedInBlock>.wrap>.profile-modal{grid-column:1/-1}
+/* 90: колокольчик (egBell2) правее левого меню */
+html.egd #egBell{left:calc(240px + 20px)!important}
+html.egd #egBellP{padding-left:252px!important}
 }
