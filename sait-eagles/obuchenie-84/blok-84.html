@@ -1,0 +1,32 @@
+<script>/* egObOnly1: «Обучение» только у Андрея (задание 84, 18.11.2026). Остальным: нет пункта «Обучение», obuchenie.html → Канал, в каналах людей (kanal.html?u=ID) нет вкладки «Уроки» (у всех, и у Андрея). */
+(function(){try{
+var O=['11111','23933'],d=document.documentElement,p=location.pathname,id='',u='';
+try{id=String(localStorage.getItem('eaglesfree_id')||'');}catch(e){}
+try{u=new URLSearchParams(location.search).get('u')||'';}catch(e){}
+var st=document.createElement('style');st.id='egObOnly1';
+st.textContent='html.egob-off a[href*="obuchenie"],html.egob-off [data-go*="obuchenie"]{display:none!important}html.egob-ch [data-tab="uroki"]{display:none!important}';
+(document.head||d).appendChild(st);
+if(/\/kanal(\.html)?$/.test(p)&&u&&O.indexOf(u)<0)d.classList.add('egob-ch');
+if(O.indexOf(id)>=0)return;
+if(/\/obuchenie(\.html)?$/.test(p)){d.style.visibility='hidden';location.replace('/kanal.html');return;}
+d.classList.add('egob-off');
+var NAV='.tabbar,.ek-nav,.zl-nav,.tab-bar,nav';
+function fix(root){
+  if(!root||!root.querySelectorAll)return;
+  var list=[].slice.call(root.querySelectorAll('a[href*="obuchenie"],[data-go*="obuchenie"]'));
+  if(root.matches&&root.matches('a[href*="obuchenie"],[data-go*="obuchenie"]'))list.push(root);
+  list.forEach(function(a){
+    var bar=a.closest&&a.closest(NAV);
+    if(bar||a.classList.contains('tab-item')){
+      var par=a.parentNode;if(!par)return;par.removeChild(a);
+      var n=0;[].forEach.call(par.children,function(c){if(c.tagName!=='SCRIPT'&&c.tagName!=='STYLE'&&!c.hidden)n++;});
+      if(n>0)par.style.setProperty('grid-template-columns','repeat('+n+',1fr)','important');
+    }else{
+      a.setAttribute('href','/marketing.html');if(a.hasAttribute('data-go'))a.setAttribute('data-go','/marketing.html');
+    }
+  });
+}
+new MutationObserver(function(ms){for(var i=0;i<ms.length;i++){var ad=ms[i].addedNodes;for(var j=0;j<ad.length;j++){if(ad[j].nodeType===1)fix(ad[j]);}}}).observe(d,{childList:true,subtree:true});
+document.addEventListener('DOMContentLoaded',function(){fix(document);});
+}catch(e){}})();
+</script>
