@@ -35,8 +35,9 @@ else:
            '})();</script>\n')
     k = s.rfind('</body>')
     if k < 0:
-        print('СТОП: нет </body>'); sys.exit(1)
-    s2 = s[:k] + blk + s[k:]
+        s2 = s + ('' if s.endswith('\n') else '\n') + blk
+    else:
+        s2 = s[:k] + blk + s[k:]
     how = 'вставлен блок'
 open(dst, 'w', encoding='utf-8', newline='').write(s2)
 print('ЗВУК', dst, how, 'md5', hashlib.md5(s2.encode('utf-8')).hexdigest())
