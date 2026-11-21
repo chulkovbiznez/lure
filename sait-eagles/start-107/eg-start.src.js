@@ -1,4 +1,4 @@
-/* EAGLES СТАРТ v1 (egStart1, задание 107, 21.11.2026, Андрей).
+/* EAGLES СТАРТ v1 (egStart1, задание 107, 21.11.2026, Андрей; 107б — плашка в Профиле под логотипом).
    • До старта людям ничего не видно. Андрей (11111) видит плашку «ПРОВЕРКА» со статистикой за всё время.
    • profile.html?start=1 у Андрея — экран «СТАРТ ПРОЕКТА» с большой кнопкой (нажимается один раз, для видео).
      30 минут после старта там же кнопка «Переснять старт».
@@ -40,6 +40,7 @@
   + '#egsLive{position:fixed;z-index:9000;top:calc(env(safe-area-inset-top,0px) + 12px);left:0;right:0;margin:0 auto;width:max-content;display:flex;align-items:center;gap:10px;padding:7px 12px 7px 10px;border-radius:16px;border:0;cursor:pointer;color:#f3eee6;font-family:Montserrat,system-ui,sans-serif;background:rgba(16,13,10,.88);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);isolation:isolate;box-shadow:0 6px 24px rgba(0,0,0,.5),0 0 22px rgba(255,180,40,.18)}'
   + '#egsLive:before{content:"";position:absolute;inset:-1px;border-radius:17px;padding:1px;z-index:-1;background:conic-gradient(from var(--ega),rgba(255,210,63,.15),#ffe08a,rgba(255,106,43,.5),rgba(255,210,63,.15) 40%,rgba(255,210,63,.15));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:egsBord 3s linear infinite}'
   + '@keyframes egsBord{to{--ega:360deg}}'
+  + '#egsLive.inl{position:relative;top:auto;left:auto;right:auto;z-index:2;margin:2px auto 14px}'
   + '#egsLive.land,.egs-rc.land{animation:egsSpring .75s}'
   + '.egs-dot{width:8px;height:8px;border-radius:50%;background:#3ecf6c;animation:egsDot 1.6s infinite}.egs-dot.pre{background:#ffb02e}'
   + '@keyframes egsDot{0%{box-shadow:0 0 0 0 rgba(62,207,108,.7)}70%{box-shadow:0 0 0 7px rgba(62,207,108,0)}100%{box-shadow:0 0 0 0 rgba(62,207,108,0)}}'
@@ -216,7 +217,10 @@
       if (live) return;
       live = document.createElement('button'); live.id = 'egsLive'; live.type = 'button'; live.setAttribute('aria-label', 'Статистика EAGLES');
       live.innerHTML = '<i class="egs-dot"></i><div class="egs-lv"><em id="egsLvL">В ПОЛЁТЕ</em><strong id="egsLvT">00:00:00</strong></div><i class="egs-sep"></i><div class="egs-lv"><em>ПАКЕТЫ</em><span class="egs-mini egs-gf egs-gd"><span class="egs-reel" id="egsLvC"></span></span></div>';
-      document.body.appendChild(live);
+      /* 107б: в Профиле плашка стоит под логотипом (между «Зеркало твоего бизнеса» и карточкой с именем), а не поверх него */
+      var top = document.querySelector('.ptop') || (document.getElementById('egLogo') || {}).parentNode;
+      if (top && top.parentNode && top !== document.body) { live.classList.add('inl'); top.parentNode.insertBefore(live, top.nextSibling); }
+      else document.body.appendChild(live);
       liveR = new Reel(document.getElementById('egsLvC'), 4);
       live.onclick = function () { openPanel(); };
     } else {
