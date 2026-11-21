@@ -1,0 +1,26 @@
+<script>/* egOb108: Обучение у всех, вкладка EYRIE (задание 108, 21.11.2026). Заменяет egObOnly1 (задание 84). Нижний пункт «Канал» → «EYRIE» (/eyrie.html). Гость в Обучении видит уроки серыми (без заставки «Сначала войди»). В каналах людей (kanal.html?u=ID) вкладки «Уроки» нет. */
+(function(){try{
+var O=['11111','23933'],d=document.documentElement,p=location.pathname,u='';
+try{u=new URLSearchParams(location.search).get('u')||'';}catch(e){}
+var css='html.egob-ch [data-tab="uroki"]{display:none!important}';
+if(/\/obuchenie(\.html)?$/.test(p))css+='#learnGate{display:none!important}';
+var st=document.createElement('style');st.id='egOb108';st.textContent=css;(document.head||d).appendChild(st);
+if(/\/kanal(\.html)?$/.test(p)&&u&&O.indexOf(u)<0)d.classList.add('egob-ch');
+var NAV='.tabbar,.ek-nav,.zl-nav,.tab-bar,.egd-nav,.egd-own';
+function txt(a){var w=document.createTreeWalker(a,4,null),n;while((n=w.nextNode())){if(n.nodeValue.trim()==='Канал')return n;}return null;}
+function fix(root){
+  if(!root||!root.querySelectorAll)return;
+  var list=[].slice.call(root.querySelectorAll('a,.ek-nav button'));if(root.tagName==='A'||(root.tagName==='BUTTON'&&root.closest&&root.closest('.ek-nav')))list.push(root);
+  list.forEach(function(a){
+    if(a.getAttribute('data-eg108'))return;
+    if(!(a.closest&&a.closest(NAV))&&!a.classList.contains('tab-item'))return;
+    var t=txt(a);if(!t)return;
+    t.nodeValue=t.nodeValue.replace('Канал','EYRIE');
+    a.setAttribute('data-eg108','1');if(a.tagName==='A')a.setAttribute('href','/eyrie.html');a.removeAttribute('onclick');
+  });
+}
+document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('[data-eg108]');if(!a||/\/eyrie(\.html)?$/.test(p))return;e.preventDefault();e.stopImmediatePropagation();location.href='/eyrie.html';},true);
+new MutationObserver(function(ms){for(var i=0;i<ms.length;i++){var ad=ms[i].addedNodes;for(var j=0;j<ad.length;j++){if(ad[j].nodeType===1)fix(ad[j]);}}}).observe(d,{childList:true,subtree:true});
+document.addEventListener('DOMContentLoaded',function(){fix(document);});
+}catch(e){}})();
+</script>

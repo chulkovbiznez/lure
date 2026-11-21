@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>EYRIE · EAGLES</title>
+<meta name="theme-color" content="#070708">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="/egd/desk.css?v=1">
+<!-- EYRIE (задание 108, 21.11.2026): вкладка «EYRIE» нижнего меню.
+     Андрей (11111/23933) → сразу его канал /kanal.html.
+     Pro с созданным каналом (есть приветствие или посты) → /kanal.html?u=ID.
+     Pro без канала → «Создать канал EYRIE» → заготовка (имя и аватар из профиля, приветствие) → kp_hello → свой канал.
+     Бесплатный и гость → объяснение «канал с EAGLES Pro». В углу у всех «Канал EAGLES» → /kanal.html. -->
+<style>
+:root{--bg:#070708;--panel:#120f0b;--line:rgba(255,210,63,.22);--gold:#ffd23f;--gold2:#ff9d2b;--fg:#f4f4f2;--mute:#a29b90;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;background:radial-gradient(120% 40% at 50% 0%,#1d1408 0%,#070607 60%) no-repeat,#060607;color:var(--fg);font-family:"Montserrat",system-ui,-apple-system,sans-serif;min-height:100%}
+.ey{max-width:560px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(110px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}
+.top b{font:900 22px "Montserrat",sans-serif;letter-spacing:.05em;background:linear-gradient(180deg,#ffe58a,#ffb21f);-webkit-background-clip:text;background-clip:text;color:transparent}
+.chip{background:var(--panel);border:1px solid var(--gold);color:var(--gold);border-radius:999px;padding:9px 14px;font:800 12.5px "Montserrat",sans-serif;text-decoration:none;white-space:nowrap}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:20px 16px;text-align:center}
+.card img.logo{display:block;width:100%;max-width:280px;margin:0 auto 6px;border-radius:16px;aspect-ratio:640/440;object-fit:cover}
+.card h2{font:900 20px "Montserrat",sans-serif;margin:10px 0 6px}
+.card p{color:var(--mute);font:600 13.5px/1.5 "Montserrat",sans-serif;margin:0 0 16px}
+.btn{display:block;width:100%;border:0;border-radius:15px;padding:15px;font:900 15px "Montserrat",sans-serif;cursor:pointer;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#1a1206;text-decoration:none;text-align:center}
+.btn[disabled]{opacity:.6}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--fg);margin-top:8px}
+.who{display:flex;align-items:center;gap:12px;margin:4px 0 14px;text-align:left}
+.av{width:58px;height:58px;border-radius:50%;border:2px solid var(--gold);background:#2a2218 center/cover no-repeat;display:grid;place-items:center;font:900 22px "Montserrat",sans-serif;color:var(--gold);flex:none}
+.who b{display:block;font:900 16px "Montserrat",sans-serif}
+.who small{color:var(--mute);font:600 12px "Montserrat",sans-serif}
+label{display:block;text-align:left;font:800 12px "Montserrat",sans-serif;color:var(--mute);margin:6px 0}
+textarea{width:100%;min-height:110px;background:#0b0a09;border:1px solid var(--line);border-radius:12px;color:var(--fg);font:600 14px/1.45 "Montserrat",sans-serif;padding:11px;resize:vertical}
+.note{color:var(--mute);font:600 12px/1.45 "Montserrat",sans-serif;margin:10px 0 14px;text-align:left}
+.wait{color:var(--mute);text-align:center;font:700 13px "Montserrat",sans-serif;margin-top:80px}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:80;background:#15110c;border-top:1px solid var(--gold);border-radius:22px 22px 0 0;padding:18px max(16px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));transform:translateY(105%);transition:transform .25s ease}
+.sheet.on{transform:none}
+.sheet h4{font:900 16px "Montserrat",sans-serif;margin:0 0 6px}
+.sheet p{color:var(--mute);font:600 13px/1.45 "Montserrat",sans-serif;margin:0 0 12px}
+.sheet .in{max-width:560px;margin:0 auto}
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#1f1a12;border:1px solid var(--gold);color:var(--fg);padding:10px 16px;border-radius:12px;font:700 13px "Montserrat",sans-serif;z-index:90;transition:opacity .4s}
+/* нижнее меню — как на остальных страницах */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:50;display:grid;grid-template-columns:repeat(5,1fr);padding:8px max(8px,env(safe-area-inset-left,0px)) calc(8px + env(safe-area-inset-bottom,0px));background:rgba(10,8,6,.82);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-top:1px solid rgba(255,210,63,.18)}
+.tab-item{position:relative;display:grid;justify-items:center;gap:3px;padding:6px 0;color:#6d675f;font:700 11px "Montserrat",system-ui,sans-serif;text-decoration:none}
+.tab-item svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .3s}
+.tab-item.active{color:#ffd23f}.tab-item.active svg{transform:translateY(-2px) scale(1.08)}
+.tab-item.active::before{content:"";position:absolute;top:-8px;left:30%;right:30%;height:3px;border-radius:0 0 3px 3px;background:#ffd23f;box-shadow:0 0 12px #ffd23f}
+@media (prefers-reduced-motion:reduce){.sheet{transition:none}}
+</style>
+</head>
+<body>
+<div class="ey">
+  <div class="top"><b>EYRIE</b><a class="chip" href="/kanal.html">Канал EAGLES</a></div>
+  <div id="box"><div class="wait">Загружаю…</div></div>
+</div>
+
+<div class="sheet" id="sheet"><div class="in"><h4 id="shT"></h4><p id="shP"></p><a class="btn" id="shB" href="/"></a><button type="button" class="btn ghost" id="shX">Закрыть</button></div></div>
+
+<nav class="tabbar">
+  <a class="tab-item" href="/profile.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.5 3.6-7 8-7s8 2.5 8 7"/></svg>Профиль</a>
+  <a class="tab-item" id="tabEye" href="/chat.html"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>EYE<i class="eye-tn" hidden></i></a>
+  <a class="tab-item" href="/contacts.html"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>Контакты</a>
+  <a class="tab-item" href="/obuchenie.html"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3.5 3 8.5 3 12 0v-5"/></svg>Обучение</a>
+  <a class="tab-item active" href="#" onclick="return false;" data-eg108="1"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="4"/><path d="M10 9l5 3-5 3z"/></svg>EYRIE</a>
+</nav>
+
+<script>
+(function(){
+var BACKEND = 'https://functions.yandexcloud.net/d4e7hbmkhkj14dq3e8ip';
+var OWNERS = ['11111', '23933'];
+var LOGO = '/media/eyrie-logo.webp';
+function ls(k){ try{ return localStorage.getItem(k) || ''; }catch(e){ return ''; } }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function $(id){ return document.getElementById(id); }
+function toast(m){ var t = document.createElement('div'); t.className = 'toast'; t.textContent = m; document.body.appendChild(t); setTimeout(function(){ t.style.opacity = '0'; }, 2400); setTimeout(function(){ t.remove(); }, 2900); }
+function sheet(t, p, b, href){ $('shT').textContent = t; $('shP').textContent = p; $('shB').textContent = b; $('shB').href = href; $('sheet').classList.add('on'); }
+$('shX').onclick = function(){ $('sheet').classList.remove('on'); };
+
+var id = ls('eaglesfree_id'), ss = ls('eaglesfree_session');
+var role = !id || !ss ? 'guest' : (OWNERS.indexOf(id) >= 0 || ls('eaglesfree_plan') === 'pro') ? 'pro' : 'free';
+if(id && OWNERS.indexOf(id) >= 0){ location.replace('/kanal.html'); return; }
+
+function call(action, data){
+  var q = BACKEND + '?action=' + action + '&ch=' + encodeURIComponent(id) + '&sess=' + encodeURIComponent(ss) + '&_=' + Date.now();
+  for(var k in data) q += '&' + k + '=' + encodeURIComponent(data[k]);
+  return fetch(q).then(function(r){ return r.json(); }).then(function(r){ if(!r || !r.ok) throw r; return r; });
+}
+function firstName(n){ return String(n || '').trim().split(/\s+/)[0] || 'друг'; }
+
+function intro(){
+  $('box').innerHTML = '<div class="card"><img class="logo" src="' + LOGO + '" alt="EYRIE"><h2>Свой канал EYRIE</h2>' +
+    '<p>Посты, ролики и ссылки в одном месте. Люди приходят по твоей ссылке и регистрируются к тебе.</p>' +
+    '<button type="button" class="btn" id="mk">Создать канал EYRIE</button></div>';
+  $('mk').onclick = function(){
+    if(role === 'pro') return draft();
+    if(role === 'guest') return sheet('Сначала вход', 'Свой канал EYRIE создаётся после входа и с EAGLES Pro. Канал EAGLES можно смотреть и без входа.', 'Войти или зарегистрироваться', '/');
+    sheet('Канал EYRIE для EAGLES Pro', 'Свой канал открывается с EAGLES Pro. Канал EAGLES можно смотреть и без Pro.', 'Подключить Pro', '/marketing.html');
+  };
+}
+
+var CHD = {name: ls('eaglesfree_name'), av: ''};
+function draft(){
+  var nm = CHD.name || ls('eaglesfree_name') || 'Я';
+  var hello = 'Привет! Я ' + firstName(nm) + '. Это мой канал в EAGLES: здесь мои ролики, мысли и всё, чем я делюсь каждый день. Регистрируйся бесплатно по ссылке с этой страницы, и будем в одной команде.';
+  $('box').innerHTML = '<div class="card" style="text-align:left"><h2 style="text-align:center;margin-top:0">Новый канал EYRIE</h2>' +
+    '<div class="who"><span class="av" id="av">' + esc(firstName(nm).slice(0, 1).toUpperCase()) + '</span><div><b>' + esc(nm) + '</b><small>Имя и аватар берутся из профиля</small></div></div>' +
+    '<label for="hello">Приветствие (закреплённый пост)</label><textarea id="hello" maxlength="1000"></textarea>' +
+    '<div class="note">Всё можно поменять потом в своём канале.</div>' +
+    '<button type="button" class="btn" id="go">Создать канал</button><button type="button" class="btn ghost" id="back">Назад</button></div>';
+  $('hello').value = hello;
+  if(CHD.av){ var a = $('av'); a.textContent = ''; a.style.backgroundImage = 'url("' + CHD.av.replace(/"/g, '') + '")'; }
+  $('back').onclick = intro;
+  $('go').onclick = function(){
+    var t = $('hello').value.trim(); if(!t){ toast('Напиши приветствие'); return; }
+    var b = $('go'); b.disabled = true; b.textContent = 'Создаю…';
+    call('kp_hello', {text: t}).then(function(){ location.replace('/kanal.html?u=' + encodeURIComponent(id)); }, function(){
+      b.disabled = false; b.textContent = 'Создать канал'; toast('Не получилось. Попробуй ещё раз');
+    });
+  };
+}
+
+if(role !== 'pro'){ intro(); return; }
+/* Pro: канал уже создан (есть своё приветствие или посты) → сразу в свой канал */
+call('kp_ch', {}).then(function(r){
+  var ch = r.ch || {}; CHD.name = ch.name || CHD.name; CHD.av = ch.av || '';
+  if(ch.hello || (r.posts || []).length) return location.replace('/kanal.html?u=' + encodeURIComponent(id));
+  intro();
+}, function(){ intro(); });
+})();
+</script>
+<script src="/egd/desk.js?v=1" defer></script>
+<script src="/eye.js?v=2" defer></script>
+</body>
+</html>
