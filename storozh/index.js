@@ -1,8 +1,8 @@
 // EAGLES Сторож — функция Yandex Cloud, запуск по таймеру раз в 5 минут.
 // Проверяет сайт, LURE, ai, сервер EAGLES, сертификат ai, баланс Yandex Cloud
-// и пишет Андрею в Telegram ТОЛЬКО при смене состояния (упало / поднялось),
+// и пишет Андрею в MAX ТОЛЬКО при смене состояния (упало / поднялось),
 // плюс раз в день в 09:00 МСК короткая сводка «всё работает».
-// Переменные: TG_TOKEN (из Lockbox), TG_CHAT, STATE_BUCKET, BILLING_ID (необязательно).
+// Переменные: MAX_TOKEN (из Lockbox storozh-max), MAX_USER (необязательно), STATE_BUCKET, BILLING_ID (необязательно).
 // Ключей в коде нет. Состояние хранится в бакете STATE_BUCKET (state.json), доступ по IAM-токену функции.
 'use strict';
 const tls = require('tls');
@@ -54,34 +54,38 @@ async function loadState(iam) {
 async function saveState(iam, st) {
   try { await fetch('https://storage.yandexcloud.net/' + ENV.STATE_BUCKET + '/state.json', { method: 'PUT', headers: { 'X-YaCloud-SubjectToken': iam, 'Content-Type': 'application/json' }, body: JSON.stringify(st) }); } catch (e) {}
 }
-// api.telegram.org из Yandex Cloud не резолвится в IPv4 (только IPv6, который не ходит),
-// поэтому подключаемся к известным IP Telegram напрямую, с правильным именем (SNI).
-const https = require('https');
-const TG_IPS = ['149.154.167.220', '149.154.167.99', '149.154.166.110'];
-function tgApi(method, payload) {
-  const body = JSON.stringify(payload || {});
-  const tryIp = (i) => new Promise((resolve, reject) => {
-    const req = https.request({ host: TG_IPS[i], servername: 'api.telegram.org', port: 443, method: 'POST',
-      path: '/bot' + ENV.TG_TOKEN + '/' + method, timeout: 10000,
-      headers: { Host: 'api.telegram.org', 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) } }, (res) => {
-      let d = ''; res.on('data', c => d += c); res.on('end', () => { try { resolve(JSON.parse(d)); } catch (e) { resolve({ ok: false }); } });
-    });
-    req.on('timeout', () => req.destroy(new Error('timeout'))); req.on('error', reject); req.end(body);
-  });
-  return (async () => { for (let i = 0; i < TG_IPS.length; i++) { try { return await tryIp(i); } catch (e) {} } return { ok: false }; })();
+// Сообщения идут в мессенджер MAX (бот «EAGLES Сторож» от ИП Чулкова).
+// Telegram из Yandex Cloud не доходит (23.11.2026), а MAX — российский и отвечает стабильно.
+// Кому писать: MAX_USER (если задан) или тот, кто первым нажал «Начать» у бота (запоминаем в state.json).
+const MAX_API = 'https://platform-api.max.ru';
+async function maxApi(method, path, body) {
+  const ac = new AbortController(); const t = setTimeout(() => ac.abort(), 10000);
+  try {
+    const r = await fetch(MAX_API + path, { method, signal: ac.signal,
+      headers: Object.assign({ Authorization: ENV.MAX_TOKEN }, body ? { 'Content-Type': 'application/json' } : {}),
+      body: body ? JSON.stringify(body) : undefined });
+    const txt = await r.text(); let j = {}; try { j = JSON.parse(txt); } catch (e) {}
+    return { ok: r.ok, status: r.status, j };
+  } catch (e) { return { ok: false, status: 0, j: {} }; } finally { clearTimeout(t); }
 }
-async function tg(text) {
-  if (!ENV.TG_TOKEN || !ENV.TG_CHAT || ENV.TG_CHAT === '0') return false;
-  const r = await tgApi('sendMessage', { chat_id: ENV.TG_CHAT, text, disable_web_page_preview: true });
-  return !!r.ok;
+async function findUser(st) {
+  if (ENV.MAX_USER) return ENV.MAX_USER;
+  if (st.maxUser) return st.maxUser;
+  const u = await maxApi('GET', '/updates?limit=100&timeout=0');
+  for (const x of (u.j.updates || [])) {
+    const id = (x.user && x.user.user_id) || (x.message && x.message.sender && x.message.sender.user_id);
+    if (id) { st.maxUser = String(id); return st.maxUser; }
+  }
+  return null;
+}
+async function send(st, text) {
+  if (!ENV.MAX_TOKEN) return false;
+  const uid = await findUser(st); if (!uid) return false;
+  const r = await maxApi('POST', '/messages?user_id=' + encodeURIComponent(uid), { text: text.slice(0, 3900) });
+  return r.ok;
 }
 
 module.exports.handler = async (event, context) => {
-  if (event && (event.queryStringParameters || {}).chatid === '1') {
-    const u = await tgApi('getUpdates', {});
-    const ids = (u.result || []).map(x => x.message && x.message.chat && x.message.chat.id).filter(Boolean);
-    return { statusCode: 200, body: JSON.stringify({ ok: !!u.ok, chats: [...new Set(ids)] }) };
-  }
   const iam = context && context.token && context.token.access_token;
   const st = await loadState(iam); st.down = st.down || {};
   const msk = new Date(Date.now() + 3 * 3600000); const hh = msk.getUTCHours(), mm = msk.getUTCMinutes(); const today = msk.toISOString().slice(0, 10);
@@ -104,7 +108,7 @@ module.exports.handler = async (event, context) => {
     out.push((bad.length ? '📋 Сторож: есть проблемы — ' + bad.join('; ') : '📋 Сторож: всё работает (сайт, LURE, ai, сервер).') +
       (bal != null ? ' Баланс Яндекса: ' + Math.round(bal) + ' ₽.' : '') + (days != null ? ' Сертификат ai: ' + days + ' дн.' : ''));
   }
-  if (out.length) await tg(out.join('\n'));
+  let sent = false; if (out.length) sent = await send(st, out.join('\n'));
   await saveState(iam, st);
-  return { statusCode: 200, body: JSON.stringify({ ok: true, sent: out.length, bad: bad.length }) };
+  return { statusCode: 200, body: JSON.stringify({ ok: true, msgs: out.length, delivered: sent, bad: bad.length, user: !!st.maxUser }) };
 };
