@@ -1,0 +1,16 @@
+const {chromium}=require('playwright');const fs=require('fs');
+(async()=>{const [DIR,out]=process.argv.slice(2);const b=await chromium.launch();fs.rmSync(out,{recursive:true,force:true});fs.mkdirSync(out,{recursive:true});
+const ctx=await b.newContext({viewport:{width:360,height:740},isMobile:true,hasTouch:true});
+await ctx.addInitScript(()=>{localStorage.setItem('eaglesfree_id','11111');localStorage.setItem('eaglesfree_session','S');localStorage.setItem('eaglesfree_name','Андрей Чулков');localStorage.setItem('eaglesfree_last_activity',String(Date.now()));localStorage.setItem('eaglesfree_plan','pro');sessionStorage.setItem('eg_pin_ok','11111');});
+await ctx.route(/app\.eaglesteam\.ru\/(\w+)\.html/,r=>{const n=r.request().url().match(/\/(\w+)\.html/)[1];const f=DIR+'/'+n+'.html';if(fs.existsSync(f))return r.fulfill({body:fs.readFileSync(f),contentType:'text/html',headers:{'cache-control':'no-cache'}});r.continue();});
+await ctx.route(/functions\.yandexcloud\.net/,async r=>{await new Promise(z=>setTimeout(z,400));r.fulfill({contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:'{"ok":false}'})});
+const p=await ctx.newPage();
+await p.goto('https://app.eaglesteam.ru/obuchenie.html',{waitUntil:'load'});await p.waitForTimeout(3000);
+const c=await ctx.newCDPSession(p);await c.send('Emulation.setCPUThrottlingRate',{rate:4});
+let i=0;const log=[];const t0=Date.now();
+c.on('Page.screencastFrame',async f=>{const n=String(i++).padStart(3,'0');fs.writeFileSync(out+'/'+n+'.jpg',Buffer.from(f.data,'base64'));await c.send('Page.screencastFrameAck',{sessionId:f.sessionId}).catch(()=>{})});
+await c.send('Page.startScreencast',{format:'jpeg',quality:50,everyNthFrame:1});
+await p.click('text=EYRIE');await p.waitForURL(/kanal/);await p.waitForTimeout(3000);
+const c2=await ctx.newCDPSession(p);
+await p.click('.ek-nav >> text=Обучение').catch(async()=>{await p.click('text=Обучение')});await p.waitForURL(/obuchenie/);await p.waitForTimeout(3000);
+await c.send('Page.stopScreencast').catch(()=>{});console.log('frames',i,'url',p.url());await b.close()})();
