@@ -54,13 +54,34 @@ async function loadState(iam) {
 async function saveState(iam, st) {
   try { await fetch('https://storage.yandexcloud.net/' + ENV.STATE_BUCKET + '/state.json', { method: 'PUT', headers: { 'X-YaCloud-SubjectToken': iam, 'Content-Type': 'application/json' }, body: JSON.stringify(st) }); } catch (e) {}
 }
+// api.telegram.org из Yandex Cloud не резолвится в IPv4 (только IPv6, который не ходит),
+// поэтому подключаемся к известным IP Telegram напрямую, с правильным именем (SNI).
+const https = require('https');
+const TG_IPS = ['149.154.167.220', '149.154.167.99', '149.154.166.110'];
+function tgApi(method, payload) {
+  const body = JSON.stringify(payload || {});
+  const tryIp = (i) => new Promise((resolve, reject) => {
+    const req = https.request({ host: TG_IPS[i], servername: 'api.telegram.org', port: 443, method: 'POST',
+      path: '/bot' + ENV.TG_TOKEN + '/' + method, timeout: 10000,
+      headers: { Host: 'api.telegram.org', 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) } }, (res) => {
+      let d = ''; res.on('data', c => d += c); res.on('end', () => { try { resolve(JSON.parse(d)); } catch (e) { resolve({ ok: false }); } });
+    });
+    req.on('timeout', () => req.destroy(new Error('timeout'))); req.on('error', reject); req.end(body);
+  });
+  return (async () => { for (let i = 0; i < TG_IPS.length; i++) { try { return await tryIp(i); } catch (e) {} } return { ok: false }; })();
+}
 async function tg(text) {
-  if (!ENV.TG_TOKEN || !ENV.TG_CHAT) return false;
-  const r = await fetch('https://api.telegram.org/bot' + ENV.TG_TOKEN + '/sendMessage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: ENV.TG_CHAT, text, disable_web_page_preview: true }) });
-  return r.ok;
+  if (!ENV.TG_TOKEN || !ENV.TG_CHAT || ENV.TG_CHAT === '0') return false;
+  const r = await tgApi('sendMessage', { chat_id: ENV.TG_CHAT, text, disable_web_page_preview: true });
+  return !!r.ok;
 }
 
 module.exports.handler = async (event, context) => {
+  if (event && (event.queryStringParameters || {}).chatid === '1') {
+    const u = await tgApi('getUpdates', {});
+    const ids = (u.result || []).map(x => x.message && x.message.chat && x.message.chat.id).filter(Boolean);
+    return { statusCode: 200, body: JSON.stringify({ ok: !!u.ok, chats: [...new Set(ids)] }) };
+  }
   const iam = context && context.token && context.token.access_token;
   const st = await loadState(iam); st.down = st.down || {};
   const msk = new Date(Date.now() + 3 * 3600000); const hh = msk.getUTCHours(), mm = msk.getUTCMinutes(); const today = msk.toISOString().slice(0, 10);
