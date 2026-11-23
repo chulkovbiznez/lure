@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Задание 113 (23.11.2026): экраны загрузки + золотые надписи вверху
+# Задание 113 v2 (23.11.2026): ТОЛЬКО экраны загрузки (надписи Андрей отклонил: «колхоз»)
 # для «Мои контакты» (contacts.html), EYRIE (kanal.html), «Обучение» (obuchenie.html).
 # Запуск: python3 patch113.py <kontakty|eyrie|obuchenie> <вход.html> <выход.html>
 # Только вид: логика, данные и сервер не трогаются. Откат: залить старый файл.
@@ -109,9 +109,9 @@ def main():
 
     head = (
         '<!-- %s: экран загрузки + золотая надпись (23.11.2026) -->'
-        '<link rel="preload" as="image" href="%s"><link rel="preload" as="image" href="%s">'
-        '<style id="%s">%s#boot{--zgr-img:url(%s);--zgr-ar:%s}%s</style>\n'
-    ) % (MARK, c['boot'], c['head'], MARK, ZGR_CSS, c['boot'], c['ar'], c['css'])
+        '<link rel="preload" as="image" href="%s">'
+        '<style id="%s">%s#boot{--zgr-img:url(%s);--zgr-ar:%s}</style>\n'
+    ) % (MARK, c['boot'], MARK, ZGR_CSS, c['boot'], c['ar'])
     boot = (
         '\n<div class="zgr" id="boot" role="status" aria-label="Загрузка"><div class="zgr-glw"></div>'
         '<div class="zgr-lg"></div><div class="zgr-bar"><i></i></div><div class="zgr-t" hidden></div></div>'
