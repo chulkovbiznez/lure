@@ -41,7 +41,7 @@ const css=document.createElement('style');css.textContent=`
 #st45 .g45{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 #st45 .g45 button{display:flex;flex-direction:column;gap:6px;padding:6px;border-radius:14px;border:1px solid #2a2622;background:#141217;color:#f4efe6;font:800 11.5px/1.2 inherit;cursor:pointer;text-align:center}
 #st45 .g45 button.on{border-color:#ffd23f;background:#231b10;color:#ffe08a}
-#st45 .pv{width:100%;aspect-ratio:1/1;border-radius:10px;background-size:cover;background-position:center}
+#st45 .p45{display:block;width:100%;aspect-ratio:1/1;border-radius:10px;background-size:cover;background-position:center}
 #st45 .vv{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 #st45 .vv button{display:flex;flex-direction:column;gap:6px;padding:7px;border-radius:14px;border:1px solid #2a2622;background:#141217;color:#f4efe6;cursor:pointer;text-align:left;font:inherit}
 #st45 .vv button.on{border-color:#ffd23f;background:#1d170f}
@@ -65,8 +65,8 @@ function PR(i,v,T){const st=ST45[i][1];
   if(v===0)return `${subj}\nClose-up of this subject as one clear central object, filling about 60% of a square frame, simple uncluttered background, icon-like composition.\nStyle: ${st}.\nSquare 1:1. No text, no letters, no logos, no watermark.`;
   return `${subj}\nA full scene that shows this subject in action in its natural setting, with environment, depth and atmosphere; the subject stays the clear main focus.\nStyle: ${st}.\nSquare 1:1. No text, no letters, no logos, no watermark.`}
 function draw(){
-  let h='<div class="sh">1. Стиль</div><div class="g45">'+ST45.map((s,i)=>`<button type="button" data-s="${i}" class="${i===cur?'on':''}"><span class="pv" style="background-image:${bg('ic',i)}"></span>${s[0]}</button>`).join('')+'</div>';
-  if(cur>=0){h+='<div class="sh">2. Что сделать</div><div class="vv">'+VAR45.map((v,j)=>`<button type="button" data-v="${j}" class="${j===vr?'on':''}"><span class="pv" style="background-image:${bg(j?'sc':'ic',cur)}"></span><b>${v[0]}</b><small>${v[1]}</small></button>`).join('')+'</div>';
+  let h='<div class="sh">1. Стиль</div><div class="g45">'+ST45.map((s,i)=>`<button type="button" data-s="${i}" class="${i===cur?'on':''}"><span class="p45" style="background-image:${bg('ic',i)}"></span>${s[0]}</button>`).join('')+'</div>';
+  if(cur>=0){h+='<div class="sh">2. Что сделать</div><div class="vv">'+VAR45.map((v,j)=>`<button type="button" data-v="${j}" class="${j===vr?'on':''}"><span class="p45" style="background-image:${bg(j?'sc':'ic',cur)}"></span><b>${v[0]}</b><small>${v[1]}</small></button>`).join('')+'</div>';
     h+=`<button type="button" class="go" data-go="1" ${vr<0?'disabled':''}>✦ Открыть в LURE</button>`}
   const b4=ov.querySelector('.b4');const y=b4.scrollTop;b4.innerHTML=h;b4.scrollTop=y}
 ov.addEventListener('click',e=>{
