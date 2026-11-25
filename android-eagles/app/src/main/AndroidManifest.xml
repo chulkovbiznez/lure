@@ -2,12 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
   <uses-permission android:name="android.permission.INTERNET"/>
   <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+  <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
   <application android:label="EAGLES" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round"
       android:allowBackup="false" android:supportsRtl="true" android:theme="@android:style/Theme.Translucent.NoTitleBar">
     <meta-data android:name="asset_statements" android:resource="@string/asset_statements"/>
     <activity android:name="com.google.androidbrowserhelper.trusted.LauncherActivity" android:exported="true"
         android:label="EAGLES" android:launchMode="singleTask">
-      <meta-data android:name="android.support.customtabs.trusted.DEFAULT_URL" android:value="https://app.eaglesteam.ru/?app=android"/>
+      <meta-data android:name="android.support.customtabs.trusted.DEFAULT_URL" android:value="https://app.eaglesteam.ru/?app=android&amp;v=12"/>
       <meta-data android:name="android.support.customtabs.trusted.STATUS_BAR_COLOR" android:resource="@color/eg_bg"/>
       <meta-data android:name="android.support.customtabs.trusted.NAVIGATION_BAR_COLOR" android:resource="@color/eg_bg"/>
       <meta-data android:name="android.support.customtabs.trusted.SPLASH_IMAGE_DRAWABLE" android:resource="@drawable/splash"/>
@@ -28,6 +29,16 @@
       </intent-filter>
     </activity>
     <activity android:name="com.google.androidbrowserhelper.trusted.FocusActivity"/>
+    <activity android:name=".BatteryActivity" android:exported="true" android:excludeFromRecents="true" android:noHistory="true"
+        android:theme="@android:style/Theme.Translucent.NoTitleBar">
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+        <category android:name="android.intent.category.BROWSABLE"/>
+        <data android:scheme="eagles" android:host="battery"/>
+        <data android:scheme="eagles" android:host="notif"/>
+      </intent-filter>
+    </activity>
     <activity android:name="com.google.androidbrowserhelper.trusted.NotificationPermissionRequestActivity" android:exported="false"/>
     <activity android:name="com.google.androidbrowserhelper.trusted.WebViewFallbackActivity"
         android:configChanges="orientation|screenSize" android:exported="false"/>
@@ -35,7 +46,7 @@
         android:grantUriPermissions="true" android:exported="false">
       <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/filepaths"/>
     </provider>
-    <service android:name="com.google.androidbrowserhelper.trusted.DelegationService" android:enabled="true" android:exported="true">
+    <service android:name=".EgDelegationService" android:enabled="true" android:exported="true">
       <meta-data android:name="android.support.customtabs.trusted.SMALL_ICON" android:resource="@drawable/ic_notify"/>
       <intent-filter>
         <action android:name="android.support.customtabs.trusted.TRUSTED_WEB_ACTIVITY_SERVICE"/>
