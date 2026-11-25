@@ -3,7 +3,7 @@
 set -e
 mkdir -p ~/k121 && cd ~/k121
 OLD=d4egv7qv00b7qmi3r5nl; FN=eagles-server; SA=ajevbo38i28ud6fae5sk
-CUR=$(yc serverless function version get-by-tag --function-name $FN --tag '$latest' --format json | jq -r .id)
+CUR=$(yc serverless function version get-by-tag --function-id d4e7hbmkhkj14dq3e8ip --tag '$latest' --format json | jq -r .id)
 [ "$CUR" = "$OLD" ] || { echo "STOP: живая версия $CUR, а ждали $OLD"; exit 1; }
 R=https://raw.githubusercontent.com/chulkovbiznez/lure/$1
 mkdir -p pkg; cp ~/k118/pkg/index.js ~/k118/pkg/server.js pkg/
@@ -13,8 +13,8 @@ python3 p121.py pkg/index.js && node --check pkg/index.js
 yc serverless function version get $OLD --format json > old.json
 ENVS=$(jq -r '.environment|to_entries|map("\(.key)=\(.value)")|join(",")' old.json)
 SECS=$(jq -r '.secrets[]|"--secret environment-variable=\(.environment_variable),id=\(.id),version-id=\(.version_id),key=\(.key)"' old.json | tr '\n' ' ')
-echo "ОТКАТ сервера: yc serverless function version create --function-name $FN --source-version-id $OLD; страницы LURE: yc storage s3 cp ~/k121/lure-do-121.html s3://lure.eaglesteam.ru/index.html" > rollback.txt
-yc serverless function version create --function-name $FN --runtime nodejs22 --entrypoint index.handler \
+echo "ОТКАТ сервера: yc serverless function version create --function-id d4e7hbmkhkj14dq3e8ip --source-version-id $OLD; страницы LURE: yc storage s3 cp ~/k121/lure-do-121.html s3://lure.eaglesteam.ru/index.html" > rollback.txt
+yc serverless function version create --function-id d4e7hbmkhkj14dq3e8ip --runtime nodejs22 --entrypoint index.handler \
   --memory 256m --execution-timeout 60s --concurrency 1 --service-account-id $SA --log-folder-id b1gdk9v2q7ufbktofk7o \
   --source-path pkg --environment "$ENVS" $SECS --format json | jq -r '"NEW " + .id + " " + .status'
 yc storage s3 cp s3://lure.eaglesteam.ru/index.html lure-do-121.html >/dev/null
