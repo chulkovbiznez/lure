@@ -2,6 +2,7 @@
 # Задание 123 (25.11.2026): звонок EYE доходит до закрытого приложения. Секретов не печатает.
 # 1) сервер сайта: action eye_ring (уведомление «📞 Имя звонит» / «📵 Пропущенный звонок»)
 # 2) sw.js: звонок висит и вибрирует; повторные сообщения снова звенят
+# 2б) ПИН не спрашивается час, открыл EAGLES — шторка и цифра на значке чистятся
 # 3) сервер звонков EYE v3.5 (ВМ eye): «не в сети» больше не отказ, звонок ждёт друга 50 с
 set -e
 C=$1; [ -n "$C" ] || { echo "нужен коммит"; exit 1; }
@@ -38,6 +39,16 @@ echo "push_key: $(curl -s "https://functions.yandexcloud.net/$FID?action=push_ke
 # 2) sw.js
 yc storage s3api put-object --bucket $B --key sw.js --body sw.js --content-type application/javascript --cache-control no-cache >/dev/null
 echo "sw на сайте: $(curl -s https://$B/sw.js | md5sum | cut -c1-8) (ждали 32370153)"
+# 2б) ПИН держится час + шторка чистится: egpwa/pwa.js v3, profile/binar/karty (проверяем, что на сайте ровно те версии, от которых делали)
+for x in "profile f6860e129f058130889b58ac674abccd 9ceddb95ef56be43951603f14491a539" "binar ae7e82a31aef5c6883d493000dbc2e05 178259933bfa6a8318f1d945733fb64f" "karty f6803509e58aa2c2d50319e366d54fc1 c494892a0d01238f1efcbaa55b5d9063"; do
+  set -- $x; curl -s https://$B/$1.html -o $1-do-123.html
+  [ "$(md5sum < $1-do-123.html | cut -c1-32)" = $2 ] || { echo "SKIP $1: на сайте другая версия"; continue; }
+  curl -fsS $R/site/$1.html -o $1.html; [ "$(md5sum < $1.html | cut -c1-32)" = $3 ] || { echo "SKIP $1: скачался не тот файл"; continue; }
+  yc storage s3api put-object --bucket $B --key $1.html --body $1.html --content-type "text/html; charset=utf-8" --cache-control no-cache >/dev/null && echo "$1 обновлена"
+done
+curl -s https://$B/egpwa/pwa.js -o pwa-do-123.js; curl -fsS $R/site/pwa.js -o pwa.js
+[ "$(md5sum < pwa.js | cut -c1-32)" = f4e644477245a60932c115c2f32e42bb ] && yc storage s3api put-object --bucket $B --key egpwa/pwa.js --body pwa.js --content-type application/javascript --cache-control no-cache >/dev/null && echo "pwa.js v3 на сайте"
+echo "ОТКАТ страниц: for f in profile binar karty; do yc storage s3api put-object --bucket $B --key \$f.html --body ~/k123/\$f-do-123.html --content-type 'text/html; charset=utf-8' --cache-control no-cache; done; yc storage s3api put-object --bucket $B --key egpwa/pwa.js --body ~/k123/pwa-do-123.js --content-type application/javascript --cache-control no-cache" >> rollback.txt
 # 3) сервер звонков
 echo "health до: $(curl -s -m 5 https://eye.eaglesteam.ru/health)"
 yc compute instance add-metadata --name eye --folder-name ai-chat --metadata eye-ver="$C $HS $HJ" >/dev/null
