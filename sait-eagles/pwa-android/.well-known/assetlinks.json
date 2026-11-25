@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "ru.eaglesteam.app",
+    "sha256_cert_fingerprints": ["8A:DF:7D:F1:08:37:36:B7:74:7C:98:59:EC:77:F1:02:6A:17:8E:0C:66:45:8F:DB:F8:1B:67:3A:7F:33:94:1D"]
+  }
+}]
