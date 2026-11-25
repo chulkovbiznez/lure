@@ -186,9 +186,12 @@ function proUntil(u) {
   return u.paidUntil || (u.lastLogin || 0) + 30 * 86400000;   // срок не пришёл (подарок, навсегда) — перепроверка через 30 дней
 }
 function hasAccess(u) { return isOwner(u) || proUntil(u) > Date.now(); }
+// 25.11 (Андрей): в LURE входят ВСЕ из EAGLES и тратят свой баланс. Пополнять баланс — только с Pro.
+// Генерация без денег не пройдёт сама (no_money). Любое новое пополнение (код, оплата) — только через canTopup.
+const canTopup = u => hasAccess(u);
 function pub(u) {
   return { id: u.id, name: u.name, plan: u.plan, balance: r2(u.balance || 0), spentToday: spentToday(u), dayLimit: dayCap(u) === Infinity ? 0 : DAY_LIMIT, owner: isOwner(u),
-    access: hasAccess(u), proUntil: isOwner(u) ? 0 : proUntil(u), terms: (u.termsV || 0) >= TERMS_V, held: r2(u.held || 0) };
+    access: true, pro: hasAccess(u), topup: canTopup(u), proUntil: isOwner(u) ? 0 : proUntil(u), terms: (u.termsV || 0) >= TERMS_V, held: r2(u.held || 0) };
 }
 
 // простая защита от перебора кодов пополнения
@@ -264,6 +267,7 @@ async function api(req, res, url) {
   if (p === '/api/wallet') return send(res, 200, { ok: true, me: pub(u), hist: (u.hist || []).slice(0, 100) });
 
   if (p === '/api/redeem' && m === 'POST') {
+    if (!canTopup(u)) return send(res, 200, { ok: false, error: 'need_pro_topup' });
     if (tooManyFails(u.id)) return send(res, 200, { ok: false, error: 'too_many' });
     const b = await readBody(req);
     const code = String(b.code || '').trim().toUpperCase().replace(/\s+/g, '');
@@ -303,12 +307,12 @@ async function api(req, res, url) {
     return send(res, 200, { ok: true });
   }
 
-  if (p === '/api/chat/transcribe' && m === 'POST') { if (!hasAccess(u)) return send(res, 200, { ok: false, error: 'need_pro' }); if ((u.termsV || 0) < TERMS_V) return send(res, 200, { ok: false, error: 'need_terms' }); return transcribe(req, res, u); }
-  if (p === '/api/chat' && m === 'POST') { if (!hasAccess(u)) return send(res, 200, { ok: false, error: 'need_pro' }); if ((u.termsV || 0) < TERMS_V) return send(res, 200, { ok: false, error: 'need_terms' }); return chat(req, res, u); }
+  if (p === '/api/chat/transcribe' && m === 'POST') { if ((u.termsV || 0) < TERMS_V) return send(res, 200, { ok: false, error: 'need_terms' }); return transcribe(req, res, u); }
+  if (p === '/api/chat' && m === 'POST') { if ((u.termsV || 0) < TERMS_V) return send(res, 200, { ok: false, error: 'need_terms' }); return chat(req, res, u); }
 
   // ----- картинки и видео -----
   if (p.startsWith('/api/media/')) {
-    await MEDIA(req, res, p, m, u, () => !hasAccess(u) ? 'need_pro' : (u.termsV || 0) < TERMS_V ? 'need_terms' : '');
+    await MEDIA(req, res, p, m, u, () => (u.termsV || 0) < TERMS_V ? 'need_terms' : '');
     if (!res.headersSent) send(res, 404, { ok: false, error: 'not_found' });
     return;
   }

@@ -527,8 +527,13 @@ setInterval(tick,2000);
       <div class="card">
         <b style="font:800 15px var(--f)">Пополнить</b>
         <p class="muted" style="margin:6px 0 12px">Оплата картой и по СБП скоро появится здесь. Если у тебя есть подарочный код, введи его ниже. Твой ID: <b id="wId" style="color:var(--text)"></b></p>
-        <div class="flex"><input class="inp" id="rCode" placeholder="LURE-XXXX-XXXX" autocomplete="off" style="text-transform:uppercase"><button class="btn2" id="rBtn" style="flex:none">Ввести</button></div>
+        <div class="flex" id="topBox"><input class="inp" id="rCode" placeholder="LURE-XXXX-XXXX" autocomplete="off" style="text-transform:uppercase"><button class="btn2" id="rBtn" style="flex:none">Ввести</button></div>
         <div class="err" id="rErr"></div>
+        <div id="topHint" hidden style="margin:2px 0 12px;padding:12px 14px;border:.5px solid rgba(255,210,63,.45);border-radius:14px;background:rgba(255,210,63,.06)">
+          <b style="font:700 14px var(--f);color:var(--gold1)">🔒 Пополнение доступно с EAGLES Pro</b>
+          <p class="muted" style="margin:6px 0 10px;font-size:13px">Остаток на счёте можно тратить и без Pro. Чтобы пополнить баланс, оформи Pro в кабинете EAGLES.</p>
+          <div class="flex"><a class="btn" style="text-decoration:none;flex:1" href="https://app.eaglesteam.ru/profile.html">Оформить Pro</a><button class="btn2" id="topRe" type="button" style="flex:1">Уже оформил</button></div>
+        </div>
         <a class="btn2" style="display:inline-block;text-decoration:none" target="_blank" rel="noopener" href="https://max.ru/u/f9LHodD0cOIec-v91ujcZ-dap9pM51MzN00AwcIMTy-x29hys8Mcg8n8HJ4">Вопрос Андрею в МАКС →</a>
       </div>
       <h2>Цены</h2>
@@ -592,7 +597,7 @@ setInterval(tick,2000);
 (function(){
 var $=function(i){return document.getElementById(i)};
 var ME=null, MODELS=[], CUR=null, ctl=null;
-var ERR={not_found:'Такого ID или почты нет в EAGLES.',too_often:'Код уже отправлен. Новый можно через минуту.',mail_limit:'Сегодня слишком много писем, попробуй завтра.',mail_failed:'Письмо не ушло, попробуй ещё раз.',bad_code:'Неверный код.',expired:'Код устарел, запроси новый.',frozen:'Аккаунт EAGLES заблокирован.',blocked:'Доступ к LURE закрыт. Напиши Андрею.',need_pro:'LURE доступен с подпиской EAGLES Pro.',need_terms:'Сначала прими правила LURE.',pin_locked:'Введи ПИН.',rec_limit:'Попытки на сегодня закончились. Напиши в техподдержку.',bad_pin_format:'ПИН: 4 цифры.',no_email:'У аккаунта нет почты. Напиши Андрею.',missing_fields:'Введи код из письма.',
+var ERR={not_found:'Такого ID или почты нет в EAGLES.',too_often:'Код уже отправлен. Новый можно через минуту.',mail_limit:'Сегодня слишком много писем, попробуй завтра.',mail_failed:'Письмо не ушло, попробуй ещё раз.',bad_code:'Неверный код.',expired:'Код устарел, запроси новый.',frozen:'Аккаунт EAGLES заблокирован.',blocked:'Доступ к LURE закрыт. Напиши Андрею.',need_pro:'LURE доступен с подпиской EAGLES Pro.',need_pro_topup:'Пополнение доступно с подпиской EAGLES Pro.',need_terms:'Сначала прими правила LURE.',pin_locked:'Введи ПИН.',rec_limit:'Попытки на сегодня закончились. Напиши в техподдержку.',bad_pin_format:'ПИН: 4 цифры.',no_email:'У аккаунта нет почты. Напиши Андрею.',missing_fields:'Введи код из письма.',
   no_money:'На счёте не хватает денег. Пополни кошелёк.',day_limit:'На сегодня лимит расходов исчерпан. Завтра снова можно.',busy:'Дождись ответа на прошлый вопрос.',too_long:'Слишком длинный текст, сократи его.',bad_model:'Эта модель сейчас недоступна.',engine_down:'Нейросети сейчас недоступны, попробуй через минуту.',engine_busy:'Нейросеть перегружена, попробуй через минуту.',engine_error:'Нейросеть не ответила, попробуй ещё раз или выбери другую.',
   used:'Этот код уже использован.',too_many:'Слишком много попыток, попробуй через час.',auth:'Вход устарел, войди заново.',server_error:'Ошибка сервера, попробуй ещё раз.',not_owner:'Только для Андрея.',bad_sum:'Проверь сумму.',no_user:'Такой ID ещё не заходил в LURE.'};
 function err(e,r){if(e==='locked'){var m=Number(r&&r.retryAfterMin)||60;return 'Слишком много попыток. Вход откроется '+(m>=60?'через час.':'через '+m+' мин.')}return ERR[e]||'Не получилось. Попробуй ещё раз.'}
@@ -719,12 +724,15 @@ $('lBack').onclick=function(){vhUnlock();clearTimeout(lResT);$('l1').hidden=fals
 
 /* ---------- приложение ---------- */
 function setMe(m){ME=m;$('balChip').textContent=rub(m.balance);$('wBal').textContent=rub(m.balance);$('wId').textContent=m.id;
-  $('wDay').textContent='Сегодня потрачено '+rub(m.spentToday)+(m.dayLimit?' из '+rub(m.dayLimit)+' в сутки':'');$('owner').hidden=!m.owner}
-function start(m){WEB=ls(key('web'))==='1';drawWeb();zgrDone();setMe(m);$('login').hidden=true;$('app').hidden=false;loadModels();openDialog(ls(key('cur'))||null);go(location.hash.replace('#','').split('&')[0]||'chat');if(m.access&&!m.terms)$('terms').hidden=false;usePF()}
+  $('wDay').textContent='Сегодня потрачено '+rub(m.spentToday)+(m.dayLimit?' из '+rub(m.dayLimit)+' в сутки':'');$('owner').hidden=!m.owner;
+  /* 25.11: без Pro пополнить нельзя — кнопка серая и подсказка; тратить остаток можно */
+  var tp=m.topup!==false,bx=$('topBox');bx.style.opacity=tp?'':'.4';bx.style.filter=tp?'':'grayscale(1)';$('rCode').disabled=$('rBtn').disabled=!tp;$('topHint').hidden=tp;
+  ERR.no_money=tp?'На счёте не хватает денег. Пополни кошелёк.':'На счёте не хватает денег. Пополнить баланс можно с подпиской EAGLES Pro.'}
+function start(m){WEB=ls(key('web'))==='1';drawWeb();zgrDone();setMe(m);$('login').hidden=true;$('app').hidden=false;loadModels();openDialog(ls(key('cur'))||null);go(location.hash.replace('#','').split('&')[0]||'chat');if(!m.terms)$('terms').hidden=false;usePF()}
 $('tOk').onclick=function(){var b=this;b.disabled=true;$('tErr').textContent='';post('/api/terms').then(function(r){b.disabled=false;if(!r.ok){if(r.error==='auth')showLogin();return}setMe(r.me);$('terms').hidden=true}).catch(function(){b.disabled=false;$('tErr').textContent='Нет связи. Если включён VPN, выключи его.'})};
 function key(k){return 'lure_'+(ME?ME.id:'x')+'_'+k}
 function go(t){if(!/^(chat|sound|img|video|wallet)$/.test(t))t='chat';document.body.dataset.tab=t;$('secName').textContent={chat:'Чаты',sound:'Звук',img:'Изображения',video:'Видео',wallet:'Баланс'}[t];$('mpanel').hidden=true;
-  var lock=ME&&!ME.access&&t!=='wallet';$('nopro').hidden=!lock;document.body.classList.toggle('locked',!!lock);
+  var lock=false;/* 25.11: в LURE входят все, экран «нет Pro» не показываем */$('nopro').hidden=!lock;document.body.classList.toggle('locked',!!lock);
   if(lock&&ME.plan==='pro')$('noproTxt').textContent='Срок подписки Pro закончился. Продли её в кабинете EAGLES и войди в LURE заново.';
   [].forEach.call(document.querySelectorAll('section[data-tab]'),function(s){s.hidden=lock||s.dataset.tab!==t});
   [].forEach.call(document.querySelectorAll('.nav button'),function(b){b.classList.toggle('on',b.dataset.go===t)});
@@ -1074,7 +1082,7 @@ function loadWallet(){get('/api/wallet').then(function(r){if(!r.ok){if(r.error==
 $('rBtn').onclick=function(){var c=$('rCode').value.trim();if(!c)return;var b=this;b.disabled=true;$('rErr').textContent='';
   post('/api/redeem',{code:c}).then(function(r){b.disabled=false;if(!r.ok){$('rErr').textContent=err(r.error);return}$('rCode').value='';toast('Зачислено '+rub(r.sum));setMe(r.me);loadWallet()}).catch(function(){b.disabled=false})};
 $('logout').onclick=function(){post('/api/logout').then(function(){location.hash='';showLogin()})};
-$('reLogin').onclick=function(){post('/api/logout').then(function(){location.hash='';showLogin()})};
+$('topRe').onclick=$('reLogin').onclick=function(){post('/api/logout').then(function(){location.hash='';showLogin()})};
 
 /* ---------- касса Андрея ---------- */
 function loadOwner(){get('/api/admin/summary').then(function(r){if(!r.ok)return;
