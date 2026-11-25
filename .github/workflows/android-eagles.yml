@@ -1,0 +1,32 @@
+name: android-eagles-apk
+on:
+  push:
+    paths: ['android-eagles/**', '.github/workflows/android-eagles.yml']
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: '8.9' }
+      - name: Build unsigned release APK
+        working-directory: android-eagles
+        run: gradle --no-daemon assembleRelease
+      - name: Commit APK back to the branch (signed later, outside CI)
+        run: |
+          mkdir -p android-eagles/out
+          cp android-eagles/app/build/outputs/apk/release/app-release-unsigned.apk android-eagles/out/
+          git config user.name "eagles-apk-bot"; git config user.email "actions@users.noreply.github.com"
+          git add -f android-eagles/out/app-release-unsigned.apk
+          git commit -m "APK build ${GITHUB_SHA::7} [skip ci]" || exit 0
+          git push
+      - name: On failure, save the log to the branch
+        if: failure()
+        run: |
+          mkdir -p android-eagles/out; echo "failed run ${GITHUB_RUN_ID}" > android-eagles/out/FAILED.txt
+          git config user.name "eagles-apk-bot"; git config user.email "actions@users.noreply.github.com"
+          git add -f android-eagles/out/FAILED.txt; git commit -m "APK build failed [skip ci]"; git push
