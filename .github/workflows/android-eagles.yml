@@ -22,6 +22,8 @@ jobs:
           cp android-eagles/app/build/outputs/apk/release/app-release-unsigned.apk android-eagles/out/
           BT=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1); mkdir -p android-eagles/out/tools
           cp $BT/lib/apksigner.jar $BT/zipalign android-eagles/out/tools/ || true
+          for a in $(find ~/.gradle -name 'androidbrowserhelper*.aar'); do unzip -p $a classes.jar > /tmp/c.jar; unzip -l /tmp/c.jar | grep -i -E 'Notification|Delegation' ; done > android-eagles/out/abh-classes.txt || true
+          unzip -p android-eagles/app/build/outputs/apk/release/app-release-unsigned.apk AndroidManifest.xml | strings | grep -i notification > android-eagles/out/manifest-check.txt || true
           git config user.name "eagles-apk-bot"; git config user.email "actions@users.noreply.github.com"
           git add -f android-eagles/out
           git commit -m "APK build ${GITHUB_SHA::7} [skip ci]" || exit 0

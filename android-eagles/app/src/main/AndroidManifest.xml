@@ -28,6 +28,7 @@
       </intent-filter>
     </activity>
     <activity android:name="com.google.androidbrowserhelper.trusted.FocusActivity"/>
+    <activity android:name="com.google.androidbrowserhelper.trusted.NotificationPermissionRequestActivity" android:exported="false"/>
     <activity android:name="com.google.androidbrowserhelper.trusted.WebViewFallbackActivity"
         android:configChanges="orientation|screenSize" android:exported="false"/>
     <provider android:name="androidx.core.content.FileProvider" android:authorities="ru.eaglesteam.app.fileprovider"
