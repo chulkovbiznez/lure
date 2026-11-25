@@ -21,6 +21,6 @@ yc storage s3 cp s3://lure.eaglesteam.ru/index.html lure-do-121.html >/dev/null
 echo "lure old $(md5sum < lure-do-121.html | cut -c1-32) (ждали f8005c00cbeadf8ffbf4511c33ccd5ad)"
 curl -fsS $R/public/index.html -o lure-121.html
 echo "lure new $(md5sum < lure-121.html | cut -c1-32)"
-yc storage s3 cp lure-121.html s3://lure.eaglesteam.ru/index.html --content-type "text/html; charset=utf-8" --cache-control no-cache >/dev/null && echo "up lure"
+yc storage s3 cp lure-121.html s3://lure.eaglesteam.ru/index.html >/dev/null && echo "up lure"
 for i in 1 2 3; do curl -s "https://functions.yandexcloud.net/d4e7hbmkhkj14dq3e8ip?action=login_request&login=99999999"; echo; done
 echo DEPLOY_DONE
