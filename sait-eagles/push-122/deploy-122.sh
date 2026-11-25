@@ -15,13 +15,12 @@ R=https://raw.githubusercontent.com/chulkovbiznez/lure/$C/sait-eagles/push-122
 curl -fsS $R/p122.py -o p122.py; curl -fsS $R/webpush.js -o webpush.js
 python3 p122.py pkg/index.js pkg/server.js webpush.js && node --check pkg/index.js
 # ключи VAPID: закрытый — в Lockbox eagles-push-vapid (создаётся один раз), открытый — в переменной функции
-SID=$(yc lockbox secret get --name eagles-push-vapid --format json 2>/dev/null | jq -r .id || true)
+SID=$(yc lockbox secret get --folder-id b1gdk9v2q7ufbktofk7o --name eagles-push-vapid --format json 2>/dev/null | jq -r .id || true)
 if [ -z "$SID" ] || [ "$SID" = null ]; then
   node -e "const c=require('crypto');const k=c.generateKeyPairSync('ec',{namedCurve:'P-256'}).privateKey.export({format:'jwk'});require('fs').writeFileSync('vk.json',JSON.stringify([{key:'VAPID_PRIVATE',text_value:k.d}]));require('fs').writeFileSync('vapid.pub',Buffer.concat([Buffer.from([4]),Buffer.from(k.x,'base64url'),Buffer.from(k.y,'base64url')]).toString('base64url'))"
-  SID=$(yc lockbox secret create --name eagles-push-vapid --description "EAGLES push VAPID private key (задание 122)" --payload "$(cat vk.json)" --format json | jq -r .id)
+  SID=$(yc lockbox secret create --folder-id b1gdk9v2q7ufbktofk7o --name eagles-push-vapid --description "EAGLES push VAPID private key (задание 122)" --payload "$(cat vk.json)" --format json | jq -r .id)
   rm -f vk.json
   yc lockbox secret add-access-binding --id $SID --role lockbox.payloadViewer --service-account-id $SA >/dev/null
-  yc lockbox secret update --id $SID --labels vapid_public=x >/dev/null 2>&1 || true
 fi
 [ -s vapid.pub ] || { echo "STOP: нет vapid.pub (секрет уже был, а открытого ключа нет)"; exit 1; }
 VPUB=$(cat vapid.pub); VID=$(yc lockbox secret get --id $SID --format json | jq -r .current_version.id)
@@ -49,7 +48,7 @@ echo "files up: sw $(curl -s https://$B/sw.js | md5sum | cut -c1-8) pwa $(curl -
 # строка в страницах (все .html в корне, кроме v.html — страница кандидата)
 LINE='<link rel="manifest" href="/manifest.webmanifest"><link rel="icon" type="image/png" href="/egpwa/favicon-48.png"><link rel="apple-touch-icon" href="/egpwa/apple-touch-icon.png"><script src="/egpwa/pwa.js" defer></script>'
 N=0; SK=""
-for k in $(yc storage s3api list-objects --bucket $B --delimiter / --format json | jq -r '.contents[].key' | grep -E '^[a-z0-9_-]+\.html$'); do
+for k in $(yc storage s3 ls s3://$B/ | awk '{print $NF}' | grep -E '^[a-z0-9_-]+\.html$'); do
   [ "$k" = v.html ] && continue
   yc storage s3 cp s3://$B/$k pages-do/$k >/dev/null
   if grep -q 'egpwa/pwa.js' pages-do/$k; then SK="$SK $k(уже)"; continue; fi
