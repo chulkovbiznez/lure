@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 # EYE — сервер-соединитель видеозвонков EAGLES.
 # v3 (16.11.2026): звонок до 4 человек (каждый с каждым), аудио или видео.
+# v3.4 (16.11.2026): 32 потока к серверу сайта вместо 6 — 500 человек входят за ~7 с, а не за ~18 с (замер kod/eye/nagruzka-500).
+# v3.5 (25.11.2026): звонок доходит, даже если у друга EAGLES закрыт. Не в сети — всё равно звоним: сервер сайта шлёт
+#   уведомление «📞 Имя звонит» (action=eye_ring), друг нажал — приложение открылось, EYE подключился и сразу получает звонок.
+#   Не ответил или звонящий положил трубку — уведомление «Пропущенный звонок».
 # Знакомит браузеры (WebRTC): передаёт приглашение, ответ и сетевые данные. Видео через него не идёт.
 # Вход: ?sess=<ключ входа EAGLES>. Проверка ключа и права звонить — через сервер сайта EAGLES (action=me, action=eye_check:
 # только взаимные друзья, без блокировки).
 # Секретов в коде нет: TURN-секрет читается из /opt/eye/turn.secret.
-import asyncio, base64, hashlib, hmac, json, os, ssl, sys, time, urllib.parse, urllib.request, uuid
+import asyncio, base64, concurrent.futures, hashlib, hmac, json, os, ssl, sys, time, urllib.parse, urllib.request, uuid
 from http import HTTPStatus
 try:
     from websockets.legacy.server import serve as ws_serve   # одинаково на websockets 10.x–14.x
@@ -21,13 +25,14 @@ STATIC = os.environ.get('EYE_STATIC', '/opt/eye/static')
 ORIGINS = set(os.environ.get('EYE_ORIGINS', 'https://app.eaglesteam.ru,https://lure.eaglesteam.ru').split(','))
 OWNER_ID = '11111'
 RING_SEC = 40
+RING_SEC_OFF = 50     # v3.5: друг не в сети — даём время открыть приложение из уведомления
 MAX_CONN_PER_USER = 4
 CALLS_PER_MIN = 8
 MAX_ROOM = 4          # решение Андрея 16.11.2026: до 4 человек в звонке
 
 USERS = {}     # id -> set(ws)
 INFO = {}      # ws -> {'id','name','sess'}
-ROOMS = {}     # cid -> {'members':{id:ws}, 'invited':{id:t0}, 'video', 't'}  (v3: звонок до 4 человек)
+ROOMS = {}     # cid -> {'members':{id:ws}, 'invited':{id:t0}, 'ring':{id:сообщение ring}, 'by':{id:sess звонящего}, 'video', 't'}
 RATE = {}      # id -> [timestamps]
 ME_CACHE = {}  # sess -> (until, data)
 
@@ -100,6 +105,12 @@ def rate_ok(uid):
     return True
 
 
+def ring_push(sess, to, kind, video=True):
+    # v3.5: уведомление на телефон через сервер сайта (он сам проверит дружбу и не даст слать чаще раза в 12 с).
+    if sess:
+        asyncio.ensure_future(bk({'action': 'eye_ring', 'with': to, 'sess': sess, 'kind': kind, 'video': '1' if video else '0'}))
+
+
 def busy(uid):
     return any(uid in r['members'] or uid in r['invited'] for r in ROOMS.values())
 
@@ -116,6 +127,7 @@ async def end_room(cid, why, by=None):
     msg = {'t': 'hangup', 'cid': cid, 'why': why}
     for uid in list(r['invited']):
         await to_user(uid, msg)               # перестать звонить на всех устройствах
+        ring_push(r.get('by', {}).get(uid), uid, 'missed', r['video'])   # v3.5: звонящий положил трубку
     for w in r['members'].values():
         if w is not by:
             await send(w, msg)
@@ -148,15 +160,19 @@ async def drop_invite(cid, uid, why):
     if not r or uid not in r['invited']:
         return
     r['invited'].pop(uid)
+    r.get('ring', {}).pop(uid, None)
+    by = r.get('by', {}).pop(uid, None)
     await to_user(uid, {'t': 'hangup', 'cid': cid, 'why': why})
+    if why == 'noanswer':
+        ring_push(by, uid, 'missed', r['video'])                         # v3.5: «Пропущенный звонок»
     if await check_room(cid, why):
         return
     for w in r['members'].values():
         await send(w, {'t': 'invite_end', 'cid': cid, 'id': uid, 'why': why})
 
 
-async def ring_timeout(cid, uid, t0):
-    await asyncio.sleep(RING_SEC)
+async def ring_timeout(cid, uid, t0, sec=RING_SEC):
+    await asyncio.sleep(sec)
     r = ROOMS.get(cid)
     if r and r['invited'].get(uid) == t0:
         await drop_invite(cid, uid, 'noanswer')
@@ -169,9 +185,7 @@ async def invite(ws, me, r, to, first):
         return (rr or {}).get('error', 'not_allowed'), None
     if not rr.get('can'):
         return rr.get('why') or 'not_friends', None
-    if not USERS.get(to):
-        return 'offline', None
-    if busy(to):
+    if busy(to):          # v3.5: «не в сети» больше не отказ — дозваниваемся уведомлением
         return 'busy', None
     return '', (rr.get('peer') or {}).get('name', '')
 
@@ -194,10 +208,13 @@ async def on_msg(ws, me, m):
         cid = uuid.uuid4().hex
         t0 = time.time()
         video = bool(m.get('video', True))
-        ROOMS[cid] = {'members': {me['id']: ws}, 'invited': {to: t0}, 'video': video, 't': t0}
-        await to_user(to, {'t': 'ring', 'cid': cid, 'from': {'id': me['id'], 'name': me['name']}, 'video': video, 'group': []})
-        await send(ws, {'t': 'ringing', 'cid': cid, 'peer': {'id': to, 'name': name}})
-        asyncio.ensure_future(ring_timeout(cid, to, t0))
+        ring = {'t': 'ring', 'cid': cid, 'from': {'id': me['id'], 'name': me['name']}, 'video': video, 'group': []}
+        off = not USERS.get(to)
+        ROOMS[cid] = {'members': {me['id']: ws}, 'invited': {to: t0}, 'ring': {to: ring}, 'by': {to: INFO[ws]['sess']}, 'video': video, 't': t0}
+        await to_user(to, ring)
+        ring_push(INFO[ws]['sess'], to, 'ring', video)
+        await send(ws, {'t': 'ringing', 'cid': cid, 'peer': {'id': to, 'name': name}, 'off': off})
+        asyncio.ensure_future(ring_timeout(cid, to, t0, RING_SEC_OFF if off else RING_SEC))
         log('call ring', cid[:6], me['id'], '->', to)
         return
     cid = str(m.get('cid') or '')
@@ -214,6 +231,8 @@ async def on_msg(ws, me, m):
         if len(r['members']) >= 2 and INFO[ws].get('v', 2) < 3:
             return await drop_invite(cid, uid, 'old_app')
         r['invited'].pop(uid)
+        r.get('ring', {}).pop(uid, None)
+        r.get('by', {}).pop(uid, None)
         peers = [peer_of(r, x) for x in r['members']]
         for w in r['members'].values():           # каждый, кто уже в звонке, сам шлёт приглашение новенькому
             await send(w, {'t': 'accepted', 'cid': cid, 'peer': {'id': uid, 'name': me['name']}})
@@ -247,10 +266,15 @@ async def on_msg(ws, me, m):
         t0 = time.time()
         r['invited'][to] = t0
         group = [peer_of(r, x)['name'] for x in r['members'] if x != uid]
-        await to_user(to, {'t': 'ring', 'cid': cid, 'from': {'id': uid, 'name': me['name']}, 'video': r['video'], 'group': group})
+        ring = {'t': 'ring', 'cid': cid, 'from': {'id': uid, 'name': me['name']}, 'video': r['video'], 'group': group}
+        off = not USERS.get(to)
+        r.setdefault('ring', {})[to] = ring
+        r.setdefault('by', {})[to] = INFO[ws]['sess']
+        await to_user(to, ring)
+        ring_push(INFO[ws]['sess'], to, 'ring', r['video'])
         for w in r['members'].values():
             await send(w, {'t': 'adding', 'cid': cid, 'peer': {'id': to, 'name': name}, 'by': uid})
-        asyncio.ensure_future(ring_timeout(cid, to, t0))
+        asyncio.ensure_future(ring_timeout(cid, to, t0, RING_SEC_OFF if off else RING_SEC))
         log('room add', cid[:6], uid, '->', to)
     elif t in ('sdp', 'ice') and member:
         to = str(m.get('to') or '')
@@ -286,6 +310,10 @@ async def handler(ws, path=None):
         ver = 2
     INFO[ws] = {'id': me['id'], 'name': me['name'], 'sess': sess, 'v': ver}
     await send(ws, {'t': 'hello', 'me': {'id': me['id'], 'name': me['name']}, 'ice': turn_ice(me['id'])})
+    for cid, r in list(ROOMS.items()):    # v3.5: открыл приложение из уведомления — звонок ещё идёт, показываем его
+        rg = r.get('ring', {}).get(me['id'])
+        if rg and me['id'] in r['invited'] and me['id'] not in r['members']:
+            await send(ws, rg)
     try:
         async for raw in ws:
             if len(raw) > 20000:
@@ -329,6 +357,8 @@ def process_request(path, headers):
 
 
 async def main():
+    # Проверки входа и «друзья ли» ходят к серверу сайта в потоках; по умолчанию их 6 (на 2 vCPU) — для 500 человек мало.
+    asyncio.get_running_loop().set_default_executor(concurrent.futures.ThreadPoolExecutor(32))
     ctx = None
     if PORT == 443 or os.environ.get('EYE_FORCE_TLS'):
         ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)

@@ -1,4 +1,7 @@
-/* EYE v5 (16.11.2026) — EYE открывается обычной страницей /chat.html с нижним меню (как Контакты, Обучение), без окна с золотой рамкой поверх Профиля.
+/* EYE v6.1 (17.11.2026) — при первом входе на страницу EYE: карточка «Разреши доступ к камере и микрофону» (крестик) + сразу запрос телефона.
+   EYE v6 (17.11.2026) — кнопка «Заявки» вверху страницы EYE: список людей, которые зовут в друзья (Принять / Отклонить); цифра на «Звонках» = только пропущенные звонки;
+   плитка на главной Профиля с логотипом из страницы не перезаписывается.
+   EYE v5 (16.11.2026) — EYE открывается обычной страницей /chat.html с нижним меню (как Контакты, Обучение), без окна с золотой рамкой поверх Профиля.
    EYE v4.2 (16.11.2026) — пункт EYE в нижнем меню теперь стоит прямо в страницах (сразу 5 пунктов, без «подскока»); eye.js только оживляет его.
    EYE v4.1 (16.11.2026) — chat.html v2 сама рисует шапку EYE и три вкладки (без мелькания «Сообщений»); eye.js не дублирует вкладку «Звонки».
    EYE v4 (16.11.2026) — EYE как продукт: золотая кнопка EYE на главной вместо «Чата с командой», пункт EYE в нижнем меню,
@@ -139,6 +142,17 @@
     '.eye-cb{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;cursor:pointer;border:0;color:#2a1702;background:linear-gradient(180deg,#fff1b8,#ffd23f 38%,#f3b230 72%,#d98d16);box-shadow:0 6px 16px rgba(255,180,40,.25)}' +
     '.eye-cb.au{color:#ffd23f;background:rgba(255,210,63,.08);border:1px solid rgba(255,210,63,.45);box-shadow:none}' +
     '.eye-cb svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}' +
+    '.eye-reqs{position:fixed;inset:0;z-index:2147482400;display:flex;align-items:flex-end;background:rgba(0,0,0,.55);font-family:Montserrat,system-ui,sans-serif}' +
+    '.eye-reqs .in{width:100%;max-width:520px;margin:0 auto;max-height:80vh;overflow:auto;padding:16px 16px calc(18px + env(safe-area-inset-bottom,0px));border-radius:22px 22px 0 0;background:#141217;border-top:1px solid rgba(255,210,63,.35);color:#f4f4f2}' +
+    '.eye-reqs .h{display:flex;align-items:center;justify-content:space-between;margin:0 2px 10px;font:900 16px/1.2 Montserrat,sans-serif;color:#ffd23f}' +
+    '.eye-reqs .h button{width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#a29b90;font:800 15px/1 Montserrat,sans-serif;cursor:pointer}' +
+    '.eye-reqs .eye-req{margin:0 0 8px}.eye-reqs .eye-empty{margin:4px 0 6px}.eye-reqs .eye-wait{margin-top:10px}' +
+    '.eye-perm{position:fixed;left:12px;right:12px;bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:2147482300;max-width:500px;margin:0 auto;padding:16px 16px 14px;border-radius:20px;background:linear-gradient(180deg,#2a1d0c,#141008);border:1.5px solid #ffd23f;box-shadow:0 18px 40px rgba(0,0,0,.6),0 0 24px rgba(255,210,63,.25);color:#f4f4f2;font-family:Montserrat,system-ui,sans-serif}' +
+    '.eye-perm .k{font:900 15px/1.25 Montserrat,sans-serif;color:#ffd23f;padding-right:34px}.eye-perm p{margin:8px 0 0;font:600 13px/1.45 Montserrat,sans-serif;color:#e8e1d4}' +
+    '.eye-perm .x{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#c9c1b4;font:800 15px/1 Montserrat,sans-serif;cursor:pointer}' +
+    '.eye-perm .go{display:block;width:100%;height:46px;margin-top:12px;border:0;border-radius:14px;background:linear-gradient(135deg,#ffd23f,#ff9a2b);color:#1a0d04;font:900 15px Montserrat,sans-serif;cursor:pointer}' +
+    '.eye-perm .ar{display:block;margin:10px auto 0;width:28px;height:28px;color:#ffd23f;animation:eyeArr 1.1s ease-in-out infinite}@keyframes eyeArr{0%,100%{transform:translateY(0)}50%{transform:translateY(7px)}}' +
+    '.eye-perm.ok{border-color:#46de82}.eye-perm.ok .k{color:#46de82}' +
     '.eye-calls .eye-req{margin:0 0 8px}.eye-calls .eye-add{margin-top:0}.eye-note{margin:14px 2px 0;font:600 11px/1.45 Montserrat,sans-serif;color:#6d675f}';
   function addCss() { if (document.getElementById('eye-css')) return; var s = document.createElement('style'); s.id = 'eye-css'; s.textContent = css; document.head.appendChild(s); }
 
@@ -682,7 +696,7 @@
       busyFr = false;
       if (!r || !r.ok) { toast(FERR[r && r.error] || 'Не получилось. Попробуй ещё раз.'); return; }
       var nm = first(name) || 'Человек';
-      if (action === 'fr_add') toast(r.state === 'yes' ? 'Теперь вы друзья. Можно звонить в EYE.' : 'Запрос отправлен. ' + nm + ' увидит его в «Сообщениях».');
+      if (action === 'fr_add') toast(r.state === 'yes' ? 'Теперь вы друзья. Можно звонить в EYE.' : 'Запрос отправлен. ' + nm + ' увидит его в EYE → «Заявки».');
       return loadFriends();
     }).catch(function () { busyFr = false; toast('Нет связи с сервером EAGLES'); });
   }
@@ -803,7 +817,7 @@
     var b = document.getElementById('openChat'); if (!b) return;
     if (!b.getAttribute('data-eye')) {
       addCss(); b.setAttribute('data-eye', '1'); b.setAttribute('aria-label', 'Открыть EYE');
-      var t = b.querySelector('.cb-t'); if (t) t.innerHTML = '<b>EYE</b><small>Чаты и звонки команды</small>';
+      var t = b.querySelector('.cb-t'); if (t && !t.querySelector('img')) t.innerHTML = '<b>EYE</b><small>Чаты и звонки команды</small>';
       var f = document.getElementById('egChf'); if (f) f.title = 'EYE';
       var n0 = document.getElementById('chatN'); if (n0) n0.style.setProperty('display', 'none', 'important');
       var n = document.createElement('i'); n.className = 'cb-n'; n.id = 'eyeN'; n.style.display = 'none';
@@ -863,7 +877,8 @@
       var va = document.getElementById('vAnn'); (va || document.getElementById('vChats')).insertAdjacentElement('afterend', v);
       cb.onclick = showCalls;
     }
-    var nc = document.getElementById('nCalls'); if (nc) { var k = missedN() + FL.incoming.length; nc.hidden = !k; nc.textContent = k > 9 ? '9+' : k; }
+    var nc = document.getElementById('nCalls'); if (nc) { var k = missedN(); nc.hidden = !k; nc.textContent = k > 9 ? '9+' : k; }
+    reqBtn();
     if (CALLS_ON) drawCalls();
   }
   function showCalls() {
@@ -880,14 +895,6 @@
     var keep = el.querySelector('#eyeAddId'), typed = keep ? keep.value : '', focused = keep && document.activeElement === keep;
     el.setAttribute('data-k', key);
     var h = '';
-    if (FL.incoming.length) {
-      h += '<div class="eye-lbl">Хотят дружить</div>';
-      FL.incoming.forEach(function (x) {
-        h += '<div class="eye-req eye-sm">' + ava(x) + '<div class="t">' + esc(x.name) + '<small>хочет дружить в EAGLES</small></div>' +
-          '<button type="button" class="eye-fr eye-gold" data-a="ok" data-id="' + esc(x.id) + '">Принять</button>' +
-          '<button type="button" class="x" data-a="no" data-id="' + esc(x.id) + '" aria-label="Отклонить">✕</button></div>';
-      });
-    }
     h += '<div class="eye-lbl">Друзья · позвонить</div>';
     if (FRON === null && !FL.friends.length) h += '<div class="eye-empty">Загружаю…</div>';
     else if (!FL.friends.length) h += '<div class="eye-empty">Пока нет друзей. Звонить в EYE можно только друзьям. Впиши ID человека внизу или открой с ним переписку и нажми «В друзья». Когда он подтвердит, сможете созваниваться.</div>';
@@ -926,6 +933,41 @@
         else if (a === 'no') frDo('fr_del', id, x ? x.name : '');
       };
     });
+  }
+  /* ---------- v6: «Заявки» — кто зовёт в друзья (кнопка вверху страницы EYE) ---------- */
+  var reqEl = null;
+  function reqBtn() {
+    var b = document.getElementById('eyeReqBtn'); if (!b) return;
+    if (!b._eye) { b._eye = 1; b.addEventListener('click', function () { openReqs(); loadFriends(); }); }
+    setN(document.getElementById('nReq'), FL.incoming.length);
+    if (reqEl) drawReqs();
+  }
+  function openReqs() {
+    addCss(); if (reqEl) return;
+    reqEl = document.createElement('div'); reqEl.className = 'eye-reqs'; reqEl.setAttribute('role', 'dialog'); reqEl.setAttribute('aria-label', 'Заявки в друзья');
+    reqEl.innerHTML = '<div class="in"></div>';
+    document.body.appendChild(reqEl);
+    reqEl.onclick = function (e) {
+      if (e.target === reqEl || e.target.closest('[data-a="close"]')) { reqEl.remove(); reqEl = null; return; }
+      var b = e.target.closest('[data-a]'); if (!b) return;
+      var id = b.getAttribute('data-id'), x = byId(id);
+      if (b.getAttribute('data-a') === 'ok') { markSeen(id); frDo('fr_add', id, x ? x.name : ''); }
+      if (b.getAttribute('data-a') === 'no') { markSeen(id); frDo('fr_del', id, x ? x.name : ''); }
+    };
+    drawReqs();
+  }
+  function drawReqs() {
+    var inn = reqEl && reqEl.querySelector('.in'); if (!inn) return;
+    var h = '<div class="h">Заявки в друзья<button type="button" data-a="close" aria-label="Закрыть">✕</button></div>';
+    if (FRON === null && !FL.incoming.length) h += '<div class="eye-empty">Загружаю…</div>';
+    else if (!FL.incoming.length) h += '<div class="eye-empty">Новых заявок нет. Когда тебя позовут в друзья, человек появится здесь.</div>';
+    FL.incoming.forEach(function (x) {
+      h += '<div class="eye-req eye-sm">' + ava(x) + '<div class="t">' + esc(x.name) + '<small>ID ' + esc(x.id) + ' · хочет дружить</small></div>' +
+        '<button type="button" class="eye-fr eye-gold" data-a="ok" data-id="' + esc(x.id) + '">Принять</button>' +
+        '<button type="button" class="x" data-a="no" data-id="' + esc(x.id) + '" aria-label="Отклонить">✕</button></div>';
+    });
+    if (FL.outgoing.length) h += '<div class="eye-wait">Ты позвал, ждут ответа: ' + FL.outgoing.map(function (x) { return esc(first(x.name)); }).join(', ') + '</div>';
+    if (inn.getAttribute('data-h') !== h) { inn.setAttribute('data-h', h); inn.innerHTML = h; }
   }
   function badges() { homeBtn(); if (!TOPW) navTab(); eyePage(); }
 
@@ -971,7 +1013,49 @@
     cardEl.querySelector('[data-a="ok"]').onclick = function () { markSeen(id); frDo('fr_add', id, nm); };
   }
 
-  function render() { placeButton(); badges(); reqCard(); }
+  /* ---------- v6.1: первый вход в EYE — попросить камеру и микрофон сразу ---------- */
+  var permDone = false;
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k) { try { localStorage.setItem(k, '1'); } catch (e) {} }
+  function permCard() {
+    if (permDone || TOPW || !document.getElementById('chHome')) return; permDone = true;
+    if (lsGet('eye_perm_ok') || lsGet('eye_perm_seen')) return;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+    function both(fn) {
+      if (!navigator.permissions || !navigator.permissions.query) return fn(false);
+      Promise.all([navigator.permissions.query({ name: 'camera' }), navigator.permissions.query({ name: 'microphone' })])
+        .then(function (r) { fn(r[0].state === 'granted' && r[1].state === 'granted'); }).catch(function () { fn(false); });
+    }
+    both(function (granted) {
+      if (granted) { lsSet('eye_perm_ok'); return; }
+      addCss();
+      var d = document.createElement('div'); d.className = 'eye-perm'; d.setAttribute('role', 'dialog');
+      d.innerHTML = '<button type="button" class="x" aria-label="Закрыть">✕</button>' +
+        '<div class="k">⚠️ Внимание! Разреши доступ к камере и микрофону</div>' +
+        '<p>Сейчас телефон спросит разрешение — нажми «Разрешить». Если отказаться, звонки в EYE работать не будут, а включать камеру и звук потом придётся долго, через настройки телефона.</p>' +
+        '<button type="button" class="go">Разрешить доступ</button>' +
+        '<svg class="ar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v15M5 12l7 7 7-7"/></svg>';
+      document.body.appendChild(d);
+      function close() { lsSet('eye_perm_seen'); d.remove(); }
+      function ask() {
+        navigator.mediaDevices.getUserMedia({ audio: true, video: true }).then(function (st) {
+          st.getTracks().forEach(function (t) { t.stop(); });
+          lsSet('eye_perm_ok'); d.className = 'eye-perm ok';
+          d.innerHTML = '<div class="k">✓ Готово! Камера и микрофон разрешены</div><p>Теперь можно звонить друзьям в EYE.</p>';
+          setTimeout(function () { d.remove(); }, 2200);
+        }).catch(function (e) {
+          var p = d.querySelector('p'); if (!p) return;
+          if (e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')) p.textContent = CAMHELP;
+          else if (e && e.name === 'NotFoundError') p.textContent = 'Не нашёл камеру или микрофон на этом устройстве. Звонить без них не получится.';
+        });
+      }
+      d.querySelector('.x').onclick = close;
+      d.querySelector('.go').onclick = ask;
+      ask();   // сразу вызываем запрос телефона
+    });
+  }
+
+  function render() { placeButton(); badges(); reqCard(); permCard(); }
 
   /* ---------- запуск ---------- */
   // Окно чата внутри Профиля (iframe того же сайта, где тоже подключён EYE): своё соединение не открываем,
