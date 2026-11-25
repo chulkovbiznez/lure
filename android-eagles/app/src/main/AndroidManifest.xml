@@ -29,6 +29,8 @@
       </intent-filter>
     </activity>
     <activity android:name="com.google.androidbrowserhelper.trusted.FocusActivity"/>
+    <activity android:name=".CallActionActivity" android:exported="false" android:excludeFromRecents="true" android:noHistory="true"
+        android:taskAffinity="" android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
     <activity android:name=".BatteryActivity" android:exported="true" android:excludeFromRecents="true" android:noHistory="true"
         android:theme="@android:style/Theme.Translucent.NoTitleBar">
       <intent-filter>
