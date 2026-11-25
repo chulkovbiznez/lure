@@ -20,8 +20,10 @@ jobs:
         run: |
           mkdir -p android-eagles/out
           cp android-eagles/app/build/outputs/apk/release/app-release-unsigned.apk android-eagles/out/
+          BT=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1); mkdir -p android-eagles/out/tools
+          cp $BT/lib/apksigner.jar $BT/zipalign android-eagles/out/tools/ || true
           git config user.name "eagles-apk-bot"; git config user.email "actions@users.noreply.github.com"
-          git add -f android-eagles/out/app-release-unsigned.apk
+          git add -f android-eagles/out
           git commit -m "APK build ${GITHUB_SHA::7} [skip ci]" || exit 0
           git push
       - name: On failure, save the log to the branch
