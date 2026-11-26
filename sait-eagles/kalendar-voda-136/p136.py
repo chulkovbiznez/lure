@@ -23,10 +23,10 @@ s=s[:a]+NEW+s[b:]
 old="egMini(t,40)+'<span>'+day+'</span>'+egOrdBadge(t)+'</div>'"
 assert s.count(old)==1
 s=s.replace(old,"egMini(t,40)+'<span>'+day+'</span>'+egOrdBadge(t)+(t>0?'<i class=\"eg-cnt\">'+t+'</i>':'')+'</div>'")
-CSS='''<style id="egCnt136">.cal-cell .eg-cnt{position:absolute;right:-5px;top:-6px;z-index:3;min-width:18px;height:18px;padding:0 4px;box-sizing:border-box;border-radius:9px;background:#fff;color:#111;font:900 11px/18px "Montserrat",sans-serif;font-style:normal;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.55);pointer-events:none}
+CSS='''<style id="egCnt136">.cal-cell .eg-cnt{position:absolute;right:-5px;top:-6px;z-index:3;min-width:18px;height:18px;padding:0 4px;box-sizing:border-box;border-radius:9px;background:transparent;border:1px solid rgba(255,255,255,.9);color:#fff;font:900 10.5px/16px "Montserrat",sans-serif;font-style:normal;text-align:center;text-shadow:0 1px 2px rgba(0,0,0,.9),0 0 3px rgba(0,0,0,.8);pointer-events:none}
 .cal-cell .eg-ord{top:auto!important;bottom:-6px!important;right:-5px!important;left:auto!important}
 .mk-page .cal-cell{overflow:visible}</style>'''
 h=s.find('</head>'); assert h>0
 s=s[:h]+CSS+'\n'+s[h:]
-s=s.replace('Цвет дня = твой круг касаний: норма 5, сверх нормы золотое кольцо.','Цвет и уровень водички = касания за день, цифра справа = сколько касаний. Норма 5, сверх нормы золотое кольцо.')
+s=s.replace('Цвет дня = твой круг касаний: норма 5, сверх нормы золотое кольцо.','Цвет и уровень водички = касания за день, цифра в кружке справа = сколько касаний. Норма 5, сверх нормы золотое кольцо.')
 open(dst,'w',encoding='utf-8').write(s)
