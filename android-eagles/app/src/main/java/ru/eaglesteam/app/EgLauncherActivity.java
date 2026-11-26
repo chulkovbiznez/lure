@@ -7,7 +7,7 @@ import android.graphics.BitmapFactory;
 import android.os.Build;
 import androidx.browser.customtabs.CustomTabColorSchemeParams;
 import androidx.browser.trusted.TrustedWebActivityIntentBuilder;
-import androidx.browser.trusted.TrustedWebUtils;
+import androidx.browser.customtabs.TrustedWebUtils;
 import androidx.browser.trusted.splashscreens.SplashScreenParamKey;
 import androidx.browser.trusted.splashscreens.SplashScreenVersion;
 import androidx.core.content.FileProvider;
