@@ -21,7 +21,7 @@ public class CallActionActivity extends Activity {
       if (caller != null && caller.matches("\\d{1,12}")) {
         String q = "ans".equals(a) ? "eyeans" : "eyedecl";
         Intent v = new Intent(Intent.ACTION_VIEW, Uri.parse("https://app.eaglesteam.ru/chat.html?to=" + caller + "&" + q + "=" + caller));
-        v.setComponent(new ComponentName(this, "com.google.androidbrowserhelper.trusted.LauncherActivity"));
+        v.setComponent(new ComponentName(this, "ru.eaglesteam.app.EgLauncherActivity"));
         v.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(v);
       }
