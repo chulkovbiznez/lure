@@ -23,10 +23,11 @@ import com.google.androidbrowserhelper.trusted.TwaProviderPicker;
  * проверить связь сайт↔приложение (validateRelationship). Когда Chrome ответил (или через 4 с),
  * открываем приложение. Так Chrome открывается уже проверенным: без серого окна со ссылкой,
  * и заставка передаётся в Chrome до первой отрисовки страницы.
+ * 1.6: заставка с золотым переливом по логотипу (ShineSplashView).
  */
 public class EgLauncherActivity extends LauncherActivity {
     private static final Uri ORIGIN = Uri.parse("https://app.eaglesteam.ru");
-    private static final Uri START = Uri.parse("https://app.eaglesteam.ru/profile.html?app=android&v=15");
+    private static final Uri START = Uri.parse("https://app.eaglesteam.ru/profile.html?app=android&v=16");
     private static final long MAX_WAIT_MS = 4000;
 
     private final Handler mHandler = new Handler(Looper.getMainLooper());
@@ -91,12 +92,16 @@ public class EgLauncherActivity extends LauncherActivity {
 
     private void showSplash() {
         try {
-            ImageView v = new ImageView(this);
-            v.setImageResource(R.drawable.splash);
-            v.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            v.setBackgroundColor(Color.rgb(7, 7, 8));
-            setContentView(v);
-        } catch (Throwable ignored) { }
+            setContentView(new ShineSplashView(this));
+        } catch (Throwable t) {
+            try {
+                ImageView v = new ImageView(this);
+                v.setImageResource(R.drawable.splash);
+                v.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                v.setBackgroundColor(Color.rgb(7, 7, 8));
+                setContentView(v);
+            } catch (Throwable ignored) { }
+        }
     }
 
     private void go() {

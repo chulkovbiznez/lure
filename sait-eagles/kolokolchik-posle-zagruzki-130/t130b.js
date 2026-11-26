@@ -1,0 +1,14 @@
+const {chromium}=require('playwright');const fs=require('fs');
+(async()=>{const F=process.argv[2];const b=await chromium.launch({args:['--autoplay-policy=no-user-gesture-required']});
+const c=await b.newContext({viewport:{width:390,height:844}});const p=await c.newPage();
+const pr=fs.readFileSync(F);
+await p.route(u=>new URL(u).pathname==='/profile.html',r=>r.fulfill({status:200,contentType:'text/html; charset=utf-8',body:pr}));
+await p.route(/functions\.yandexcloud/,async r=>{await new Promise(z=>setTimeout(z,60000))});
+await p.goto('https://app.eaglesteam.ru/egpwa/favicon-48.png');
+await p.evaluate(()=>{localStorage.clear();sessionStorage.clear();const d=new Date(),T=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+localStorage.setItem('eaglesfree_id','11111');localStorage.setItem('eaglesfree_session','x');localStorage.setItem('eaglesfree_last_activity',String(Date.now()));localStorage.setItem('eg_onb_done','1');localStorage.setItem('eg_pin_t','11111:'+Date.now());
+localStorage.setItem('egBell-cache-11111',JSON.stringify({d:T,K:[{name:'Дело',due:T,where:'Карта',link:'#'}],P:[]}))});
+await p.addInitScript(()=>{window.__t0=performance.now();window.__ev=[];const os=AudioBufferSourceNode.prototype.start;AudioBufferSourceNode.prototype.start=function(){__ev.push('SND@'+Math.round(performance.now()));return os.apply(this,arguments)};const op=HTMLMediaElement.prototype.play;HTMLMediaElement.prototype.play=function(){__ev.push('play@'+Math.round(performance.now()));return op.apply(this,arguments)};
+const iv=setInterval(()=>{const z=document.getElementById('egpZ');if(z&&!window.__zs&&getComputedStyle(z).display!=='none'){window.__zs=1;__ev.push('loaderON@'+Math.round(performance.now()))}if(z&&window.__zs&&!window.__zh&&getComputedStyle(z).display==='none'){window.__zh=1;__ev.push('loaderOFF@'+Math.round(performance.now()))}const bl=document.getElementById('egBell');if(bl&&bl.classList.contains('ring')&&!window.__r){window.__r=1;__ev.push('ring@'+Math.round(performance.now()))}},20)});
+await p.goto('https://app.eaglesteam.ru/profile.html?app=android&v=15').catch(()=>{});
+await p.waitForTimeout(11000);console.log(F.split('/').pop(),JSON.stringify(await p.evaluate(()=>__ev)));await b.close();})();
