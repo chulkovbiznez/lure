@@ -1,0 +1,10 @@
+const {chromium}=require('playwright');const fs=require('fs');
+(async()=>{const F=process.argv[2];const b=await chromium.launch();const c=await b.newContext({viewport:{width:390,height:844}});const p=await c.newPage();
+const pr=fs.readFileSync(F);const errs=[];p.on('pageerror',e=>errs.push(e.message));
+await p.route(u=>new URL(u).pathname==='/profile.html',r=>r.fulfill({status:200,contentType:'text/html; charset=utf-8',body:pr}));
+await p.route(/functions\.yandexcloud/,async r=>{const d=r.request().postData()||'';await new Promise(z=>setTimeout(z,300));r.fulfill({status:200,contentType:'application/json',body:d.includes('pin_state')?'{"ok":true,"has":true}':'{}'})});
+await p.goto('https://app.eaglesteam.ru/egpwa/favicon-48.png');
+await p.evaluate(()=>{localStorage.clear();sessionStorage.clear();localStorage.setItem('eaglesfree_id','11111');localStorage.setItem('eaglesfree_session','x');localStorage.setItem('eaglesfree_last_activity',String(Date.now()))});
+await p.goto('https://app.eaglesteam.ru/profile.html').catch(()=>{});await p.waitForTimeout(3000);
+await p.screenshot({path:'s131-pin-'+F.split('-').pop()+'.png'});
+console.log(F,await p.evaluate(()=>{const e=document.getElementById('egp');return [e.hidden,getComputedStyle(e).display,getComputedStyle(e).visibility,!!document.getElementById('egpZ'),getComputedStyle(document.getElementById('egpZ')).display].join(',')}),errs.slice(0,3));await b.close()})();
