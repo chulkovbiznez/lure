@@ -32,7 +32,8 @@ public class EgDelegationService extends DelegationService {
         if (t != null && t.toString().startsWith("📞") && nm.areNotificationsEnabled()) {
           return postCall(nm, platformTag, platformId, notification);
         }
-        if (t != null && t.toString().startsWith("⏰") && nm.areNotificationsEnabled()) {
+        boolean isRem = (t != null && t.toString().contains("⏰")) || (platformTag != null && platformTag.contains("rem-"));   // 1.17: и по tag rem-…
+        if (isRem && nm.areNotificationsEnabled()) {
           if (nm.getNotificationChannel(REM_CH) == null) {
             try { nm.deleteNotificationChannel("eagles_rem_v1"); } catch (Exception ignored) { }
             NotificationChannel ch = new NotificationChannel(REM_CH, "Будильник EAGLES", NotificationManager.IMPORTANCE_HIGH);
@@ -47,7 +48,7 @@ public class EgDelegationService extends DelegationService {
           // 1.17: уведомление собираем заново (как звонок): в копии Chrome-уведомления звук глушился (без звука при свёрнутом приложении)
           Notification.Builder b = new Notification.Builder(this, REM_CH)
               .setSmallIcon(R.drawable.ic_notify)
-              .setContentTitle(t)
+              .setContentTitle(t != null ? t : "⏰ Будильник EAGLES")
               .setContentText(notification.extras.getCharSequence(Notification.EXTRA_TEXT))
               .setContentIntent(notification.contentIntent)
               .setDeleteIntent(notification.deleteIntent)
@@ -88,7 +89,7 @@ public class EgDelegationService extends DelegationService {
           nm.notify(platformTag, platformId, b.build());
           return true;
         }
-      } catch (Exception ignored) { }
+      } catch (Exception eN) { android.util.Log.w("EAGLES", "notify branch failed", eN); }
     }
     return super.onNotifyNotificationWithChannel(platformTag, platformId, notification, channelName);
   }
