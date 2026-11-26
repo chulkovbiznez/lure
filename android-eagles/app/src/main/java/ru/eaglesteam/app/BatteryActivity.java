@@ -16,6 +16,7 @@ public class BatteryActivity extends Activity {
     Uri d = getIntent() != null ? getIntent().getData() : null;
     String host = d != null && d.getHost() != null ? d.getHost() : "battery";
     try {
+      if ("alarmoff".equals(host)) { AlarmService.stop(this); finish(); return; }   // 1.18: кнопка «Выключить» на странице Карт
       if ("notif".equals(host)) {
         Intent i = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
         i.putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());

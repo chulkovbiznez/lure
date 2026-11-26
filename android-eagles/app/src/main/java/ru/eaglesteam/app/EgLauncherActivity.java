@@ -43,7 +43,7 @@ import com.google.androidbrowserhelper.trusted.TwaProviderPicker;
  */
 public class EgLauncherActivity extends LauncherActivity {
     private static final Uri ORIGIN = Uri.parse("https://app.eaglesteam.ru");
-    private static final Uri START = Uri.parse("https://app.eaglesteam.ru/profile.html?app=android&v=21&ac=18");
+    private static final Uri START = Uri.parse("https://app.eaglesteam.ru/profile.html?app=android&v=21&ac=19");
     private static final long MAX_WAIT_MS = 4000;
 
     private final Handler mHandler = new Handler(Looper.getMainLooper());
@@ -66,10 +66,17 @@ public class EgLauncherActivity extends LauncherActivity {
     }
 
     @Override
+    protected void onNewIntent(Intent intent) {
+        try { if (intent != null && intent.getBooleanExtra("egAlarmStop", false)) AlarmService.stop(this); } catch (Throwable ignored) { }
+        super.onNewIntent(intent);
+    }
+
+    @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         // 1.14: кнопки «Ответить»/«Отклонить» звонка EYE открывают нас напрямую — гасим уведомление (мелодия стихает)
         try {
             Intent in = getIntent();
+            if (in != null && in.getBooleanExtra("egAlarmStop", false)) AlarmService.stop(this);   // 1.18: открыли будильник — тишина
             if (in != null && in.hasExtra("egCallId")) {
                 android.app.NotificationManager nm = (android.app.NotificationManager) getSystemService(NOTIFICATION_SERVICE);
                 if (nm != null) nm.cancel(in.getStringExtra("egCallTag"), in.getIntExtra("egCallId", 0));

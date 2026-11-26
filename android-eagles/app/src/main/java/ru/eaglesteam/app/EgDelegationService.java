@@ -34,6 +34,9 @@ public class EgDelegationService extends DelegationService {
         }
         boolean isRem = (t != null && t.toString().contains("⏰")) || (platformTag != null && platformTag.contains("rem-"));   // 1.17: и по tag rem-…
         if (isRem && nm.areNotificationsEnabled()) {
+          // 1.18: настоящий будильник — служба играет звук по кругу, плашка висит до «Выключить»
+          if (AlarmService.fire(this, t, notification.extras.getCharSequence(Notification.EXTRA_TEXT), notification)) return true;
+          // не получилось запустить службу — как в 1.17: звенящее уведомление
           if (nm.getNotificationChannel(REM_CH) == null) {
             try { nm.deleteNotificationChannel("eagles_rem_v1"); } catch (Exception ignored) { }
             NotificationChannel ch = new NotificationChannel(REM_CH, "Будильник EAGLES", NotificationManager.IMPORTANCE_HIGH);
@@ -92,6 +95,13 @@ public class EgDelegationService extends DelegationService {
       } catch (Exception eN) { android.util.Log.w("EAGLES", "notify branch failed", eN); }
     }
     return super.onNotifyNotificationWithChannel(platformTag, platformId, notification, channelName);
+  }
+
+  // 1.18: страница Карт закрыла уведомление будильника (кнопка «Выключить» на сайте) — глушим звук
+  @Override
+  public void onCancelNotification(String platformTag, int platformId) {
+    try { if (platformTag != null && platformTag.contains("rem-")) AlarmService.stop(this); } catch (Exception ignored) { }
+    super.onCancelNotification(platformTag, platformId);
   }
 
   private boolean postCall(NotificationManager nm, String tag, int id, Notification n) {
