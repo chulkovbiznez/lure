@@ -1,4 +1,5 @@
 package ru.eaglesteam.app;
+// 1.20 build
 
 import android.app.Activity;
 import android.net.Uri;
