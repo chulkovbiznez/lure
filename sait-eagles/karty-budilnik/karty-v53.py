@@ -1,4 +1,4 @@
-# Карты v53 (26.11.2026; вызов синхронно в нажатии — Chrome открывает eagles:// только по жесту): будильники передаются в приложение (eagles://alarms?d=...), оно заводит их в телефоне само (APK 1.19+). Ставится поверх v52.
+# Карты v53b (26.11.2026; БЕЗ вызова при открытии страницы — он выкидывал на профиль; вызов синхронно в нажатии — Chrome открывает eagles:// только по жесту): будильники передаются в приложение (eagles://alarms?d=...), оно заводит их в телефоне само (APK 1.19+). Ставится поверх v52.
 import sys
 f = sys.argv[1]; S = open(f, encoding='utf8').read()
 if 'egAl53' in S: sys.exit('STOP: v53 уже стоит')
@@ -14,7 +14,6 @@ BLOCK = r'''<script id="egAl53">
   function hook(){var o=window.al50ui;if(typeof o!=='function'||o.__a53)return false;var w=function(){var r=o.apply(this,arguments);try{sync()}catch(_){}return r};w.__a53=1;window.al50ui=w;return true}
   if(!hook()){var i=0,h=setInterval(function(){if(hook()||++i>40)clearInterval(h)},250)}
   document.addEventListener('click',function(e){var t=e.target;if(t&&t.closest&&t.closest('#al50l'))window.__al53del=1},true);
-  setTimeout(sync,2500);
 })();
 </script>
 '''
