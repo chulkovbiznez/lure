@@ -1,0 +1,1189 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<title>LURE</title>
+<meta name="theme-color" content="#070708">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/znak.webp">
+<link rel="preload" as="image" href="/lure-logo.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap">
+<style>
+@font-face{font-family:"EAGLES Gold";src:url(/fonts/EAGLES-Gold.ttf) format("truetype");font-weight:900;font-display:swap}
+@font-face{font-family:"Montserrat EK";src:url(/fonts/Montserrat-900.ttf) format("truetype");font-weight:900;font-display:swap}
+:root{--bg:#070708;--card:#141217;--card2:#1b181d;--line:#2a2622;--text:#f4f4f2;--dim:#a29b90;--dim2:#6f6a64;
+--gold:#ffd23f;--gold1:#ffe08a;--gold2:#e9a23b;--orange:#ff6a2b;--red:#e8321a;--green:#3ecf6c;
+--f:"Montserrat","Montserrat EK",system-ui,-apple-system,"Segoe UI",sans-serif;--g:"EAGLES Gold","Montserrat EK","Arial Black",sans-serif;color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--f);height:100%}
+html,body{overflow-x:clip}/* 17.11: на экране загрузки страница становилась шире экрана (до 447 px при 412) — телефон менял масштаб, и орёл прыгал вправо вниз */
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none;padding:0}
+a{color:var(--gold)}
+[hidden]{display:none!important}
+.wrap{max-width:720px;margin:0 auto;padding:0 16px}
+.gold{background:linear-gradient(180deg,var(--gold1),var(--gold) 45%,var(--gold2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.btn{display:block;width:100%;border-radius:16px;padding:16px;background:linear-gradient(90deg,#ff6a2b,#ff9a3c);color:#1a0d05;font:900 16px var(--f);text-align:center;box-shadow:0 10px 26px rgba(255,106,43,.28)}
+.btn:disabled{opacity:.5}
+.btn2{border:1px solid var(--line);background:#0d0c0f;border-radius:12px;padding:10px 14px;font:700 13.5px var(--f);color:var(--text)}
+#zgr{--zgr-img:url(/lure-logo.webp);--zgr-ar:640/395}/* ЭКРАН ЗАГРУЗКИ (09.11.2026): логотип по центру, золотая полоска */
+.zgr{position:fixed;inset:0;z-index:100005;background:#070708;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:38px;padding:0 24px 6vh;overflow:hidden;transition:opacity .45s ease}
+.zgr[hidden]{display:none!important}
+.zgr.zgr-out{opacity:0;pointer-events:none}
+.zgr-glw{position:absolute;left:50%;top:43%;width:600px;height:600px;margin:-300px 0 0 -300px;border-radius:50%;background:radial-gradient(circle,rgba(255,176,46,.22),rgba(255,120,30,.07) 38%,rgba(0,0,0,0) 66%);animation:zgrPulse 3.4s ease-in-out infinite;pointer-events:none}
+.zgr-lg{position:relative;width:min(82vw,360px);aspect-ratio:var(--zgr-ar);background:var(--zgr-img) center/contain no-repeat;animation:zgrIn .8s cubic-bezier(.2,.8,.2,1) both,zgrFloat 4.2s ease-in-out .8s infinite}
+.zgr-lg::after{content:"";position:absolute;inset:0;-webkit-mask:var(--zgr-img) center/contain no-repeat;mask:var(--zgr-img) center/contain no-repeat;background:linear-gradient(100deg,rgba(255,255,255,0) 40%,rgba(255,246,214,.75) 50%,rgba(255,255,255,0) 60%) no-repeat;background-size:300% 100%;animation:zgrShine 2.8s ease-in-out .6s infinite}
+.zgr-bar{position:relative;width:min(58vw,230px);height:4px;border-radius:4px;background:rgba(255,210,63,.13);box-shadow:inset 0 0 0 .5px rgba(255,210,63,.18);animation:zgrIn .6s .25s both}
+.zgr-bar i{position:absolute;left:0;top:0;bottom:0;width:6%;border-radius:4px;background:linear-gradient(90deg,#ffe08a,#ffd23f 30%,#ff9a2a 70%,#ff5a1f);box-shadow:0 0 14px rgba(255,170,40,.75),0 0 3px rgba(255,220,120,.9);transition:width .5s cubic-bezier(.3,.7,.3,1)}
+.zgr-bar i::after{content:"";position:absolute;right:-3px;top:50%;width:10px;height:10px;margin-top:-5px;border-radius:50%;background:radial-gradient(circle,#fff6d6,rgba(255,200,80,.6) 45%,rgba(255,170,40,0) 70%)}
+.zgr-t{position:absolute;left:0;right:0;bottom:calc(14vh + env(safe-area-inset-bottom,0px));text-align:center;font:600 13px/1.5 var(--f),system-ui,sans-serif;color:#8a8074;padding:0 24px}
+.zgr-t a{color:#ffd23f}
+@keyframes zgrIn{from{opacity:0;transform:scale(.94) translateY(8px)}to{opacity:1;transform:none}}
+@keyframes zgrFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes zgrShine{0%{background-position:100% 0}55%,100%{background-position:0 0}}
+@keyframes zgrPulse{0%,100%{opacity:.75;transform:scale(1)}50%{opacity:1;transform:scale(1.06)}}
+@media (prefers-reduced-motion:reduce){.zgr-lg,.zgr-lg::after,.zgr-glw{animation:none}}
+.inp{width:100%;height:52px;border-radius:14px;border:1px solid var(--line);background:#100e12;padding:0 16px;font:600 16px var(--f);outline:none}
+.inp:focus{border-color:var(--gold2)}
+.card{background:linear-gradient(180deg,#17141a,#110f13);border:1px solid var(--line);border-radius:22px;padding:16px;margin-bottom:12px}
+.muted{color:var(--dim);font-size:13.5px;line-height:1.5}
+.err{color:#ff7b6b;font-size:13.5px;min-height:20px;margin:8px 0}
+.okc{color:var(--green)}
+h2{font:900 13px var(--f);letter-spacing:1.2px;text-transform:uppercase;color:var(--dim);margin:20px 2px 10px}
+
+/* вход */
+#login{min-height:100%;display:flex;flex-direction:column;justify-content:center;padding:32px 0}
+.logo{text-align:center;margin-bottom:28px}
+.logo img{width:64px;height:64px;border-radius:50%;box-shadow:0 0 40px rgba(255,190,60,.35)}
+.logo b{display:block;font:900 64px/1 var(--g);letter-spacing:6px;margin-top:14px}
+.logo span{display:block;font:800 11px var(--f);letter-spacing:4px;color:var(--dim);margin-top:8px}
+.logo p{margin:14px auto 0;max-width:340px;color:var(--dim);font:600 14px/1.5 var(--f)}
+
+/* шапка */
+.top{position:sticky;top:0;z-index:10;background:rgba(7,7,8,.88);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-bottom:1px solid #16141a}
+.top .wrap{display:flex;align-items:center;gap:10px;height:58px;padding-top:env(safe-area-inset-top,0)}
+.top img{width:30px;height:30px;border-radius:50%}
+.top b{font:900 24px var(--g);letter-spacing:3px}
+.back{flex:none;color:var(--dim);text-decoration:none;font:800 13px var(--f);border:1px solid var(--line);border-radius:999px;padding:7px 11px;margin-right:2px}
+.bal{margin-left:auto;border:1px solid rgba(255,210,63,.35);background:#1a1510;border-radius:999px;padding:7px 12px;font:800 13.5px var(--f);color:var(--gold);white-space:nowrap}
+
+/* нижнее меню как в кабинете EAGLES */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:20;background:rgba(12,11,13,.9);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-top:1px solid var(--line);padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px))}
+.nav div{display:grid;grid-template-columns:repeat(5,1fr);max-width:720px;margin:0 auto}
+.nav button{position:relative;display:grid;justify-items:center;gap:3px;padding:6px 0;font:700 11px var(--f);color:#6d675f}
+.nav svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.nav .on{color:var(--orange)}
+.nav .on:before{content:"";position:absolute;top:-8px;left:30%;right:30%;height:3px;border-radius:0 0 3px 3px;background:var(--orange);box-shadow:0 0 12px var(--orange)}
+main{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+
+/* чат */
+#chat{display:flex;flex-direction:column;height:calc(100dvh - 58px - 72px - env(safe-area-inset-bottom,0px))}
+.mbar{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:10px 16px 8px;max-width:720px;margin:0 auto;width:100%}
+.mbar::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 13px;font:800 12.5px var(--f);color:var(--dim)}
+.chip.on{background:#2a2216;border-color:var(--gold2);color:var(--gold)}
+.chip.tool{color:var(--text)}
+.msgs{flex:1;overflow-y:auto;padding:6px 0 10px}
+.msgs .wrap{display:flex;flex-direction:column;gap:12px}
+.m{max-width:92%;border-radius:18px;padding:11px 14px;font:500 15px/1.55 var(--f);overflow-wrap:anywhere}
+.m.u{align-self:flex-end;background:#2a2216;border:1px solid #3a2e1a;border-bottom-right-radius:6px;white-space:pre-wrap}
+.m.a{align-self:flex-start;background:var(--card);border:1px solid var(--line);border-bottom-left-radius:6px}
+.m.a p{margin:0 0 8px}.m.a p:last-child{margin:0}
+.m.a pre{background:#0b0a0c;border:1px solid var(--line);border-radius:10px;padding:10px;overflow-x:auto;font:500 13px/1.45 ui-monospace,Consolas,monospace;margin:8px 0}
+.m.a code{font:500 13.5px ui-monospace,Consolas,monospace;background:#0b0a0c;border-radius:5px;padding:1px 4px}
+.m.a pre code{background:none;padding:0}
+.m.a h3,.m.a h4{margin:10px 0 6px;font:800 16px var(--f)}
+.m.a ul,.m.a ol{margin:4px 0 8px;padding-left:22px}
+.meta{font:700 11px var(--f);color:var(--dim2);margin-top:6px;display:flex;gap:10px;align-items:center}
+.meta button{color:var(--dim);font:700 11px var(--f)}
+.typing:after{content:"▍";animation:bl 1s steps(2) infinite;color:var(--gold)}
+@keyframes bl{50%{opacity:0}}
+.empty{text-align:center;padding:40px 10px;color:var(--dim)}
+.empty b{display:block;font:900 30px var(--g);letter-spacing:3px;margin-bottom:8px}
+.sugg{display:grid;gap:8px;margin-top:18px;text-align:left}
+.sugg button{border:1px solid var(--line);background:var(--card);border-radius:14px;padding:12px 14px;font:600 14px var(--f);text-align:left;color:var(--text)}
+.composer{border-top:1px solid #16141a;padding:10px 0}
+.composer .wrap{display:flex;gap:8px;align-items:flex-end}
+.composer textarea{flex:1;resize:none;min-height:48px;border-radius:16px;border:1px solid var(--line);background:#100e12;padding:13px 14px;font:500 15.5px/1.4 var(--f);outline:none}
+.composer textarea:focus{border-color:var(--gold2)}
+.send{flex:none;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#ff6a2b,#ffb03a);display:grid;place-items:center}
+.send svg{width:22px;height:22px;fill:#1a0d05}
+.send.stop{background:#2a2622}.send.stop svg{fill:var(--text)}
+.hint{font:600 11.5px var(--f);color:var(--dim2);text-align:center;margin-top:6px}
+
+/* диалоги */
+.sheet{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center}
+.sheet>div{width:100%;max-width:720px;max-height:80vh;overflow-y:auto;background:#141217;border:1px solid var(--line);border-bottom:0;border-radius:22px 22px 0 0;padding:18px 16px calc(20px + env(safe-area-inset-bottom))}
+.dl{display:flex;align-items:center;gap:10px;padding:12px 4px;border-bottom:1px solid #1f1c20}
+.dl button.t{flex:1;text-align:left;font:700 14px var(--f);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dl small{color:var(--dim2);font-size:11.5px}
+.dl .x{color:var(--dim2);font-size:18px;padding:0 6px}
+
+/* кошелёк */
+.big{text-align:center;padding:22px 16px;border-color:rgba(255,210,63,.4);background:linear-gradient(160deg,#241b10,#100d0a)}
+.big small{display:block;color:var(--dim);font:800 12px var(--f);letter-spacing:.08em}
+.big b{display:block;font:900 40px var(--f);color:var(--gold);margin:6px 0}
+.row{display:flex;justify-content:space-between;gap:10px;padding:10px 2px;border-bottom:1px solid #1e1a15;font-size:13.5px}
+.row span{color:var(--dim);min-width:0;overflow:hidden;text-overflow:ellipsis}
+.row b{white-space:nowrap}
+.plus{color:var(--green)}
+.flex{display:flex;gap:8px}
+.soon{text-align:center;padding:36px 18px}
+.soon .ic{font-size:44px}
+.soon b{display:block;font:900 22px var(--f);margin:10px 0 6px}
+.codebox{font:700 14px ui-monospace,Consolas,monospace;background:#0b0a0c;border:1px solid var(--line);border-radius:12px;padding:12px;white-space:pre-wrap;user-select:all}
+.toast{position:fixed;z-index:60;left:50%;bottom:calc(92px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#22190e;border:1px solid var(--gold2);color:var(--text);font:700 13px var(--f);padding:10px 14px;border-radius:12px;max-width:90vw;text-align:center}
+.foot{text-align:center;color:#55555c;font-size:11.5px;margin:24px 0 8px;line-height:1.5}
+
+/* v2: тоньше, выбор нейросети сверху */
+.top .wrap{gap:4px;height:56px}
+.ico{flex:none;width:38px;height:38px;display:grid;place-items:center;border-radius:12px;color:var(--dim);border:0;padding:0;margin:0}
+.ico svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.ico:hover,.ico:focus-visible{background:#141217;color:var(--text)}
+.mid{flex:1;min-width:0;display:flex;justify-content:center}
+.pick{display:flex;align-items:center;gap:4px;max-width:100%;padding:8px 10px;border-radius:12px;font:600 15.5px var(--f);color:var(--text);letter-spacing:.1px}
+.pick span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pick svg{flex:none;width:18px;height:18px;fill:none;stroke:var(--gold);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.pick:hover,.pick:focus-visible{background:#141217}
+.brand{display:flex;align-items:center;gap:8px}
+.brand img{width:24px;height:24px}
+.top .brand b{font:900 17px var(--g);letter-spacing:4px}
+body:not([data-tab=chat]) .sub,body:not([data-tab=chat]) #dOpen{visibility:hidden}
+body:not([data-tab=chat]) .sub{display:none}
+body.locked .sub{display:none}body.locked #dOpen{visibility:hidden}
+.bal{font:600 12.5px var(--f);padding:6px 11px;border-color:rgba(255,210,63,.22);background:transparent}
+.mpanel{position:fixed;z-index:30;left:50%;transform:translateX(-50%);top:calc(60px + env(safe-area-inset-top,0px));width:min(360px,calc(100vw - 24px));background:#121014;border:1px solid #26221f;border-radius:18px;padding:6px;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.opt{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:11px 12px;border-radius:12px}
+.opt:hover,.opt:focus-visible{background:#1b181d}
+.opt span{flex:1;min-width:0}
+.opt b{display:block;font:600 14.5px var(--f);color:var(--text)}
+.opt small{display:block;font:500 12px/1.4 var(--f);color:var(--dim2);margin-top:2px}
+.opt i{flex:none;width:18px;height:18px}
+.opt.on i{background:no-repeat center/18px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffd23f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E")}
+.empty{padding:0;min-height:52vh;display:grid;place-items:center;font:500 25px/1.3 var(--f);color:var(--text);letter-spacing:-.2px;text-align:center}
+.m{font:400 15.5px/1.62 var(--f)}
+.m.a{max-width:100%;background:none;border:0;padding:2px 2px}
+.m.a b,.m.a strong{font-weight:700}
+.m.u{background:#1c1813;border-color:#2b241b;border-radius:20px;border-bottom-right-radius:6px}
+.meta,.meta button{font:500 11.5px var(--f)}
+.composer{border-top:0;padding:8px 0 12px}
+.composer .wrap{align-items:flex-end;background:none}
+.composer textarea{border-radius:24px;font:400 15.5px/1.4 var(--f);min-height:48px;padding:13px 18px;background:#121014;border-color:#24201d}
+.send{width:44px;height:44px;margin-bottom:2px}
+.nav{border-top-color:#1a1719;background:rgba(9,8,10,.92)}
+.nav button{font:500 10.5px var(--f)}
+.nav svg{stroke-width:1.6}
+.nav .on:before{height:2px;top:-8px;box-shadow:0 0 8px var(--orange)}
+h2{font:700 11.5px var(--f);letter-spacing:1.4px}
+.btn{font:700 15.5px var(--f)}
+.btn2{font:600 13.5px var(--f)}
+.card{border-color:#221f1c}
+.big b{font-weight:700}
+
+/* v3: LURE наверху, выбор ниже */
+.top .wrap{height:50px}
+.brand{gap:7px}
+.brand img{width:20px;height:20px;opacity:.95}
+.top .brand b{font:900 15px var(--g);letter-spacing:6px;color:var(--gold1);background:none;-webkit-text-fill-color:currentColor;padding-left:6px}
+.sub{display:flex;justify-content:center;padding:0 16px 6px;max-width:720px;margin:0 auto}
+.pick{font:500 13px var(--f);color:var(--dim);padding:5px 10px;border:1px solid #221f1c;border-radius:999px;gap:2px}
+.pick span{max-width:62vw}
+.pick svg{width:15px;height:15px;stroke:var(--gold2)}
+.mpanel{top:calc(92px + env(safe-area-inset-top,0px))}
+
+/* v4: LURE + раздел */
+#chat{height:calc(100dvh - 90px - 72px - env(safe-area-inset-bottom,0px))}
+.brand em{font:400 15px var(--f);font-style:normal;color:var(--text);letter-spacing:.3px;margin-left:2px}
+.top .brand b{padding-left:3px}
+/* v5: премиальная шапка */
+.top{background:#070708;border-bottom:0}
+.top:after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:linear-gradient(90deg,transparent,rgba(233,162,59,.45) 50%,transparent)}
+.top .wrap{height:54px;gap:0}
+.top .wrap>.back{width:64px;justify-content:start;display:flex;align-items:center}
+.mid{justify-content:center}
+.brand{flex-direction:column;align-items:center;gap:3px}
+.top .brand b{font:900 16px/1 var(--g);letter-spacing:9px;padding-left:9px;color:var(--gold)}
+.brand em{font:500 8.5px/1 var(--f);letter-spacing:3.2px;text-transform:uppercase;color:var(--dim);margin:0;padding-left:3.2px}
+.bal{width:64px;flex:none;margin:0;padding:0;border:0;background:none;text-align:right;font:600 13px var(--f);color:var(--gold1);font-variant-numeric:tabular-nums}
+.sub{justify-content:space-between;align-items:center;padding:4px 16px 6px}
+.sub .ico{width:36px;height:36px}
+.pick{border:0;padding:6px 8px;font:500 13.5px var(--f);color:var(--text)}
+.pick svg{stroke:var(--dim)}
+body:not([data-tab=chat]) #dOpen{display:none}
+#chat{height:calc(100dvh - 100px - 72px - env(safe-area-inset-bottom,0px))}
+.mpanel{top:calc(104px + env(safe-area-inset-top,0px))}
+
+/* v6: логотип на входе */
+.logo .biglogo{width:min(340px,86vw);height:auto;border-radius:0;box-shadow:none;display:block;margin:0 auto}
+.logo p{margin-top:10px}
+#login .wrap{padding-top:28px}
+
+/* v7: слово LURE из логотипа */
+.brand img.word{width:auto;height:22px;opacity:1;border-radius:0;display:block}
+.brand{gap:4px}
+/* v8–v13: лучшая модель, тонкие рамки, длинные сообщения */
+.opt.best{border:1.5px solid var(--gold2)!important;background:linear-gradient(180deg,#221b10,#15110c)!important;box-shadow:0 0 0 1px rgba(255,210,63,.12),0 6px 18px rgba(233,162,59,.12);border-radius:14px;margin:2px 0 6px}
+.tagb{display:inline-block;margin-left:8px;vertical-align:2px;font:800 9.5px var(--f);letter-spacing:.08em;font-style:normal;color:#1a0d05;background:linear-gradient(180deg,var(--gold1),var(--gold2));border-radius:6px;padding:2px 6px}
+/* тонкие премиальные рамки */
+.card,.inp,.btn2,.seg,.voice,.chips2 button,.gmo,.ochips button,.gi,.gobar,.composer textarea,.chip,.sugg button,.m.a,.sheet>div,.back,.mpanel{border-width:.5px!important}
+.card,.seg,.gi{border-color:#2c2824}
+.refb{border-width:.5px;border-color:#3e372f}
+.gobar{border-color:rgba(233,162,59,.55)}
+.ochips button.on,.voice.on,.gmo.on,.opt.best{border-color:rgba(233,162,59,.75)!important}
+.ochips button{font-weight:500}.ochips button.on{font-weight:600}
+.inp:focus,.composer textarea:focus{border-color:rgba(233,162,59,.6)!important}
+.ta{display:block;height:auto;min-height:46px;padding:12px 14px;font:400 15.5px/1.45 var(--f);color:var(--text);resize:none;overflow-y:hidden;border-radius:14px}
+.ta::placeholder{color:#6f6a64;font-weight:400}
+.m.u .ut.clip{max-height:calc(15 * 1.62em);overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 2.4em),transparent);mask-image:linear-gradient(180deg,#000 calc(100% - 2.4em),transparent)}
+.att{flex:none;width:44px;height:44px;margin-bottom:2px;border-radius:50%;border:.5px solid #2c2824;background:#121014;display:grid;place-items:center}
+.att svg{width:21px;height:21px;fill:none;stroke:#a39b90;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.att.web.on{border-color:rgba(233,162,59,.7);background:#2a2216}.att.web.on svg{stroke:var(--gold)}
+.webtag{display:block;font:600 11px var(--f);color:var(--gold);margin-bottom:4px}
+.phint{font:600 12px var(--f);color:#8a837a;text-align:right;padding-bottom:6px!important}.composer .wrap.phint{display:block}.phint:empty{display:none}.phint b{color:var(--gold)}
+.attrow{display:flex;gap:8px;flex-wrap:wrap;padding-bottom:8px!important}
+.attrow .ac{position:relative;display:flex;align-items:center;gap:6px;height:56px;border-radius:12px;border:.5px solid #2c2824;background:#121014;padding:0 26px 0 10px;font:600 12px var(--f);color:#c9c1b5;max-width:220px}
+.attrow .ac img{width:56px;height:56px;object-fit:cover;border-radius:12px;margin-left:-10px}
+.attrow .ac.i{padding:0 0 0 10px}
+.attrow .ac span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.attrow .ac button{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:#2a2622;color:#fff;font-size:14px;line-height:22px;padding:0}
+.uimgs{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;margin-bottom:6px}
+.uimgs img{width:96px;height:96px;object-fit:cover;border-radius:12px;display:block}
+.ufile{display:inline-block;font:600 12px var(--f);color:#c9c1b5;background:#00000033;border-radius:10px;padding:6px 10px;margin:0 0 6px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px}
+.m.u .more{display:block;margin:4px 0 0 auto;font:600 13px var(--f);color:var(--gold);padding:2px 0}
+/* картинки и видео */
+.olab{display:block;font:600 12px var(--f);color:#8a837a;margin:14px 0 6px;text-transform:uppercase;letter-spacing:.06em}
+.ochips{display:flex;flex-wrap:wrap;gap:6px}
+.ochips button{border:.5px solid var(--line);background:#0d0c0f;border-radius:10px;padding:8px 12px;font:500 13px var(--f);color:#bdb6ac;display:flex;align-items:center;gap:7px}
+.ochips button.on{border-color:rgba(233,162,59,.75);color:var(--gold);background:#1d1810;font-weight:600}
+.ochips .ar{display:inline-block;border:1.5px solid currentColor;border-radius:2px}
+.refb{margin-top:10px;width:100%;border:.5px dashed #3e372f;border-radius:12px;padding:10px;font:600 13px var(--f);color:#a39b90;background:none}
+.refs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.refs:empty{display:none}
+.refs span{position:relative;width:56px;height:56px;border-radius:10px;overflow:hidden;border:.5px solid var(--line)}
+.refs img{width:100%;height:100%;object-fit:cover}
+.refs button{position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;background:#000a;color:#fff;font:700 12px var(--f);line-height:20px;padding:0}
+.gobar{display:flex;gap:12px;align-items:center;background:linear-gradient(180deg,#17141a,#110f13);border:.5px solid rgba(233,162,59,.55);border-radius:20px;padding:10px 10px 10px 16px;margin-bottom:6px}
+.gobar small{display:block;font:600 11px var(--f);color:#8a837a;text-transform:uppercase;letter-spacing:.06em}.gobar b{font:900 22px var(--f);color:var(--gold);white-space:nowrap}
+.gobar .btn{padding:14px 10px}
+.gal{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.gi{position:relative;border-radius:14px;overflow:hidden;border:.5px solid #2c2824;background:#0d0c0f;cursor:pointer}
+.gi img,.gi video{display:block;width:100%;height:auto;background:#000}
+.gi .ph{display:grid;place-items:center;color:rgba(255,255,255,.85);font:700 12px var(--f);text-align:center;padding:10px;background:radial-gradient(circle at 30% 25%,#ffd23f55,transparent 55%),radial-gradient(circle at 80% 80%,#ff6a2b55,transparent 55%),linear-gradient(160deg,#2a2016,#0d0b10)}
+.gi small{display:block;padding:6px 8px;color:#8a837a;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gi .bar{position:absolute;left:8px;right:8px;bottom:34px;height:4px;border-radius:4px;background:#2a2622;overflow:hidden}.gi .bar i{display:block;height:100%;background:var(--orange);width:0;transition:width 1s linear}
+.gi .play{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);width:42px;height:42px;border-radius:50%;background:#000a;color:#fff;display:grid;place-items:center;font-size:16px;pointer-events:none}
+.viewer{position:fixed;inset:0;z-index:60;background:#000d;display:grid;place-items:center;padding:16px}
+.viewer .vbox{width:min(560px,100%);max-height:100%;overflow:auto;background:#121014;border:.5px solid #2c2824;border-radius:18px;padding:12px}
+#vMedia img,#vMedia video{display:block;width:100%;max-height:62vh;object-fit:contain;border-radius:12px;background:#000}
+#vInfo{font-size:12.5px;margin:10px 2px}
+.viewer .flex{display:flex;flex-wrap:wrap;gap:8px}.viewer .flex>*{flex:1 1 40%;text-align:center;text-decoration:none}
+body:not([data-tab=chat]):not([data-tab=img]):not([data-tab=video]):not([data-tab=sound]) .sub{display:none}
+body[data-tab=img] .sub,body[data-tab=video] .sub,body[data-tab=sound] .sub{display:flex;visibility:visible}
+body[data-tab=img] #dNew2,body[data-tab=video] #dNew2,body[data-tab=sound] #dNew2{visibility:hidden}
+.mp{font-size:15px!important;font-weight:500!important;line-height:1.45;overflow-y:hidden}
+#vInfo{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-size:12px;margin:8px 2px}
+#vInfo.open{display:block}
+
+/* НОВЫЙ ВХОД (09.11.2026): как окно ПИН, 6 ячеек, без кнопки «Войти» */
+#login .logo{position:relative;margin-bottom:6px}
+#login .logo::before{content:"";position:absolute;left:50%;top:50%;width:460px;height:460px;margin:-230px 0 0 -230px;border-radius:50%;background:radial-gradient(circle,rgba(255,176,46,.18),rgba(255,120,30,.05) 40%,rgba(0,0,0,0) 66%);pointer-events:none;animation:vhPulse 3.6s ease-in-out infinite}
+@keyframes vhPulse{50%{opacity:.6;transform:scale(1.06)}}
+#login .biglogo{position:relative;transition:width .45s cubic-bezier(.2,.8,.2,1)}
+#login.vh2 .biglogo{width:min(230px,62vw)}
+.vh-h{margin:18px 0 4px;text-align:center;font:800 23px/1.25 var(--f);color:var(--text)}
+.vh-sub{margin:0 auto;text-align:center;color:var(--dim);font:500 14px/1.5 var(--f);max-width:330px}
+.vh-sub b{color:var(--text);font-weight:700}
+.vh-fld{position:relative;margin-top:24px}
+.vh-fld input{height:58px;border-radius:16px;padding:0 18px 0 50px;font:600 17px var(--f);color:var(--text);transition:border-color .2s,box-shadow .2s}
+.vh-fld input:focus{border-color:rgba(255,210,63,.6);box-shadow:0 0 0 4px rgba(255,210,63,.08)}
+.vh-fld svg{position:absolute;left:17px;top:19px;width:20px;height:20px;stroke:var(--gold2);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#l1 .err{text-align:center}
+.vh-btn{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:58px;border-radius:16px;background:linear-gradient(180deg,#ffe9a3 0%,#ffd23f 42%,#f0a830 100%);color:#2a1a04;font:800 16.5px var(--f);box-shadow:0 12px 30px rgba(255,180,50,.28),inset 0 1px 0 rgba(255,255,255,.65),inset 0 -2px 0 rgba(150,80,0,.25);transition:transform .12s,filter .2s}
+.vh-btn::before{content:"";position:absolute;top:0;bottom:0;width:60%;left:-70%;background:linear-gradient(100deg,rgba(255,255,255,0),rgba(255,255,255,.55),rgba(255,255,255,0));transform:skewX(-18deg);animation:vhSweep 3.4s ease-in-out 1.2s infinite}
+@keyframes vhSweep{0%{left:-70%}45%,100%{left:130%}}
+.vh-btn:active{transform:scale(.985)}
+.vh-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.vh-btn .sp{display:none;width:18px;height:18px;border-radius:50%;border:2.5px solid rgba(42,26,4,.25);border-top-color:#2a1a04;animation:vhRot .7s linear infinite}
+.vh-btn.busy{filter:saturate(.8)}.vh-btn.busy .sp{display:block}.vh-btn.busy svg{display:none}
+@keyframes vhRot{to{transform:rotate(360deg)}}
+.vh-cells{position:relative;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px;margin:28px auto 0;max-width:340px}
+.vh-cells i{position:relative;display:flex;align-items:center;justify-content:center;aspect-ratio:5/6;border-radius:14px;background:#141217;border:1px solid var(--line);font:800 26px var(--f);font-style:normal;color:var(--gold1);font-variant-numeric:tabular-nums;transition:border-color .2s,background .2s,transform .2s,box-shadow .2s}
+.vh-cells i.f{border-color:rgba(255,210,63,.55);background:linear-gradient(180deg,#1f1a12,#141217);animation:vhPop .22s ease-out}
+@keyframes vhPop{50%{transform:scale(1.08)}}
+.vh-cells i.cur::after{content:"";width:2px;height:28px;border-radius:2px;background:var(--gold);animation:vhBlink 1s steps(2) infinite}
+@keyframes vhBlink{50%{opacity:0}}
+.vh-cells input{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;border:0;background:transparent;color:transparent;caret-color:transparent}
+.vh-cells.chk i{border-color:rgba(255,210,63,.7);animation:vhWave 1s ease-in-out infinite}
+.vh-cells.chk i:nth-child(2){animation-delay:.08s}.vh-cells.chk i:nth-child(3){animation-delay:.16s}.vh-cells.chk i:nth-child(4){animation-delay:.24s}.vh-cells.chk i:nth-child(5){animation-delay:.32s}.vh-cells.chk i:nth-child(6){animation-delay:.4s}
+@keyframes vhWave{50%{transform:translateY(-5px);box-shadow:0 8px 20px rgba(255,190,60,.25)}}
+.vh-cells.bad{animation:vhShake .42s}
+.vh-cells.bad i{border-color:rgba(255,107,90,.8);color:#ff6b5a}
+@keyframes vhShake{20%{transform:translateX(-9px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(3px)}}
+.vh-cells.good i{border-color:var(--green);color:#bff5cf;background:linear-gradient(180deg,#123222,#101a14)}
+.vh-cells.lock i{opacity:.35}
+.vh-msg{min-height:22px;margin:12px 2px 0;font:600 13.5px/1.45 var(--f);color:var(--dim);text-align:center}
+.vh-msg.err{color:#ff7b6b}.vh-msg.ok{color:var(--green)}
+.vh-lock{display:flex;gap:12px;align-items:center;margin-top:14px;padding:14px 16px;border-radius:16px;background:linear-gradient(180deg,#1f1410,#160f0d);border:1px solid rgba(255,107,90,.35)}
+.vh-lock[hidden]{display:none}
+.vh-lock svg{flex:none;width:28px;height:28px;stroke:#ff6b5a;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.vh-lock b{display:block;font:800 14.5px var(--f);color:#ffd9d3}
+.vh-lock span{font:600 13px var(--f);color:#c9a49d}
+.vh-lock em{font-style:normal;color:#fff;font-variant-numeric:tabular-nums}
+.vh-links{display:flex;justify-content:space-between;gap:10px;margin-top:20px}
+.vh-lnk{font:700 13.5px var(--f);color:var(--gold);padding:6px 0;background:none;border:0}
+.vh-lnk[disabled]{color:var(--dim2)}
+.vh-foot{margin-top:24px;text-align:center;font:500 12.5px/1.6 var(--f);color:var(--dim2)}
+.vh-foot a{font-weight:700;text-decoration:none}
+@media (prefers-reduced-motion:reduce){#login .logo::before,.vh-btn::before,.vh-cells i,.vh-cells.bad{animation:none!important}}
+/* ЗОЛОТО LURE (17.11): как в EAGLES — меню, кнопки, отправка в золоте вместо оранжевого */
+.nav{background:linear-gradient(180deg,rgba(6,6,7,.6),rgba(6,6,7,.96) 40%);border-top:1px solid rgba(255,210,63,.12)}
+.nav button{color:#7d756a}
+.nav .on{color:var(--gold)}
+.nav .on:before{background:var(--gold);box-shadow:0 0 12px var(--gold)}
+.btn{background:linear-gradient(180deg,#ffe7a0,#ffd23f 45%,#c8901c);color:#1a1205;box-shadow:0 10px 26px rgba(255,190,60,.22)}
+.send{background:linear-gradient(180deg,#ffe7a0,#ffd23f 45%,#c8901c);box-shadow:0 6px 18px rgba(255,190,60,.25)}
+.send svg{fill:#1a1205}
+.gi .bar i{background:linear-gradient(90deg,#ffe08a,#ffd23f)}
+/* Возврат в Карты (18.11.2026, задание 82) */
+.top .wrap>.back.tokarty{width:auto;max-width:48vw;height:32px;gap:2px;padding:0 11px 0 5px;border:.5px solid rgba(233,162,59,.6)!important;border-radius:999px;color:var(--gold1);font:700 12.5px/1 var(--f);white-space:nowrap;text-decoration:none;background:#15110b}
+.top .wrap>.back.tokarty svg{width:17px;height:17px}
+.top .wrap>.back.tokarty~.bal{width:auto;min-width:56px}
+#vKarty{margin-top:8px;text-decoration:none}
+.bkpulse{animation:bkP 1s ease-in-out 4}@keyframes bkP{50%{box-shadow:0 0 0 4px rgba(255,210,63,.5),0 0 24px rgba(255,170,40,.6)}}
+</style>
+<!-- lureDesk95: широкая версия LURE для ноутбука (18.11.2026, задание 95). Только экран от 1200 точек, телефон не меняется. -->
+<style id="lureDesk95">
+@media (min-width:1200px){
+#app:not([hidden]){padding-left:232px}
+.nav{top:0;bottom:0;right:auto;width:232px;border-top:0!important;border-right:1px solid rgba(255,210,63,.12);padding:22px 14px;background:#08080a!important;-webkit-backdrop-filter:none;backdrop-filter:none}
+.nav div{display:flex;flex-direction:column;gap:4px;max-width:none;margin:0}
+.nav div:before{content:"";display:block;height:34px;margin:2px 10px 22px;background:url(/lure-word.webp) left center/auto 28px no-repeat}
+.nav button{display:flex;align-items:center;justify-content:flex-start;gap:14px;padding:12px 14px;border-radius:12px;font:600 15px var(--f)!important;text-align:left}
+.nav button:hover{background:rgba(255,255,255,.04);color:#cfc6b8}
+.nav .on{background:rgba(255,210,63,.08)}
+.nav .on:before{top:10px!important;bottom:10px;left:0!important;right:auto!important;width:3px;height:auto!important;border-radius:0 3px 3px 0!important}
+main{padding-bottom:24px}
+#app .wrap,.top .sub{max-width:880px}
+#chat{height:calc(100dvh - 100px)!important}
+.top .brand .word{display:none}
+#dOpen{display:none!important}
+.toast{left:calc(50% + 116px);bottom:28px}
+.mpanel{left:calc(50% + 116px)}
+body[data-tab=chat] #app:not([hidden]){padding-left:532px}
+body[data-tab=chat] .mpanel,body[data-tab=chat] .toast{left:calc(50% + 266px)}
+body[data-tab=chat]:not(.locked) #app:not([hidden])~#dlgs{display:block!important;position:fixed;top:0;bottom:0;left:232px;right:auto;width:300px;z-index:15;background:#0b0a0c}
+body[data-tab=chat]:not(.locked) #app:not([hidden])~#dlgs>div{max-width:none;max-height:none;height:100%;border:0!important;border-right:1px solid #1d1a1e!important;border-radius:0;background:#0b0a0c;padding:22px 12px 20px}
+#dlgs .dl{padding:11px 10px;border-radius:12px;border-bottom:0;margin-bottom:2px;cursor:pointer}
+#dlgs .dl:hover{background:rgba(255,255,255,.04)}
+#dlgs .dl.ld-on{background:rgba(255,210,63,.09)}
+#dlgs .dl.ld-on button.t{color:var(--gold)}
+}
+</style>
+<script id="lureDesk95js">
+(function(){
+var mq=window.matchMedia?matchMedia('(min-width:1200px)'):{matches:false},first=false,tries={},last=0;
+function $(i){return document.getElementById(i)}
+function vis(){var a=$('app'),b=document.body;return a&&!a.hidden&&b&&!b.classList.contains('locked')&&b.dataset.tab==='chat'}
+function cur(){var v='';try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(/^lure_.+_cur$/.test(k)){v=localStorage.getItem(k);if(k!=='lure_x_cur')break}}}catch(e){}return v||''}
+function load(){var o=$('dOpen'),d=$('dlgs');if(!o||!d)return;last=Date.now();o.click();d.hidden=true}
+function mark(){var c=cur(),L=$('dList'),has=false;if(!L)return has;[].forEach.call(L.querySelectorAll('.dl'),function(r){var b=r.querySelector('[data-o]'),on=!!(b&&c&&b.getAttribute('data-o')===c);r.classList.toggle('ld-on',on);if(on)has=true});return has}
+function tick(){if(!mq.matches||!vis())return;
+  if(!first){first=true;load();return}
+  var c=cur(),has=mark(),m=$('mlist');
+  if(c&&!has&&m&&m.children.length>1&&Date.now()-last>8000&&(tries[c]||0)<4){tries[c]=(tries[c]||0)+1;load()}}
+document.addEventListener('click',function(e){var r=e.target&&e.target.closest&&e.target.closest('#dlgs .dl');if(r&&!e.target.closest('[data-x]')&&mq.matches){var b=r.querySelector('button.t');if(b&&e.target!==b)b.click()}setTimeout(mark,50)},true);
+setInterval(tick,2000);
+})();
+</script>
+</head>
+<body>
+<!-- ЭКРАН ЗАГРУЗКИ (09.11.2026): логотип LURE + золотая полоска, уходит, когда открылся вход, ПИН или сам LURE -->
+<div class="zgr" id="zgr" role="status" aria-label="Загрузка"><div class="zgr-glw"></div><div class="zgr-lg"></div><div class="zgr-bar"><i></i></div><div class="zgr-t" hidden></div></div>
+<script>(function(){var Z=document.getElementById('zgr'),B=Z.querySelector('.zgr-bar i'),p=6,t=0,fin=0;function tick(){if(fin)return;p+=(92-p)*(p<60?.16:.07);B.style.width=p+'%'}window.zgrShow=function(){if(!Z.hidden&&t)return;fin=0;Z.classList.remove('zgr-out');Z.hidden=false;if(!t){tick();t=setInterval(tick,260);clearTimeout(Z._w);Z._w=setTimeout(function(){if(!fin&&!Z.hidden){var x=Z.querySelector('.zgr-t');x.innerHTML='Загрузка идёт дольше обычного. <a href=>Обновить</a>';x.hidden=false}},15000)}};window.zgrDone=function(){if(Z.hidden||fin)return;fin=1;clearInterval(t);t=0;B.style.width='100%';setTimeout(function(){Z.classList.add('zgr-out');setTimeout(function(){Z.hidden=true;Z.classList.remove('zgr-out')},460)},380)};if(!Z.hidden){Z.hidden=true;zgrShow()}})();</script>
+
+<!-- ВХОД -->
+<section id="login" hidden><div class="wrap" style="max-width:440px">
+  <div class="logo">
+    <img class="biglogo" src="/lure-logo.webp" width="640" height="395" alt="LURE. Покажи свой мир">
+  </div>
+  <div id="l1">
+    <h1 class="vh-h">Вход в LURE</h1>
+    <p class="vh-sub">Тот же аккаунт, что и в EAGLES. Впиши ID или почту, пришлём код.</p>
+    <form id="lF1" novalidate>
+      <div class="vh-fld"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><input class="inp" id="lLogin" placeholder="ID или почта" autocomplete="username" autocapitalize="none" spellcheck="false" inputmode="email" aria-label="ID или почта"></div>
+      <div class="err" id="lErr1"></div>
+      <button class="vh-btn" id="lBtn1" type="submit"><span class="sp"></span><span id="lBtn1t">Получить код</span><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    </form>
+    <p class="vh-foot">Нет аккаунта EAGLES? Регистрация откроется в декабре — <a href="https://max.ru/u/f9LHodD0cOIec-v91ujcZ-dap9pM51MzN00AwcIMTy-x29hys8Mcg8n8HJ4" target="_blank" rel="noopener">напиши в MAX</a><br>Если LURE не открывается, выключи VPN.</p>
+  </div>
+  <div id="l2" hidden>
+    <h1 class="vh-h">Код из письма</h1>
+    <p class="vh-sub" id="lHint"></p>
+    <div class="vh-cells" id="lCells"><i></i><i></i><i></i><i></i><i></i><i></i><input id="lCode" inputmode="numeric" autocomplete="one-time-code" aria-label="Код из письма, 6 цифр"></div>
+    <div class="vh-msg" id="lErr2"></div>
+    <div class="vh-lock" id="lLock" hidden></div>
+    <div class="vh-links"><button class="vh-lnk" id="lBack" type="button">← Другой ID</button><button class="vh-lnk" id="lResend" type="button" disabled>Новый код через 0:59</button></div>
+    <p class="vh-foot">Письма нет? Загляни в «Спам» или «Промоакции».</p>
+  </div>
+  <div id="lp" hidden>
+    <p id="pTitle" style="text-align:center;font:700 18px var(--f);margin:0 0 6px"></p>
+    <p class="muted" id="pHint" style="text-align:center;min-height:20px"></p>
+    <input class="inp" id="pCode" placeholder="Код из письма" inputmode="numeric" autocomplete="one-time-code" maxlength="6" hidden style="text-align:center;letter-spacing:6px;font-size:22px;margin-bottom:10px">
+    <input class="inp" id="pIn" type="text" name="lure-lock-digits" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore maxlength="4" aria-label="ПИН" style="text-align:center;letter-spacing:16px;font-size:28px;-webkit-text-security:disc">
+    <div class="err" id="pErr"></div>
+    <p style="text-align:center;margin-top:14px"><button class="btn2" id="pForgot">Забыл ПИН</button></p>
+    <p style="text-align:center;margin-top:8px"><button class="btn2" id="pOut">Войти другим аккаунтом</button></p>
+  </div>
+</div></section>
+
+<!-- ПРИЛОЖЕНИЕ -->
+<div id="app" hidden>
+  <header class="top"><div class="wrap">
+    <a class="back ico" href="https://app.eaglesteam.ru/profile.html" aria-label="Вернуться в EAGLES"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></a>
+    <div class="mid"><span class="brand"><img class="word" src="/lure-word.webp" alt="LURE" width="268" height="60"><em id="secName">Чаты</em></span></div>
+    <button class="bal" id="balChip" type="button">… ₽</button>
+  </div>
+  <div class="sub">
+    <button class="ico" id="dOpen" type="button" aria-label="Диалоги"><svg viewBox="0 0 24 24"><path d="M4 8h16M4 16h10"/></svg></button>
+    <button class="pick" id="mPick" type="button" aria-haspopup="listbox"><span id="mName">…</span><svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg></button>
+    <button class="ico" id="dNew2" type="button" aria-label="Новый диалог"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+  </div>
+  </header>
+  <div class="mpanel" id="mpanel" hidden><div class="mlist" id="mlistSel" role="listbox"></div></div>
+
+  <main>
+    <!-- Чат -->
+    <section id="chat" data-tab="chat">
+      
+      <div class="msgs" id="msgs"><div class="wrap" id="mlist"></div></div>
+      <div class="composer"><div class="wrap phint" id="priceLine"></div><div class="wrap attrow" id="attRow" hidden></div><div class="wrap">
+        <button class="att" id="attBtn" type="button" aria-label="Прикрепить фото или файл"><svg viewBox="0 0 24 24"><path d="M21 11.5l-8.6 8.6a5.5 5.5 0 01-7.8-7.8l8.6-8.6a3.7 3.7 0 015.2 5.2l-8.6 8.6a1.8 1.8 0 01-2.6-2.6l8-8"/></svg></button>
+        <button class="att web" id="webBtn" type="button" aria-label="Интернет" aria-pressed="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.8 3 2.8 15 0 18M12 3c-2.8 3-2.8 15 0 18"/></svg></button>
+        <input type="file" id="attFile" accept="image/*,video/*,audio/*,.pdf,.docx,.txt,.md,.csv,.mp3,.m4a,.wav,.ogg,.opus,.mp4,.mov,.webm" multiple hidden>
+        <textarea id="q" rows="1" placeholder="Спроси что угодно"></textarea>
+        <button class="send" id="sendBtn" type="button" aria-label="Отправить"><svg viewBox="0 0 24 24"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg></button>
+      </div></div>
+    </section>
+
+    <!-- Нет Pro -->
+    <section id="nopro" hidden><div class="wrap">
+      <div class="card soon" style="margin-top:16px;border-color:rgba(255,210,63,.4)"><div class="ic">🦅</div><b>LURE доступен с подпиской EAGLES Pro</b>
+        <p class="muted" id="noproTxt">Оформи Pro в своём кабинете EAGLES, и LURE откроется. Деньги за нейросети считаются отдельно, в кошельке LURE.</p>
+        <a class="btn" style="text-decoration:none;margin-top:14px" href="https://app.eaglesteam.ru/profile.html">Оформить Pro в EAGLES</a>
+        <p style="margin-top:12px"><button class="btn2" id="reLogin">Я уже оформил, войти заново</button></p></div>
+    </div></section>
+
+    <!-- Звук -->
+    <section data-tab="sound" hidden><div class="wrap" style="padding-top:14px">
+      <div class="card"><b class="ttl" id="soundT">Текст для озвучки</b>
+        <textarea class="inp mp" id="soundP" rows="4" style="resize:none;margin-top:8px" placeholder="Например: Привет! Я Андрей, и сегодня покажу, как ИИ экономит час каждый день."></textarea>
+        <p class="muted" id="soundN" style="font-size:12px;margin:6px 2px 0;text-align:right"></p>
+        <div id="soundO"></div></div>
+      <div class="gobar"><div><small>К оплате</small><b id="soundPrice">—</b></div><button class="btn" id="soundGo" style="width:auto;flex:1">Озвучить</button></div>
+      <p class="muted" style="font-size:12px;margin:2px 4px 14px">Списание только за готовый звук. Не получилось, деньги не списываются. Озвучка своим голосом появится позже.</p>
+      <h2>Мои звуки</h2>
+      <div class="gal" id="soundG" style="grid-template-columns:1fr"><p class="muted" style="margin:0">Здесь будут твои звуки.</p></div>
+    </div></section>
+
+    <!-- Картинки -->
+    <section data-tab="img" hidden><div class="wrap" style="padding-top:14px">
+      <div class="card"><b class="ttl">Что нарисовать</b>
+        <textarea class="inp mp" id="imgP" rows="4" style="resize:none;margin-top:8px" placeholder="Например: золотой орёл над ночной Москвой, кинематографичный свет"></textarea>
+        <div class="refs" id="imgR"></div>
+        <button class="refb" type="button" data-ref="img">＋ Добавить фото-референс</button>
+        <div id="imgO"></div></div>
+      <div class="gobar"><div><small>К оплате</small><b id="imgPrice">—</b></div><button class="btn" id="imgGo" style="width:auto;flex:1">Создать картинку</button></div>
+      <p class="muted" style="font-size:12px;margin:2px 4px 14px">Списание только за готовый результат. Не получилось, деньги не списываются.</p>
+      <h2>Мои картинки</h2>
+      <div class="gal" id="imgG"><p class="muted" style="grid-column:1/-1;margin:0">Здесь будут твои картинки.</p></div>
+    </div></section>
+
+    <!-- Видео -->
+    <section data-tab="video" hidden><div class="wrap" style="padding-top:14px">
+      <div class="card"><b class="ttl">Что снять</b>
+        <textarea class="inp mp" id="videoP" rows="4" style="resize:none;margin-top:8px" placeholder="Например: орёл взлетает со скалы на рассвете, камера облетает его по кругу"></textarea>
+        <div class="refs" id="videoR"></div>
+        <button class="refb" type="button" data-ref="video">＋ Добавить фото (первый кадр или референс)</button>
+        <div id="videoO"></div></div>
+      <div class="gobar"><div><small>К оплате</small><b id="videoPrice">—</b></div><button class="btn" id="videoGo" style="width:auto;flex:1">Создать видео</button></div>
+      <p class="muted" style="font-size:12px;margin:2px 4px 14px">Ролик готовится несколько минут. Страницу можно закрыть: готовое видео будет ждать здесь. Списание только за готовое.</p>
+      <h2>Мои видео</h2>
+      <div class="gal" id="videoG"><p class="muted" style="grid-column:1/-1;margin:0">Здесь будут твои ролики.</p></div>
+    </div></section>
+    <input type="file" id="mvFile" accept="video/mp4,video/quicktime,video/webm,video/*" hidden>
+    <input type="file" id="xrFile" hidden>
+    <input type="file" id="xrImg" accept="image/jpeg,image/png,image/webp" multiple hidden>
+    <input type="file" id="refFile" accept="image/jpeg,image/png,image/webp" multiple hidden>
+    <div class="viewer" id="viewer" hidden><div class="vbox"><div id="vMedia"></div><p id="vInfo" class="muted"></p>
+      <div class="flex"><a class="btn" id="vDl" target="_blank" rel="noopener" download>Скачать</a><button class="btn2" id="vRef" type="button">✏️ Изменить</button><button class="btn2" id="vRefV" type="button">🎬 В видео</button><button class="btn2" id="vDel" type="button">Удалить</button></div>
+      <a class="btn" id="vKarty" href="https://app.eaglesteam.ru/karty.html#iz-lure" hidden>← Вернуться в карты</a>
+      <button class="btn2" id="vClose" type="button" style="margin-top:8px;width:100%">Закрыть</button></div></div>
+
+    <!-- Кошелёк -->
+    <section data-tab="wallet" hidden><div class="wrap" style="padding-top:16px">
+      <div class="card big"><small>НА СЧЁТЕ</small><b id="wBal">… ₽</b><p class="muted" id="wDay" style="margin:0"></p></div>
+      <div class="card">
+        <b style="font:800 15px var(--f)">Пополнить</b>
+        <p class="muted" style="margin:6px 0 12px">Оплата картой и по СБП скоро появится здесь. Если у тебя есть подарочный код, введи его ниже. Твой ID: <b id="wId" style="color:var(--text)"></b></p>
+        <div class="flex" id="topBox"><input class="inp" id="rCode" placeholder="LURE-XXXX-XXXX" autocomplete="off" style="text-transform:uppercase"><button class="btn2" id="rBtn" style="flex:none">Ввести</button></div>
+        <div class="err" id="rErr"></div>
+        <div id="topHint" hidden style="margin:2px 0 12px;padding:12px 14px;border:.5px solid rgba(255,210,63,.45);border-radius:14px;background:rgba(255,210,63,.06)">
+          <b style="font:700 14px var(--f);color:var(--gold1)">🔒 Пополнение доступно с EAGLES Pro</b>
+          <p class="muted" style="margin:6px 0 10px;font-size:13px">Остаток на счёте можно тратить и без Pro. Чтобы пополнить баланс, оформи Pro в кабинете EAGLES.</p>
+          <div class="flex"><a class="btn" style="text-decoration:none;flex:1" href="https://app.eaglesteam.ru/profile.html">Оформить Pro</a><button class="btn2" id="topRe" type="button" style="flex:1">Уже оформил</button></div>
+        </div>
+        <a class="btn2" style="display:inline-block;text-decoration:none" target="_blank" rel="noopener" href="https://max.ru/u/f9LHodD0cOIec-v91ujcZ-dap9pM51MzN00AwcIMTy-x29hys8Mcg8n8HJ4">Вопрос Андрею в МАКС →</a>
+      </div>
+      <h2>Цены</h2>
+      <div class="card" id="priceList"><p class="muted">Загружаю…</p></div>
+      <h2>История</h2>
+      <div class="card" id="hist"><p class="muted">Пока пусто.</p></div>
+
+      <div id="owner" hidden>
+        <h2>Касса LURE · видишь только ты</h2>
+        <div class="card" id="oSum"><p class="muted">Загружаю…</p></div>
+        <div class="card">
+          <b style="font:800 15px var(--f)">Коды пополнения</b>
+          <div class="flex" style="margin-top:10px"><input class="inp" id="cSum" placeholder="Сумма, ₽" inputmode="numeric"><input class="inp" id="cCnt" placeholder="Сколько" inputmode="numeric" value="1" style="max-width:110px"></div>
+          <button class="btn" id="cBtn" style="margin-top:10px">Создать коды</button>
+          <div id="cOut" style="margin-top:10px"></div>
+        </div>
+        <div class="card">
+          <b style="font:800 15px var(--f)">Пополнить по ID</b>
+          <div class="flex" style="margin-top:10px"><input class="inp" id="kId" placeholder="ID EAGLES"><input class="inp" id="kSum" placeholder="Сумма, ₽" inputmode="decimal"></div>
+          <button class="btn2" id="kBtn" style="margin-top:10px;width:100%">Зачислить</button>
+          <p class="muted" style="margin:8px 0 0">Сумма с минусом списывает деньги, например −50.</p>
+          <div class="err" id="kErr"></div>
+        </div>
+        <div class="card" id="oPeople"></div>
+      </div>
+      <p style="text-align:center"><button class="btn2" id="logout">Выйти из LURE</button></p>
+      <p class="foot">LURE · сервис на сайте EAGLES · Зеркало твоего бизнеса<br>Ответы нейросетей могут содержать ошибки, проверяй важное.<br><a href="/oferta.html" target="_blank" rel="noopener">Оферта</a> · <a href="/politika.html" target="_blank" rel="noopener">Конфиденциальность</a> · <a href="/soglasie.html" target="_blank" rel="noopener">Согласие на обработку данных</a></p>
+    </div></section>
+  </main>
+
+  <nav class="nav"><div>
+    <button data-go="chat" class="on"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>Чаты</button>
+    <button data-go="img"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>Изображения</button>
+    <button data-go="video"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="4"/><path d="M10 9l5 3-5 3z"/></svg>Видео</button>
+    <button data-go="sound"><svg viewBox="0 0 24 24"><path d="M4 10v4M8 6v12M12 3v18M16 7v10M20 10v4"/></svg>Звук</button>
+    <button data-go="wallet"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10h18M16 15h2"/><path d="M6 6l9-3 2 3"/></svg>Баланс</button>
+  </div></nav>
+</div>
+
+<div class="sheet" id="terms" hidden><div>
+  <b style="font:800 18px var(--f)">Правила LURE</b>
+  <ol class="muted" style="padding-left:20px;margin:12px 0;line-height:1.5">
+    <li>LURE: сервис на сайте EAGLES. Ответы, картинки и видео создают нейросети, они могут ошибаться. Важное проверяй.</li>
+    <li>Нельзя просить и создавать: реальных людей без их согласия, особенно политиков, глав государств и известных людей; политику, экстремизм, насилие, оружие, наркотики; оскорбления религий и народов; материалы 18+; подделки документов и обман; всё, что нарушает законы РФ.</li>
+    <li>За свои запросы и за то, как ты используешь результат, отвечаешь ты сам.</li>
+    <li>Каждый запрос сохраняется с твоим ID. За нарушение доступ к LURE закрывается.</li>
+    <li>Деньги на балансе LURE идут только на нейросети и не участвуют в выплатах EAGLES.</li>
+  </ol>
+  <p class="muted" style="margin:0 0 14px;font-size:13px;line-height:1.5">Нажимая «Принимаю правила», ты принимаешь <a href="/oferta.html" target="_blank" rel="noopener">оферту LURE</a>, даёшь <a href="/soglasie.html" target="_blank" rel="noopener">согласие на обработку персональных данных</a> и подтверждаешь, что тебе есть 18 лет. <a href="/politika.html" target="_blank" rel="noopener">Политика конфиденциальности</a>.</p>
+  <div class="err" id="tErr"></div>
+  <button class="btn" id="tOk">Принимаю правила</button>
+</div></div>
+<div class="sheet" id="dlgs" hidden><div>
+  <div class="flex" style="align-items:center;margin-bottom:6px"><b style="font:900 18px var(--f);flex:1">Диалоги</b><button class="btn2" id="dNew">＋ Новый</button></div>
+  <div id="dList"></div>
+</div></div>
+
+
+<script src="/config.js"></script>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)};
+var ME=null, MODELS=[], CUR=null, ctl=null;
+var ERR={not_found:'Такого ID или почты нет в EAGLES.',too_often:'Код уже отправлен. Новый можно через минуту.',mail_limit:'Сегодня слишком много писем, попробуй завтра.',mail_failed:'Письмо не ушло, попробуй ещё раз.',bad_code:'Неверный код.',expired:'Код устарел, запроси новый.',frozen:'Аккаунт EAGLES заблокирован.',blocked:'Доступ к LURE закрыт. Напиши Андрею.',need_pro:'LURE доступен с подпиской EAGLES Pro.',need_pro_topup:'Пополнение доступно с подпиской EAGLES Pro.',need_terms:'Сначала прими правила LURE.',pin_locked:'Введи ПИН.',rec_limit:'Попытки на сегодня закончились. Напиши в техподдержку.',bad_pin_format:'ПИН: 4 цифры.',no_email:'У аккаунта нет почты. Напиши Андрею.',missing_fields:'Введи код из письма.',
+  no_money:'На счёте не хватает денег. Пополни кошелёк.',day_limit:'На сегодня лимит расходов исчерпан. Завтра снова можно.',busy:'Дождись ответа на прошлый вопрос.',too_long:'Слишком длинный текст, сократи его.',bad_model:'Эта модель сейчас недоступна.',engine_down:'Нейросети сейчас недоступны, попробуй через минуту.',engine_busy:'Нейросеть перегружена, попробуй через минуту.',engine_error:'Нейросеть не ответила, попробуй ещё раз или выбери другую.',
+  used:'Этот код уже использован.',too_many:'Слишком много попыток, попробуй через час.',auth:'Вход устарел, войди заново.',server_error:'Ошибка сервера, попробуй ещё раз.',not_owner:'Только для Андрея.',bad_sum:'Проверь сумму.',no_user:'Такой ID ещё не заходил в LURE.'};
+function err(e,r){if(e==='mail_hour'){var h=Number(r&&r.retryAfterMin)||60;return 'Мы уже отправили 3 письма с кодом за час. Проверь папку «Спам». Новый код можно через '+h+' мин.'}if(e==='locked'){var m=Number(r&&r.retryAfterMin)||60;return 'Слишком много попыток. Вход откроется '+(m>=60?'через час.':'через '+m+' мин.')}return ERR[e]||'Не получилось. Попробуй ещё раз.'}
+function toast(t){var d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(function(){d.remove()},2800)}
+function rub(n){n=Number(n)||0;return (Math.abs(n)<10?n.toFixed(2):Math.round(n*10)/10).toString().replace('.',',')+' ₽'}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function chkLock(u){return function(j){if(j&&j.error==='pin_locked'&&u.indexOf('/api/pin/')<0)showPin('enter');return j}}
+/* запросы идут либо на этот же сервер, либо (при белых списках) через функцию Яндекса: window.LURE_API в config.js */
+var API=window.LURE_API||'',CRED=API?'omit':'same-origin';
+function U(p){return API?API+(API.indexOf('?')<0?'?':'&')+'p='+encodeURIComponent(p):p}
+function TOK(v){try{if(v===undefined)return localStorage.getItem('lure_tok')||'';if(v)localStorage.setItem('lure_tok',v);else localStorage.removeItem('lure_tok')}catch(e){return ''}}
+function H(h){h=h||{};var t=TOK();if(t)h['X-Lure-Session']=t;return h}
+function post(u,b){return fetch(U(u),{method:'POST',headers:H({'Content-Type':'application/json'}),credentials:CRED,body:JSON.stringify(b||{})}).then(function(r){return r.json()}).then(chkLock(u))}
+function get(u){return fetch(U(u),{headers:H(),credentials:CRED}).then(function(r){return r.json()}).then(chkLock(u))}
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){return null}}
+
+/* ---------- вход ---------- */
+var lid='';
+function showLogin(){zgrDone();sss(0);TOK(null);$('app').hidden=true;$('login').hidden=false;$('l1').hidden=false;$('l2').hidden=true;$('lp').hidden=true;$('login').classList.remove('vh2')}
+/* ---------- ПИН: один на весь EAGLES (тот же, что на сайте) ---------- */
+var PM='',P1='',MAXU='https://max.ru/u/f9LHodD0cOIec-v91ujcZ-dap9pM51MzN00AwcIMTy-x29hys8Mcg8n8HJ4';
+function ssg(){try{return sessionStorage.getItem('lure_ul')}catch(e){return null}}
+function sss(v){try{if(v)sessionStorage.setItem('lure_ul','1');else sessionStorage.removeItem('lure_ul')}catch(e){}}
+function showPin(mode,hint){zgrDone();PM=mode;P1='';$('app').hidden=true;$('dlgs').hidden=true;$('terms').hidden=true;$('login').hidden=false;$('l1').hidden=true;$('l2').hidden=true;$('lp').hidden=false;$('login').classList.remove('vh2');
+  $('pIn').value='';$('pIn').disabled=false;$('pCode').value='';$('pErr').textContent='';$('pCode').hidden=mode!=='rec';$('pForgot').hidden=mode!=='enter';
+  $('pTitle').textContent={enter:'Введи ПИН',set:'Придумай ПИН из 4 цифр',rep:'Повтори ПИН',rec:'Код из письма и новый ПИН'}[mode];
+  $('pHint').textContent=hint||{enter:'Тот же ПИН, что на сайте EAGLES.',set:'Он будет общим для LURE и сайта EAGLES.',rep:'',rec:''}[mode];
+  setTimeout(function(){(mode==='rec'?$('pCode'):$('pIn')).focus()},100)}
+function unlocked(){sss(1);$('lp').hidden=true;get('/api/me').then(function(r){if(r.ok&&!r.locked)start(r.me);else showLogin()})}
+function netErr(){$('pIn').disabled=false;$('pErr').textContent='Нет связи. Если включён VPN, выключи его.'}
+function pinErr(r){$('pIn').disabled=false;if(r.error==='auth'){showLogin();return}
+  if(r.error==='pin_blocked'){showPin('enter');$('pErr').textContent='ПИН введён неверно 5 раз. Нажми «Забыл ПИН», на почту придёт код.';return}
+  if(r.error==='no_pin'){showPin('set');return}
+  if(r.error==='rec_limit'){$('pErr').innerHTML='Попытки на сегодня закончились. Напиши в техподдержку:<br><a href="'+MAXU+'" target="_blank" rel="noopener">Андрей в МАКС</a> · <span style="user-select:all">chulkovbiznez@gmail.com</span>';return}
+  $('pErr').textContent=r.error==='bad_pin'?'Неверный ПИН. Осталось попыток: '+r.left:r.error==='bad_code'?'Неверный код из письма.':err(r.error,r)}
+$('pIn').oninput=function(){var v=this.value.replace(/\D/g,'').slice(0,4);if(v!==this.value)this.value=v;if(v.length<4)return;var x=this;
+  if(PM==='set'){P1=v;showPin('rep');P1=v;return}
+  if(PM==='rep'){if(v!==P1){showPin('set');$('pErr').textContent='ПИН не совпал, попробуй ещё раз.';return}
+    x.disabled=true;post('/api/pin/set',{pin:v}).then(function(r){if(r.ok)unlocked();else if(r.error==='pin_exists')showPin('enter','ПИН уже задан на сайте EAGLES. Введи его.');else pinErr(r)}).catch(netErr);return}
+  if(PM==='enter'){x.disabled=true;post('/api/pin/check',{pin:v}).then(function(r){x.value='';if(r.ok)unlocked();else pinErr(r)}).catch(netErr);return}
+  if(PM==='rec'){var c=$('pCode').value.replace(/\D/g,'');if(c.length!==6){x.value='';$('pErr').textContent='Сначала введи 6 цифр из письма.';return}
+    x.disabled=true;post('/api/pin/rec_verify',{code:c,pin:v}).then(function(r){x.value='';if(r.ok)unlocked();else pinErr(r)}).catch(netErr)}};
+$('pCode').oninput=function(){var v=this.value.replace(/\D/g,'').slice(0,6);if(v!==this.value)this.value=v;if(v.length===6)$('pIn').focus()};
+$('pForgot').onclick=function(){var b=this;b.disabled=true;post('/api/pin/rec_request').then(function(r){b.disabled=false;if(!r.ok){pinErr(r);return}showPin('rec','Код отправлен на '+(r.emailHint||'твою почту')+'. Введи его и придумай новый ПИН.')}).catch(function(){b.disabled=false;netErr()})};
+$('pOut').onclick=function(){post('/api/logout').then(showLogin,showLogin)};
+/* Возврат в Карты (18.11.2026, задание 82): пришли из Карт (#...&back=karty) — помним до 6 часов в этой вкладке */
+var KARTYU='https://app.eaglesteam.ru/karty.html#iz-lure',BKK=(function(){var h=location.hash,v=null;
+  try{if(/[#&]back=karty(&|$)/.test(h))sessionStorage.setItem('lure_back',String(Date.now()));else if(!h||h==='#')sessionStorage.removeItem('lure_back');v=sessionStorage.getItem('lure_back')}catch(e){}
+  return v&&Date.now()-(+v)<6*3600e3?1:0})();
+function bkOff(){try{sessionStorage.removeItem('lure_back')}catch(e){}}
+(function(){if(!BKK)return;var a=document.querySelector('.top .back');if(a){a.href=KARTYU;a.classList.add('tokarty');a.setAttribute('aria-label','Вернуться в карты');
+  a.innerHTML='<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span>Вернуться в карты</span>';a.addEventListener('click',bkOff)}
+  var v=document.getElementById('vKarty');if(v){v.hidden=false;v.addEventListener('click',bkOff)}})();
+/* Промпт снаружи (08.11.2026, модель+формат 17.11.2026): lure.eaglesteam.ru/#img&m=<модель>&ar=<формат>&p=<промпт>.
+   m и ar необязательны, p всегда последний. Держим в sessionStorage, чтобы дожило до конца входа и ПИН; адрес сразу чистим до #img. */
+var PF=null,PFM='',PFA='';(function(){var h=location.hash,i=h.indexOf('&p=');
+  if(i>0){var q=h.slice(1,i).split('&'),tab=q[0];q.slice(1).forEach(function(x){var kv=x.split('=');if(kv[0]==='m')PFM=String(kv[1]||'').replace(/[^a-z0-9_-]/gi,'').slice(0,24);if(kv[0]==='ar')PFA=String(decodeURIComponent(kv[1]||'')).replace(/[^a-z0-9:]/gi,'').slice(0,6)});
+    try{PF=decodeURIComponent(h.slice(i+3)).slice(0,4000)}catch(e){PF=null}
+    try{if(PF)sessionStorage.setItem('lure_pf',JSON.stringify({p:PF,m:PFM,ar:PFA}))}catch(e){}history.replaceState(null,'','#'+tab)}
+  if(!PF)try{var s=sessionStorage.getItem('lure_pf');if(s){if(s.charAt(0)==='{'){s=JSON.parse(s);PF=s.p||null;PFM=s.m||'';PFA=s.ar||''}else PF=s}}catch(e){}})();
+function usePF(){if(!PF||!ME||!ME.access)return;var t=PF;PF=null;try{sessionStorage.removeItem('lure_pf')}catch(e){}
+  if(curTab()!=='img')go('img');$('imgP').value=t;MOPT.img.ar=PFA||'1:1';mgrow($('imgP'));
+  loadCat(function(){var L=MC.img||[],m=PFM&&L.filter(function(x){return x.k===PFM})[0];
+    if(m){MSEL.img=m.k;ls(key('mk_img'),m.k)}if(curTab()==='img')mediaName();drawOpts('img')});
+  if(BKK){toast('Промпт для Карт готов, формат 1:1. Выбери модель и нажми «Создать картинку». Потом нажми на картинку → «Скачать» → «Вернуться в карты»');return}
+  toast(PFM?'Промпт уже вставлен, модель и формат выбраны. Впиши свою надпись в первой строке, прикрепи картинку и нажми «Создать картинку»':'Промпт готов. Выбери модель и нажми «Создать картинку»')}
+function afterLogin(m){sss(1);post('/api/pin/state').then(function(s){if(s.ok&&!s.has)showPin('set');else start(m)}).catch(function(){start(m)})}
+function boot(){get('/api/me').then(function(r){if(!r.ok){showLogin();return}
+  if(!r.locked&&ssg()){start(r.me);return}
+  post('/api/pin/state').then(function(s){if(!s.ok){pinErr(s);showLogin();return}if(!s.has){showPin('set');return}
+    if(r.locked)showPin('enter');else post('/api/lock').then(function(){showPin('enter')})}).catch(showLogin)}).catch(showLogin)}
+/* НОВЫЙ ВХОД (09.11.2026): кнопки «Войти» нет — 6 цифр, и проверка идёт сама. Вставка целиком из письма
+   («EAGLES: код для входа 123456») — берём цифры, последние 6. Обрыв связи — тихий повтор 1 раз. */
+var lLog='',lBusy=0,lLockT=0,lResAt=0,lResT=0,VH0='Вставь или впиши код. Вход откроется сам.';
+function vhMsg(t,c){var m=$('lErr2');m.innerHTML=t||'';m.className='vh-msg'+(c?' '+c:'')}
+function vhDraw(){var x=$('lCode'),v=x.value,C=$('lCells').querySelectorAll('i'),f=document.activeElement===x;
+  for(var k=0;k<6;k++){C[k].textContent=v[k]||'';C[k].classList.toggle('f',!!v[k]);C[k].classList.toggle('cur',f&&k===v.length&&!lBusy&&!x.disabled)}}
+function vhClear(){$('lCode').value='';$('lCells').className='vh-cells';vhDraw()}
+function vhUnlock(){clearTimeout(lLockT);$('lLock').hidden=true;$('lCode').disabled=false}
+function vhStep2(hint,old){vhUnlock();$('l1').hidden=true;$('l2').hidden=false;$('login').classList.add('vh2');
+  $('lHint').innerHTML=(old?'Код уже отправлен на <b></b>, он ещё действует.':'Отправили на <b></b>.')+' Письмо от kod@eaglesteam.ru';$('lHint').querySelector('b').textContent=hint||'твою почту';
+  vhClear();vhMsg(VH0);if(!old)lResAt=Date.now()+60000;vhRes();setTimeout(function(){$('lCode').focus();vhDraw()},120)}
+function vhBtn(on){var b=$('lBtn1');b.disabled=on;b.classList.toggle('busy',on);$('lBtn1t').textContent=on?'Отправляю код…':'Получить код'}
+$('lF1').onsubmit=function(e){e.preventDefault();
+  var v=$('lLogin').value.trim();if(!v){$('lErr1').textContent='Впиши свой ID или почту.';$('lLogin').focus();return}
+  vhBtn(true);$('lErr1').textContent='';
+  post('/api/login/request',{login:v}).then(function(r){vhBtn(false);
+    if(r.ok){lid=r.id;lLog=v;vhStep2(r.emailHint);return}
+    if(r.error==='too_often'&&lid&&lLog===v){vhStep2('',1);return}
+    $('lErr1').textContent=err(r.error,r)}).catch(function(){vhBtn(false);$('lErr1').textContent='Нет связи. Проверь интернет. Если включён VPN, выключи его.'})};
+$('lLogin').onkeydown=null;
+$('lCode').addEventListener('input',function(){var d=this.value.replace(/\D/g,'');if(d.length>6)d=d.slice(-6);this.value=d;
+  $('lCells').classList.remove('bad');if(!lBusy)vhMsg(VH0);vhDraw();if(d.length===6)vhVerify(d,0)});
+$('lCode').addEventListener('focus',vhDraw);$('lCode').addEventListener('blur',vhDraw);
+$('lCells').addEventListener('click',function(){$('lCode').focus()});
+function vhVerify(c,retry){if(lBusy||$('lCode').disabled)return;lBusy=1;$('lCells').className='vh-cells chk';vhDraw();vhMsg('Проверяю…');
+  post('/api/login/verify',{id:lid,code:c}).then(function(r){lBusy=0;
+    if(r.ok){$('lCells').className='vh-cells good';vhMsg('Готово, заходим…','ok');if(r.token)TOK(r.token);setTimeout(function(){afterLogin(r.me)},350);return}
+    if(r.error==='locked'){vhLocked(Number(r.retryAfterMin)||60);return}
+    $('lCells').className='vh-cells bad';
+    var t=err(r.error,r);
+    if(r.error==='bad_code'){t=retry?'Код не подошёл. Возможно, он уже сработал, пока не было связи. Нажми «Прислать новый код».':'Неверный код. Проверь письмо.';if(!retry&&r.left>0)t='Неверный код. Осталось попыток: '+r.left}
+    if(r.error==='expired'){lResAt=0;vhRes()}
+    vhMsg(t,'err');setTimeout(function(){$('lCode').value='';vhDraw()},450)
+  }).catch(function(){lBusy=0;
+    if(!retry){vhMsg('Проверяю…');setTimeout(function(){vhVerify(c,1)},900);return}
+    $('lCells').className='vh-cells';vhDraw();
+    vhMsg('Нет связи. Код не пропал. <button class="vh-lnk" id="lRetry" type="button">Проверить ещё раз</button><br>Если включён VPN, выключи его.','err');
+    $('lRetry').onclick=function(){vhVerify($('lCode').value,1)}})}
+function vhLocked(min){var until=Date.now()+min*60000,L=$('lLock');$('lCode').disabled=true;vhClear();$('lCells').className='vh-cells lock';vhMsg('');
+  clearTimeout(lResT);$('lResend').disabled=true;$('lResend').textContent='Новый код недоступен';
+  L.innerHTML='<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><div><b>Слишком много попыток</b><span>Вход по этому ID откроется через <em id="lLt"></em></span></div>';L.hidden=false;
+  (function t(){var s=Math.max(0,Math.ceil((until-Date.now())/1000)),e=$('lLt');if(!e)return;e.textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+    if(s>0)lLockT=setTimeout(t,1000);else{vhUnlock();vhClear();vhMsg('Можно снова. Нажми «Прислать новый код».');lResAt=0;vhRes()}})()}
+function vhRes(){clearTimeout(lResT);var r=$('lResend'),s=Math.ceil((lResAt-Date.now())/1000);if($('lCode').disabled)return;
+  if(s>0){r.disabled=true;r.textContent='Новый код через 0:'+String(s).padStart(2,'0');lResT=setTimeout(vhRes,500)}else{r.disabled=false;r.textContent='Прислать новый код'}}
+$('lResend').onclick=function(){var r=this;r.disabled=true;r.textContent='Отправляю…';
+  post('/api/login/request',{login:lLog||lid}).then(function(x){
+    if(x.ok){lid=x.id;vhClear();vhMsg('Новый код отправлен на почту.','ok');lResAt=Date.now()+60000;vhRes();$('lCode').focus();return}
+    if(x.error==='locked'){vhLocked(Number(x.retryAfterMin)||60);return}
+    if(x.error==='too_often')lResAt=Date.now()+60000;
+    vhMsg(err(x.error,x),'err');vhRes()}).catch(function(){vhMsg('Нет связи. Попробуй ещё раз через минуту.','err');lResAt=0;vhRes()})};
+$('lBack').onclick=function(){vhUnlock();clearTimeout(lResT);$('l1').hidden=false;$('l2').hidden=true;$('login').classList.remove('vh2');$('lErr1').textContent='';setTimeout(function(){$('lLogin').focus()},50)};
+
+/* ---------- приложение ---------- */
+function setMe(m){ME=m;$('balChip').textContent=rub(m.balance);$('wBal').textContent=rub(m.balance);$('wId').textContent=m.id;
+  $('wDay').textContent='Сегодня потрачено '+rub(m.spentToday)+(m.dayLimit?' из '+rub(m.dayLimit)+' в сутки':'');$('owner').hidden=!m.owner;
+  /* 25.11: без Pro пополнить нельзя — кнопка серая и подсказка; тратить остаток можно */
+  var tp=m.topup!==false,bx=$('topBox');bx.style.opacity=tp?'':'.4';bx.style.filter=tp?'':'grayscale(1)';$('rCode').disabled=$('rBtn').disabled=!tp;$('topHint').hidden=tp;
+  ERR.no_money=tp?'На счёте не хватает денег. Пополни кошелёк.':'На счёте не хватает денег. Пополнить баланс можно с подпиской EAGLES Pro.'}
+function start(m){WEB=ls(key('web'))==='1';drawWeb();zgrDone();setMe(m);$('login').hidden=true;$('app').hidden=false;loadModels();openDialog(ls(key('cur'))||null);go(location.hash.replace('#','').split('&')[0]||'chat');if(!m.terms)$('terms').hidden=false;usePF()}
+$('tOk').onclick=function(){var b=this;b.disabled=true;$('tErr').textContent='';post('/api/terms').then(function(r){b.disabled=false;if(!r.ok){if(r.error==='auth')showLogin();return}setMe(r.me);$('terms').hidden=true}).catch(function(){b.disabled=false;$('tErr').textContent='Нет связи. Если включён VPN, выключи его.'})};
+function key(k){return 'lure_'+(ME?ME.id:'x')+'_'+k}
+function go(t){if(!/^(chat|sound|img|video|wallet)$/.test(t))t='chat';document.body.dataset.tab=t;$('secName').textContent={chat:'Чаты',sound:'Звук',img:'Изображения',video:'Видео',wallet:'Баланс'}[t];$('mpanel').hidden=true;
+  var lock=false;/* 25.11: в LURE входят все, экран «нет Pro» не показываем */$('nopro').hidden=!lock;document.body.classList.toggle('locked',!!lock);
+  if(lock&&ME.plan==='pro')$('noproTxt').textContent='Срок подписки Pro закончился. Продли её в кабинете EAGLES и войди в LURE заново.';
+  [].forEach.call(document.querySelectorAll('section[data-tab]'),function(s){s.hidden=lock||s.dataset.tab!==t});
+  [].forEach.call(document.querySelectorAll('.nav button'),function(b){b.classList.toggle('on',b.dataset.go===t)});
+  if(t==='wallet')loadWallet();if(!lock&&isMedia(t))mediaTab(t);else if(MODELS.length)drawModels();history.replaceState(null,'','#'+t)}
+[].forEach.call(document.querySelectorAll('.nav button'),function(b){b.onclick=function(){go(b.dataset.go)}});
+$('balChip').onclick=function(){go('wallet')};
+
+/* ---------- модели ---------- */
+function pretty(id){var s=String(id).split('/').pop();
+  s=s.replace(/^claude-?/i,'Claude ').replace(/^gpt-?/i,'GPT-').replace(/^gemini-?/i,'Gemini ').replace(/^o(\d)/i,'o$1').replace(/(\d)-(\d)/g,'$1.$2').replace(/-/g,' ').replace(/\s+/g,' ').trim();
+  return s.replace(/\b(sonnet|opus|haiku|flash|pro|omni|mini|nano|lite)\b/gi,function(w){return w[0].toUpperCase()+w.slice(1).toLowerCase()})}
+function typical(m){if(!m)return 0;if(m.perCall)return m.perCallRub;return (1500*m.per1M.in+600*m.per1M.out)/1e6}
+function isBest(id){return /opus-5/i.test(id)?1:0}
+function loadModels(){get('/api/models').then(function(r){if(!r.ok){if(r.error==='auth')showLogin();return}
+  MODELS=r.models.filter(function(m){return !m.perCall}).sort(function(a,b){return isBest(b.id)-isBest(a.id)});var sel=ls(key('model'));
+  if(!MODELS.some(function(m){return m.id===sel}))sel=(MODELS.filter(function(m){return /sonnet/i.test(m.id)})[0]||MODELS[0]||{}).id;
+  ls(key('model'),sel||null);drawModels();drawPrices(r.models)})}
+var DESC=[[/opus/i,'Самая умная, для сложных задач'],[/sonnet/i,'Отличная на каждый день'],[/haiku/i,'Быстрая и недорогая'],[/gpt/i,'Универсальная от OpenAI'],[/gemini.*pro/i,'Сильная от Google'],[/flash/i,'Быстрая и самая дешёвая']];
+function desc(id){for(var i=0;i<DESC.length;i++)if(DESC[i][0].test(id))return DESC[i][1];return ''}
+function drawModels(){setTimeout(priceHint,0);var sel=ls(key('model'));var m=MODELS.filter(function(x){return x.id===sel})[0];
+  /* 17.11: чатовые модели приходят позже каталога картинок — на вкладках Изображения/Видео/Звук имя модели не перетирать */
+  if(isMedia(curTab())){if(MC)mediaName()}else $('mName').textContent=m?pretty(m.id):'LURE';
+  $('mlistSel').innerHTML=MODELS.map(function(x){return '<button class="opt'+(x.id===sel?' on':'')+(isBest(x.id)?' best':'')+'" data-m="'+esc(x.id)+'" role="option"><span><b>'+esc(pretty(x.id))+(isBest(x.id)?'<em class="tagb">ЛУЧШАЯ</em>':'')+'</b><small>'+esc(desc(x.id))+' · ≈ '+rub(typical(x))+' за ответ</small></span><i></i></button>'}).join('');
+  [].forEach.call($('mlistSel').querySelectorAll('[data-m]'),function(b){b.onclick=function(){ls(key('model'),b.dataset.m);$('mpanel').hidden=true;drawModels()}})}
+$('mPick').onclick=function(e){e.stopPropagation();var t=curTab();if(isMedia(t)){if(!MC)return;drawMediaModels(t)}else drawModels();$('mpanel').hidden=!$('mpanel').hidden};
+document.addEventListener('click',function(e){if(!$('mpanel').hidden&&!$('mpanel').contains(e.target))$('mpanel').hidden=true});
+$('dOpen').onclick=function(){openList()};
+function drawPrices(all){$('priceList').innerHTML=all.length?all.map(function(m){return '<div class="row"><span>'+esc(pretty(m.id))+'</span><b>'+(m.perCall?rub(m.perCallRub)+' за раз':'≈ '+rub(typical(m))+' за ответ')+'</b></div>'}).join('')+'<p class="muted" style="margin:10px 0 0">Цена зависит от длины вопроса и ответа. Точная сумма видна под каждым ответом и в истории.</p>':'<p class="muted">Модели пока не подключены.</p>'}
+
+/* ---------- картинки и видео ---------- */
+var MC=null, MSEL={}, MOPT={img:{},video:{},sound:{}}, REFS={img:[],video:[],sound:[]}, GAL={img:[],video:[],sound:[]}, POLL=null, REFKIND='img';
+ERR.no_style='Напиши стиль музыки.';ERR.media_off='Картинки и видео ещё подключаются. Скоро заработают.';ERR.no_prompt='Опиши, что нужно создать.';ERR.refs_big='Фото слишком тяжёлые. Убери одно или два.';ERR.jobs_busy='Уже идут 3 задания. Дождись, пока одно закончится.';ERR.engine_error='Нейросеть не приняла задание. Попробуй изменить описание.';ERR.need_video='Добавь видео с движением.';ERR.need_photo='Добавь фото персонажа.';ERR.bad_video='Нужно видео mp4, mov или webm.';ERR.video_big='Видео больше 100 МБ, возьми покороче.';
+function isMedia(t){return t==='img'||t==='video'||t==='sound'}
+function curTab(){return document.body.dataset.tab}
+function mModel(t){if(!MC)return null;var L=MC[t]||[];var k=MSEL[t]||ls(key('mk_'+t));return L.filter(function(x){return x.k===k})[0]||L[0]||null}
+function loadCat(cb){if(MC){cb&&cb();return}get('/api/media/catalog').then(function(r){if(!r.ok){if(r.error==='auth')showLogin();return}MC=r.cat;MC.ready=r.ready;cb&&cb()}).catch(function(){})}
+function mediaName(){var m=mModel(curTab());$('mName').textContent=m?m.n:'…'}
+function drawMediaModels(t){var m=mModel(t);
+  $('mlistSel').innerHTML=(MC[t]||[]).map(function(x){var mn=Math.min.apply(null,Object.keys(x.table).map(function(k){return x.table[k]}));
+    return '<button class="opt'+(m&&x.k===m.k?' on':'')+'" data-k="'+esc(x.k)+'" role="option"><span><b>'+esc(x.n)+'</b><small>'+esc(x.d)+' · от '+rub(mn)+'</small></span><i></i></button>'}).join('');
+  [].forEach.call($('mlistSel').querySelectorAll('[data-k]'),function(b){b.onclick=function(){MSEL[t]=b.dataset.k;ls(key('mk_'+t),b.dataset.k);$('mpanel').hidden=true;mediaName();drawOpts(t)}})}
+var ARN={'auto':'Авто','1:1':'1:1','9:16':'9:16','16:9':'16:9','4:5':'4:5','3:4':'3:4','4:3':'4:3','2:3':'2:3','3:2':'3:2','21:9':'21:9'};
+function arIcon(a){if(a==='auto')return '';var p=a.split(':'),w=+p[0],h=+p[1],s=14/Math.max(w,h);return '<i class="ar" style="width:'+Math.round(w*s)+'px;height:'+Math.round(h*s)+'px"></i>'}
+function chipRow(t,name,vals,label,fmt){if(!vals||vals.length<2)return '';var cur=MOPT[t][name];
+  return '<b class="ttl" style="display:block;margin:12px 0 6px;font-size:13px">'+label+'</b><div class="ochips">'+vals.map(function(v){return '<button type="button" class="'+(String(v)===String(cur)?'on':'')+'" data-o="'+name+'" data-v="'+esc(v)+'">'+fmt(v)+'</button>'}).join('')+'</div>'}
+function drawOpts(t){var m=mModel(t),o=MOPT[t];if(!m){$(t+'O').innerHTML='';return}if(t==='sound')return drawSnd(m,o);
+  if(m.ar.indexOf(o.ar)<0)o.ar=m.ar[0];if(m.res&&m.res.indexOf(o.res)<0)o.res=m.res[0];if(m.q&&m.q.indexOf(o.q)<0)o.q=m.q[0];if(m.dur&&m.dur.indexOf(+o.dur)<0)o.dur=m.dur[0];if(o.audio===undefined||o._k!==m.k){if(o._k!==m.k)o.audio=m.audioDef!==false;o._k=m.k}
+  var h=chipRow(t,'ar',m.ar,'Формат',function(v){return arIcon(v)+ARN[v]})+chipRow(t,'res',m.res,'Качество',function(v){return {std:'Стандарт',pro:'Pro'}[v]||String(v).toUpperCase()})+chipRow(t,'q',m.q,'Детализация',function(v){return v==='high'?'Высокая':'Обычная'})+chipRow(t,'dur',m.dur,'Длина',function(v){return v+' сек'});
+  if(m.audio)h+=chipRow(t,'audio',[true,false],'Звук',function(v){return v===true||v==='true'?'Со звуком':'Без звука'});
+  if(m.mc){if(!o.orient)o.orient='video';h+=chipRow(t,'orient',['video','image'],'Поворот персонажа',function(v){return v==='video'?'Как в видео (до 30 сек)':'Как на фото (до 10 сек)'});
+    h+='<b class="ttl" style="display:block;margin:12px 0 6px;font-size:13px">Видео с движением</b><button class="refb" type="button" id="mvBtn" style="margin-top:0">'+(MV?'🎬 '+esc(MV.name)+' · '+MV.dur+' сек · заменить':'＋ Выбрать видео (танец, жест, движение)')+'</button>'}
+  if(t==='video'&&(m.vrefs||m.arefs||m.rrefs)){
+    var xr=function(kind,max,lbl,add){if(!max)return '';var L=XR[kind].slice(0,max);return '<b class="ttl" style="display:block;margin:12px 0 6px;font-size:13px">'+lbl+'</b>'+L.map(function(x,i){return '<div class="refb" style="margin-top:0;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:8px"><span>'+(kind==='v'?'🎬 ':'🎵 ')+esc(x.name)+' · '+x.dur+' сек</span><button type="button" data-xx="'+kind+i+'" aria-label="Убрать" style="background:none;border:0;color:inherit;font-size:18px;padding:0 4px;cursor:pointer">×</button></div>'}).join('')+(L.length<max?'<button class="refb" type="button" data-xa="'+kind+'" style="margin-top:0">'+add+'</button>':'')};
+    if(m.rrefs){var R=XR.r.slice(0,m.rrefs);h+='<b class="ttl" style="display:block;margin:12px 0 6px;font-size:13px">Фото-референсы (персонажи, предметы, места) · '+R.length+' из '+m.rrefs+'</b><div class="refs">'+R.map(function(x,i){return '<span><img src="'+x.thumb+'" alt=""><button type="button" data-xx="r'+i+'" aria-label="Убрать">×</button></span>'}).join('')+'</div>'+(R.length<m.rrefs?'<button class="refb" type="button" data-xa="r" style="margin-top:0">＋ Добавить фото-референсы · можно до '+m.rrefs+'</button>':'')}
+    var vs=m.vsum?XR.v.slice(0,m.vrefs).reduce(function(a,x){return a+x.dur},0):0;
+    h+=xr('v',m.vrefs,'Видео-референс'+(m.vrefs>1?' · '+Math.min(XR.v.length,m.vrefs)+' из '+m.vrefs+(m.vsum?', всего '+Math.round(vs)+' из '+m.vsum+' сек':''):''),'＋ Добавить видео (до '+m.vmax+' сек)'+(m.tableV?' · с видео дороже':''))+xr('a',m.arefs,'Аудио-референс','＋ Добавить аудио (голос, музыка) · можно до '+m.arefs)}
+  $(t+'O').innerHTML=h;
+  [].forEach.call($(t+'O').querySelectorAll('[data-xa]'),function(b){b.onclick=function(){XRKIND=b.dataset.xa;if(XRKIND==='r'){$('xrImg').value='';$('xrImg').click();return}var f=$('xrFile');f.accept=XRKIND==='v'?'video/mp4,video/quicktime,video/webm,video/*':'audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/x-m4a,audio/flac,audio/*';f.value='';f.click()}});
+  [].forEach.call($(t+'O').querySelectorAll('[data-xx]'),function(b){b.onclick=function(){XR[b.dataset.xx[0]].splice(+b.dataset.xx.slice(1),1);drawOpts(t)}});
+  if(t==='video'){var vp=$('videoP');if(!vp.dataset.ph)vp.dataset.ph=vp.placeholder;vp.placeholder=m.mc?'Необязательно: что поменять в сцене (фон, одежда, стиль)':vp.dataset.ph}
+  if(m.mc)$('mvBtn').onclick=function(){$('mvFile').value='';$('mvFile').click()};
+  [].forEach.call($(t+'O').querySelectorAll('[data-o]'),function(b){b.onclick=function(){var v=b.dataset.v;o[b.dataset.o]=b.dataset.o==='audio'?v==='true':b.dataset.o==='dur'?+v:v;drawOpts(t)}});
+  var p=(t==='video'&&m.tableV&&m.vrefs&&XR.v.length?m.tableV:m.table)[[m.res?o.res:'',m.q?o.q:'',m.dur?o.dur:'',m.audio?(o.audio?1:0):''].join('|')];
+  if(m.mc){var lim=o.orient==='image'?10:30;p=MV?Math.max(1,Math.ceil(m.ps[o.res]*Math.min(lim,Math.ceil(MV.dur)))):0;$(t+'Price').textContent=p?rub(p):rub(Math.ceil(m.ps[o.res]))+'/сек';if(MV&&MV.dur>lim)toast('Видео длиннее '+lim+' сек, возьмём первые '+lim+' сек')}
+  else $(t+'Price').textContent=p?(m.q?'≈ ':'')+rub(p):'—';drawRefs(t)}
+var MV=null,XR={v:[],a:[],r:[]},XRKIND='v';
+function d2b(d){var a=d.split(','),b=atob(a[1]),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return new Blob([u],{type:'image/jpeg'})}
+$('xrImg').onchange=function(){var m=mModel('video');if(!m||!m.rrefs)return;var fs=[].slice.call(this.files||[]).slice(0,Math.max(0,m.rrefs-XR.r.length));
+  Promise.all(fs.map(shrink)).then(function(L){L.forEach(function(d){XR.r.push({file:d2b(d),ext:'jpg',thumb:d,name:'фото'})});drawOpts('video')},function(){toast('Не получилось открыть фото')})};
+$('xrFile').onchange=function(){var f=this.files&&this.files[0],kind=XRKIND,m=mModel('video');if(!f||!m)return;var ext=(f.name.split('.').pop()||'').toLowerCase();if(ext==='qt')ext='mov';
+  var okx=kind==='v'?['mp4','mov','webm']:['mp3','wav','m4a','flac'];
+  if(okx.indexOf(ext)<0){ext=kind==='v'?(/webm/.test(f.type)?'webm':/quicktime/.test(f.type)?'mov':/mp4/.test(f.type)?'mp4':''):(/mpeg|mp3/.test(f.type)?'mp3':/wav/.test(f.type)?'wav':/mp4|m4a|aac/.test(f.type)?'m4a':/flac/.test(f.type)?'flac':'')}
+  if(!ext){toast(kind==='v'?ERR.bad_video:'Нужен файл MP3, WAV, M4A или FLAC');return}if(f.size>100e6){toast(ERR.video_big);return}
+  var v=document.createElement(kind==='v'?'video':'audio');v.preload='metadata';v.muted=true;var u=URL.createObjectURL(f);
+  v.onloadedmetadata=function(){var d=Math.round(v.duration*10)/10;v.onerror=null;v.onloadedmetadata=null;v.removeAttribute('src');URL.revokeObjectURL(u);
+    if(!(d>0)){toast('Не получилось прочитать файл');return}
+    if(kind==='v'&&m.vmax&&d>m.vmax+0.5){toast('Видео длиннее '+m.vmax+' сек. Обрежь его и загрузи снова.');return}
+    if(kind==='v'&&m.vsum){var sm=XR.v.slice(0,m.vrefs).reduce(function(a,x){return a+x.dur},0);if(sm+d>m.vsum+0.5){toast('Все видео вместе должны быть не длиннее '+m.vsum+' сек. Сейчас уже '+Math.round(sm)+' сек.');return}}
+    XR[kind].push({file:f,ext:ext,dur:d,name:f.name.length>22?f.name.slice(0,20)+'…':f.name});drawOpts('video')};
+  v.onerror=function(){URL.revokeObjectURL(u);toast('Не получилось прочитать файл')};v.src=u};
+function upFile(it,btn,lbl){if(it.url)return Promise.resolve(it.url);return post('/api/media/upload',{ext:it.ext,size:it.file.size}).then(function(r){if(!r.ok)throw r;
+  return new Promise(function(ok,no){var x=new XMLHttpRequest();x.open('PUT',r.put);x.upload.onprogress=function(e){if(e.lengthComputable)btn.textContent=lbl+' '+Math.round(e.loaded/e.total*100)+'%'};
+    x.onload=function(){if(x.status>=200&&x.status<300){it.url=r.url;ok(r.url)}else no({error:'upload_failed',code:x.status})};x.onerror=function(){no({error:'upload_failed',code:0})};x.send(it.file)})})}
+function upAll(t,btn){if(t!=='video')return Promise.resolve({v:[],a:[],r:[]});var m=mModel(t),V=XR.v.slice(0,m.vrefs||0),A=XR.a.slice(0,m.arefs||0),R=XR.r.slice(0,m.rrefs||0),L=R.concat(V,A),i=0;
+  function next(){if(i>=L.length)return Promise.resolve();var it=L[i++];return upFile(it,btn,(V.indexOf(it)>=0?'Загружаю видео':A.indexOf(it)>=0?'Загружаю аудио':'Загружаю фото')+(L.length>1?' '+i+'/'+L.length:'')).then(next)}
+  var u=function(x){return x.url};return next().then(function(){return {v:V.map(u),a:A.map(u),r:R.map(u)}})}
+$('mvFile').onchange=function(){var f=this.files&&this.files[0];if(!f)return;var ext=(f.name.split('.').pop()||'').toLowerCase();if(ext==='qt')ext='mov';
+  if(['mp4','mov','webm'].indexOf(ext)<0){ext=/webm/.test(f.type)?'webm':/quicktime/.test(f.type)?'mov':/mp4/.test(f.type)?'mp4':''}
+  if(!ext){toast(ERR.bad_video);return}if(f.size>100e6){toast(ERR.video_big);return}
+  var v=document.createElement('video');v.preload='metadata';v.muted=true;var u=URL.createObjectURL(f);
+  v.onloadedmetadata=function(){var d=Math.round(v.duration*10)/10;v.onerror=null;v.onloadedmetadata=null;v.removeAttribute('src');URL.revokeObjectURL(u);if(!(d>0)){toast('Не получилось прочитать видео');return}MV={file:f,ext:ext,dur:d,name:f.name.length>22?f.name.slice(0,20)+'…':f.name};drawOpts('video')};
+  v.onerror=function(){URL.revokeObjectURL(u);toast('Не получилось прочитать видео')};v.src=u};
+function upVideo(btn){return post('/api/media/upload',{ext:MV.ext,size:MV.file.size}).then(function(r){if(!r.ok)throw r;
+  return new Promise(function(ok,no){var x=new XMLHttpRequest();x.open('PUT',r.put);x.upload.onprogress=function(e){if(e.lengthComputable)btn.textContent='Загружаю видео '+Math.round(e.loaded/e.total*100)+'%'};
+    x.onload=function(){x.status>=200&&x.status<300?ok(r.url):no({error:'upload_failed',code:x.status})};x.onerror=function(){no({error:'upload_failed',code:0})};x.send(MV.file)})})}
+function maxRefs(t){var m=mModel(t);return !m?0:(t==='video'&&m.refsV&&m.vrefs&&XR.v.length?m.refsV:m.refs)}
+function drawRefs(t){var m=mModel(t),L=REFS[t];$(t+'R').innerHTML=L.map(function(s,i){return '<span><img src="'+s+'" alt=""><button type="button" data-rx="'+i+'" aria-label="Убрать">×</button></span>'}).join('');
+  [].forEach.call($(t+'R').querySelectorAll('[data-rx]'),function(b){b.onclick=function(){L.splice(+b.dataset.rx,1);drawRefs(t)}});
+  var rb=document.querySelector('.refb[data-ref="'+t+'"]');if(rb){rb.hidden=!m||L.length>=maxRefs(t);rb.textContent=(m&&m.mc?'＋ Фото персонажа':t==='video'&&m&&m.rrefs?'＋ Первый и последний кадр':'＋ Добавить фото'+(t==='video'?' (первый кадр или референс)':'-референс'))+(m?' · можно до '+maxRefs(t)+(L.length?', добавлено '+L.length:''):'')}}
+function shrink(file){return new Promise(function(ok,no){var fr=new FileReader();fr.onerror=no;fr.onload=function(){var im=new Image();im.onerror=no;im.onload=function(){var k=Math.min(1,1600/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);ok(c.toDataURL('image/jpeg',.85))};im.src=fr.result};fr.readAsDataURL(file)})}
+[].forEach.call(document.querySelectorAll('.refb[data-ref]'),function(b){b.onclick=function(){REFKIND=b.dataset.ref;$('refFile').value='';$('refFile').click()}});
+$('refFile').onchange=function(){var t=REFKIND,m=mModel(t),fs=[].slice.call(this.files||[]).slice(0,m?Math.max(0,maxRefs(t)-REFS[t].length):0);
+  Promise.all(fs.map(shrink)).then(function(L){REFS[t]=REFS[t].concat(L);drawRefs(t)},function(){toast('Не получилось открыть фото')})};
+var VSEX={george:'М',sarah:'Ж',adam:'М',alice:'Ж',bella:'Ж',bill:'М',brian:'М',callum:'М',charlie:'М',chris:'М',daniel:'М',eric:'М',harry:'М',jessica:'Ж',laura:'Ж',liam:'М',lily:'Ж',matilda:'Ж',river:'нейтр.',roger:'М',will:'М'};
+function sndPrice(m){var o=MOPT.sound,n=$('soundP').value.trim().length,mx=m.song&&!o.custom?3000:m.max;$('soundP').maxLength=mx||2000;$('soundN').textContent=mx?n+' / '+mx+' символов':'';
+  var p=m.perChar?(n?Math.max(1,Math.ceil(n*m.perChar)):0):m.table['|||'];$('soundPrice').textContent=p?(m.perChar?'≈ ':'')+rub(p):(m.perChar?rub(Math.ceil(1000*m.perChar))+' / 1000 симв.':'—')}
+var GEN=['Поп','Рок','Рэп','Хип-хоп','Электроника','Танцевальная','Лоу-фай','R&B','Джаз','Акустика','Баллада','Эпик, кино','Шансон','Детская','Весёлая','Грустная','Мотивация'];
+var SPH={tts:'Например: Привет! Я Андрей, и сегодня покажу, как ИИ экономит час каждый день.',sfx:'Например: дождь по крыше и далёкий гром / энергичный электронный бит 128 BPM',song:'Например: весёлая поп-песня на русском про команду, которая вместе взлетает к успеху, припев легко запомнить',lyr:'[Куплет]\nМы начинали с нуля, но верили в мечту…\n\n[Припев]\nВыше, выше, как орлы…'};
+function drawSnd(m,o){var P=$('soundP'),inp=function(id,lbl,ph,val,mx){return '<b class="ttl" style="display:block;margin:12px 0 6px;font-size:13px">'+lbl+'</b><input class="inp" id="'+id+'" maxlength="'+mx+'" placeholder="'+esc(ph)+'" value="'+esc(val||'')+'">'};
+  $('soundT').textContent=m.voices?'Текст для озвучки':m.song?(o.instr?'Опиши мелодию':o.custom?'Текст песни':'Опиши песню'):'Опиши звук';$('soundGo').textContent=m.voices?'Озвучить':m.song?'Создать песню':'Создать звук';
+  P.placeholder=m.voices?SPH.tts:m.song?(o.custom&&!o.instr?SPH.lyr:SPH.song):SPH.sfx;
+  var h='';if(m.voices){if(m.voices.indexOf(o.voice)<0)o.voice=m.voices[0];h+=chipRow('sound','voice',m.voices,'Голос',function(v){return v[0].toUpperCase()+v.slice(1)+' <small style="opacity:.6">'+(VSEX[v]||'')+'</small>'})+'<p class="muted" style="font-size:12px;margin:8px 2px 0">Голоса говорят на русском и других языках. Чтобы послушать голос, озвучь короткую фразу: это около 1 ₽.</p>'}
+  if(m.song){if(o.custom===undefined){o.custom=false;o.instr=false;o.gender=''}
+    h+=chipRow('sound','custom',[false,true],'Как писать',function(v){return v===true||v==='true'?'Свой текст песни':'Только описание'});
+    h+=chipRow('sound','instr',[false,true],'Вокал',function(v){return v===true||v==='true'?'Без слов (мелодия)':'С голосом'});
+    if(!o.instr)h+=chipRow('sound','gender',['','m','f'],'Голос певца',function(v){return {'':'Любой',m:'Мужской',f:'Женский'}[v]});
+    h+='<b class="ttl" style="display:block;margin:12px 0 6px;font-size:13px">Стиль музыки'+(o.custom?'':' (необязательно)')+'</b><div class="ochips">'+GEN.map(function(g){var on=(o.style||'').toLowerCase().split(/\s*,\s*/).indexOf(g.toLowerCase())>=0;return '<button type="button" class="'+(on?'on':'')+'" data-gen="'+esc(g)+'">'+esc(g)+'</button>'}).join('')+'</div><input class="inp" id="sStyle" maxlength="1000" style="margin-top:8px" placeholder="Или впиши свой: например, бодрый поп с гитарой, 120 BPM" value="'+esc(o.style||'')+'">';
+    if(o.custom)h+=inp('sTitle','Название','Например: Взлёт',o.title,80);
+    h+='<p class="muted" style="font-size:12px;margin:8px 2px 0">'+(o.custom?'В тексте можно отмечать части: [Куплет], [Припев], [Бридж].':'Suno сам напишет слова и музыку по описанию.')+' Песня обычно длится 2–4 минуты и готова за 2–4 минуты.</p>'}
+  if(m.loop){if(o.loop===undefined)o.loop=false;h+=chipRow('sound','loop',[false,true],'Как звучит',function(v){return v===true||v==='true'?'Повтор по кругу (луп)':'Один раз'})}
+  $('soundO').innerHTML=h;
+  if($('sStyle'))$('sStyle').oninput=function(){o.style=this.value;[].forEach.call($('soundO').querySelectorAll('[data-gen]'),function(b){b.classList.toggle('on',o.style.toLowerCase().split(/\s*,\s*/).indexOf(b.dataset.gen.toLowerCase())>=0)})};
+  [].forEach.call($('soundO').querySelectorAll('[data-gen]'),function(b){b.onclick=function(){var L=(o.style||'').split(/\s*,\s*/).filter(Boolean),g=b.dataset.gen,i=L.map(function(x){return x.toLowerCase()}).indexOf(g.toLowerCase());if(i>=0)L.splice(i,1);else L.push(g);o.style=L.join(', ');drawSnd(m,o)}});if($('sTitle'))$('sTitle').oninput=function(){o.title=this.value};
+  [].forEach.call($('soundO').querySelectorAll('[data-o]'),function(b){b.onclick=function(){var v=b.dataset.v,k=b.dataset.o;o[k]=/^(loop|custom|instr)$/.test(k)?v==='true':v;drawSnd(m,o)}});
+  sndPrice(m)}
+$('soundP').addEventListener('input',function(){var m=mModel('sound');if(m)sndPrice(m)});
+function createSnd(){var m=mModel('sound'),o=MOPT.sound,b=$('soundGo'),pr=$('soundP').value.trim();if(!m)return;if(pr.length<2){toast(m.voices?'Напиши текст для озвучки.':m.song&&o.custom?'Напиши текст песни.':ERR.no_prompt);$('soundP').focus();return}
+  if(m.song&&o.custom&&!(o.style||'').trim()){toast('Напиши стиль музыки, например: поп, рок, рэп.');$('sStyle').focus();return}
+  b.disabled=true;post('/api/media/create',{k:m.k,prompt:pr,voice:o.voice,loop:o.loop,custom:o.custom,instr:o.instr,gender:o.gender,style:o.style,title:o.title}).then(function(r){b.disabled=false;
+    if(!r.ok){if(r.error==='auth'){showLogin();return}if(r.error==='no_money'){toast(ERR.no_money);go('wallet');return}toast(err(r.error,r));return}
+    GAL.sound.unshift(r.job);drawGal('sound');poll();toast(m.voices?'Озвучиваю. Звук появится ниже.':m.song?'Пишу песню. Она появится ниже через 2–4 минуты.':'Создаю звук. Он появится ниже.')}).catch(function(){b.disabled=false;toast('Нет связи. Если включён VPN, выключи его.')})}
+function etaOf(x){var m=MC&&(MC.img.concat(MC.video,MC.sound||[])).filter(function(z){return z.k===x.k})[0];var e=(m&&m.eta)||(x.kind==='img'?40:150);if(x.dur&&x.kind==='video')e=Math.round(e*Math.max(1,x.dur/8));return e}
+function runPct(at,eta){var s=(Date.now()-at)/1000;return Math.min(97,Math.round(100*(1-Math.exp(-1.6*s/eta))/(1-Math.exp(-1.6))))}
+function runTxt(t,at,eta){var s=Math.max(0,Math.round((Date.now()-at)/1000)),left=eta-s,p=runPct(at,eta);
+  return '<span><b style="font-size:20px;display:block">'+p+'%</b>'+(t==='img'?'Рисую':t==='sound'?'Озвучиваю':'Снимаю')+'<br><span style="font-weight:500;opacity:.75">'+(left>5?'осталось ≈ '+(left>=90?Math.round(left/60)+' мин':left+' сек'):left>-eta?'почти готово…':'очередь у нейросети, готовое появится здесь само')+'</span></span>'}
+setInterval(function(){[].forEach.call(document.querySelectorAll('[data-run]'),function(d){var at=+d.dataset.at,eta=+d.dataset.eta;d.innerHTML=runTxt(d.dataset.kind,at,eta);var b=d.parentNode.querySelector('.bar i');if(b)b.style.width=runPct(at,eta)+'%'})},1000);
+function gItem(x,i){var t=x.kind==='img'?'img':x.kind==='snd'?'sound':'video',run=x.status==='run';
+  if(t==='sound')return '<div class="gi" data-gi="'+i+'" style="cursor:default">'+(run?'<div class="ph" data-run="'+esc(x.id)+'" data-at="'+(x.at||Date.now())+'" data-eta="'+etaOf(x)+'" data-kind="sound" style="min-height:74px">'+runTxt('sound',x.at||Date.now(),etaOf(x))+'</div><div class="bar"><i style="width:'+runPct(x.at||Date.now(),etaOf(x))+'%"></i></div>'
+    :'<audio src="'+esc(x.url)+'" controls preload="none" style="display:block;width:calc(100% - 16px);margin:10px 8px 0"></audio>')+'<small data-gv="1" style="cursor:pointer">'+esc(x.model||'')+(x.voice?' · '+esc(x.voice[0].toUpperCase()+x.voice.slice(1)):'')+(x.title?' · «'+esc(x.title)+'»':'')+(x.cost||x.price?' · '+rub(x.cost||x.price):'')+' · '+esc(x.prompt||'')+'</small></div>';
+  var body=run?'<div class="ph" data-run="'+esc(x.id)+'" data-at="'+(x.at||Date.now())+'" data-eta="'+etaOf(x)+'" data-kind="'+t+'" style="aspect-ratio:'+(x.ar&&x.ar!=='auto'?x.ar.replace(':','/'):'1/1')+'">'+runTxt(t,x.at||Date.now(),etaOf(x))+'</div><div class="bar"><i style="width:'+runPct(x.at||Date.now(),etaOf(x))+'%"></i></div>'
+    :t==='img'?'<img src="'+esc(x.url)+'" alt="" loading="lazy">':'<video src="'+esc(x.url)+'#t=0.1" preload="metadata" muted playsinline></video><span class="play">▶</span>';
+  return '<div class="gi" data-gi="'+i+'">'+body+'<small>'+esc(x.model||'')+(x.cost||x.price?' · '+rub(x.cost||x.price):'')+'</small></div>'}
+function drawGal(t){var L=GAL[t];$(t+'G').innerHTML=L.length?L.map(gItem).join(''):'<p class="muted" style="grid-column:1/-1;margin:0">'+(t==='img'?'Здесь будут твои картинки.':t==='sound'?'Здесь будут твои звуки.':'Здесь будут твои ролики.')+'</p>';
+  [].forEach.call($(t+'G').querySelectorAll('[data-gi]'),function(d){d.onclick=function(e){var x=L[+d.dataset.gi];if(t==='sound'&&!(e.target.dataset&&e.target.dataset.gv))return;if(x&&x.status!=='run')view(x)}})}
+function loadGal(){get('/api/media/list').then(function(r){if(!r.ok)return;GAL.img=[];GAL.video=[];GAL.sound=[];r.list.forEach(function(x){GAL[x.kind==='img'?'img':x.kind==='snd'?'sound':'video'].push(x)});drawGal('img');drawGal('video');drawGal('sound');poll()}).catch(function(){})}
+function poll(){clearTimeout(POLL);var ids=GAL.img.concat(GAL.video,GAL.sound).filter(function(x){return x.status==='run'}).map(function(x){return x.id});if(!ids.length)return;
+  POLL=setTimeout(function(){get('/api/media/status?ids='+ids.slice(0,10).join('.')).then(function(r){if(!r.ok){poll();return}
+    r.jobs.forEach(function(j){['img','video','sound'].forEach(function(t){GAL[t]=GAL[t].map(function(x){return x.id===j.id?Object.assign({},x,j):x}).filter(function(x){if(x.id===j.id&&x.status==='failed'){toast('Не получилось: '+(x.err||'ошибка')+'. Деньги не списаны.');return false}return true})})});
+    if(ME&&r.balance!=null){ME.balance=r.balance;$('balChip').textContent=rub(r.balance)}drawGal('img');drawGal('video');drawGal('sound');poll()}).catch(poll)},6000)}
+var VX=null;
+function view(x){VX=x;$('vMedia').innerHTML=x.kind==='img'?'<img src="'+esc(x.url)+'" alt="" style="width:100%;border-radius:12px">':x.kind==='snd'?'<audio src="'+esc(x.url)+'" controls autoplay style="width:100%"></audio>':'<video src="'+esc(x.url)+'" controls autoplay playsinline style="width:100%;border-radius:12px"></video>';
+  $('vInfo').textContent=(x.model||'')+(x.cost?' · '+rub(x.cost):'')+(x.prompt?' · '+x.prompt:'');$('vDl').href=x.url;$('vRef').hidden=$('vRefV').hidden=x.kind!=='img';$('viewer').hidden=false}
+function vClose(){$('viewer').hidden=true;$('vMedia').innerHTML=''}
+$('vClose').onclick=vClose;$('vInfo').onclick=function(){this.classList.toggle('open')};$('viewer').onclick=function(e){if(e.target===this)vClose()};
+$('vDel').onclick=function(){if(!VX||!confirm('Удалить из галереи?'))return;var id=VX.id;['img','video','sound'].forEach(function(t){GAL[t]=GAL[t].filter(function(x){return x.id!==id});drawGal(t)});post('/api/media/delete',{id:id}).catch(function(){});vClose()};
+// «Скачать»: качаем файл прямо на месте, без перехода во вкладку с картинкой (Андрей 09.11). Если не вышло — открываем как раньше.
+$('vDl').onclick=function(e){if(!VX||!VX.url)return;e.preventDefault();var u=VX.url,b=this,bt=b.textContent;b.textContent='Скачиваю…';
+  fetch(u).then(function(r){if(!r.ok)throw 0;return r.blob()}).then(function(bl){var ext=(bl.type.split('/')[1]||(VX.kind==='img'?'png':'mp4')).replace('jpeg','jpg').replace('quicktime','mov').replace('mpeg','mp3').split(';')[0];
+    var o=URL.createObjectURL(bl),a=document.createElement('a');a.href=o;a.download='LURE-'+(VX.id||Date.now())+'.'+ext;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(o)},60000);
+    b.textContent=bt;if(BKK){toast('Скачано ✓ Теперь «Вернуться в карты»');var k=$('vKarty');k.classList.remove('bkpulse');void k.offsetWidth;k.classList.add('bkpulse');return}toast('Скачано ✓ Файл в «Загрузках»')}).catch(function(){b.textContent=bt;window.open(u,'_blank','noopener')})};
+function toRef(t){if(!VX)return;var u=VX.url;vClose();fetch(u).then(function(r){return r.blob()}).then(shrink).then(function(s){if(curTab()!==t)go(t);loadCat(function(){var m=mModel(t);if(m&&REFS[t].length<m.refs){REFS[t].push(s);drawRefs(t);toast(t==='video'?'Картинка добавлена в видео как кадр':'Добавлено в референсы')}else toast('У этой модели больше фото не добавить')})}).catch(function(){toast('Не получилось взять фото')})}
+$('vRef').onclick=function(){toRef('img')};$('vRefV').onclick=function(){toRef('video')};
+function mgrow(e){var t=e.target||e,cs=getComputedStyle(t),lh=parseFloat(cs.lineHeight),pad=parseFloat(cs.paddingTop)+parseFloat(cs.paddingBottom),max=lh*12+pad+2,min=lh*4+pad+2;t.style.height='auto';var h=Math.max(min,t.scrollHeight);t.style.height=Math.min(h,max)+'px';t.style.overflowY=h>max?'auto':'hidden'}
+['imgP','videoP','soundP'].forEach(function(i){$(i).addEventListener('input',mgrow);setTimeout(function(){mgrow($(i))},0)});
+function create(t){var m=mModel(t),o=MOPT[t],b=$(t+'Go'),pr=$(t+'P').value.trim();if(!m)return;
+  if(m.mc){if(!REFS[t].length){toast(ERR.need_photo);return}if(!MV){toast(ERR.need_video);return}}
+  else if(pr.length<2){toast(ERR.no_prompt);$(t+'P').focus();return}
+  var bt=b.textContent;b.disabled=true;
+  var X={v:[],a:[],r:[]};
+  (m.mc?(MV.url?Promise.resolve(MV.url):upVideo(b).then(function(u){MV.url=u;return u})):upAll(t,b).then(function(r){X=r;return ''}))
+  .then(function(vurl){b.textContent=bt;return post('/api/media/create',{k:m.k,prompt:pr,ar:o.ar,res:o.res,q:o.q,dur:o.dur,audio:o.audio,refs:REFS[t].slice(0,maxRefs(t)),vurl:vurl,vdur:MV&&MV.dur,orient:o.orient,vrefs:X.v,arefs:X.a,rrefs:X.r})},function(e){b.textContent=bt;throw e})
+  .then(function(r){b.disabled=false;
+    if(!r.ok){if(r.error==='auth'){showLogin();return}if(r.error==='no_money'){toast(ERR.no_money);go('wallet');return}toast(err(r.error,r));return}
+    GAL[t].unshift(r.job);drawGal(t);poll();if(BKK&&t==='img'){$('imgP').value='';mgrow($('imgP'));toast('Рисую. Когда появится — нажми на неё → «Скачать» → «Вернуться в карты»');return}toast(t==='img'?'Рисую. Картинка появится ниже.':'Снимаю. Видео появится ниже через несколько минут.')}).catch(function(e){b.disabled=false;if(e&&e.error){toast(e.error==='upload_failed'?'Файл не загрузился (код '+(e.code||'нет ответа')+'). Попробуй ещё раз.':err(e.error,e));return}toast('Нет связи. Если включён VPN, выключи его.')})}
+$('imgGo').onclick=function(){create('img')};$('soundGo').onclick=function(){createSnd()};$('videoGo').onclick=function(){create('video')};
+function mediaTab(t){setTimeout(function(){mgrow($(t+'P'))},0);loadCat(function(){if(curTab()!==t)return;mediaName();drawOpts(t);if(MC&&!MC.ready)$(t+'Price').textContent='скоро'});loadGal()}
+
+/* ---------- диалоги (хранятся в этом браузере) ---------- */
+/* диалоги хранятся на сервере LURE, видны с любого устройства */
+function newDialog(){return {id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),title:'',msgs:[]}}
+function dStore(d){post('/api/dialog',{id:d.id,title:d.title,msgs:d.msgs}).then(function(r){if(r&&r.error==='dialog_full')toast('Диалог слишком длинный, начни новый');else if(r&&r.error==='auth')showLogin()}).catch(function(){toast('Диалог не сохранился: нет связи')})}
+function openDialog(id){var tmp=CUR=newDialog();ls(key('cur'),id||CUR.id);drawMsgs();if(!id)return;
+  get('/api/dialog?id='+encodeURIComponent(id)).then(function(r){if(CUR!==tmp||tmp.msgs.length)return;if(r.ok&&r.dialog){CUR=r.dialog;drawMsgs()}else ls(key('cur'),tmp.id)}).catch(function(){})}
+function drawList(L){$('dList').innerHTML=L.length?L.map(function(x){return '<div class="dl"><button class="t" data-o="'+esc(x.id)+'">'+esc(x.t||'Без названия')+'</button><small>'+new Date(x.at).toLocaleDateString('ru-RU')+'</small><button class="x" data-x="'+esc(x.id)+'" aria-label="Удалить">×</button></div>'}).join(''):'<p class="muted">Диалогов пока нет.</p>';
+  [].forEach.call($('dList').querySelectorAll('[data-o]'),function(b){b.onclick=function(){openDialog(b.dataset.o);$('dlgs').hidden=true}});
+  [].forEach.call($('dList').querySelectorAll('[data-x]'),function(b){b.onclick=function(){var id=b.dataset.x;drawList(L.filter(function(x){return x.id!==id}));post('/api/dialog/delete',{id:id}).catch(function(){});if(CUR&&CUR.id===id)openDialog(null)}})}
+function openList(){$('dList').innerHTML='<p class="muted">Загружаю…</p>';$('dlgs').hidden=false;
+  get('/api/dialogs').then(function(r){if(!r.ok){if(r.error==='auth')showLogin();return}drawList(r.list)}).catch(function(){$('dList').innerHTML='<p class="muted">Нет связи. Если включён VPN, выключи его.</p>'})}
+$('dNew2').onclick=function(){openDialog(null);$('q').focus()};
+$('dNew').onclick=function(){openDialog(null);$('dlgs').hidden=true;$('q').focus()};
+$('dlgs').onclick=function(e){if(e.target===this)this.hidden=true};
+
+/* ---------- текст ответа ---------- */
+function md(s){var out=[],parts=String(s).split(/```/);
+  parts.forEach(function(p,i){if(i%2){var nl=p.indexOf('\n');out.push('<pre><code>'+esc(nl>-1&&nl<20?p.slice(nl+1):p)+'</code></pre>');return}
+    var lines=esc(p).split('\n'),html='',list=null;
+    function close(){if(list){html+='</'+list+'>';list=null}}
+    lines.forEach(function(l){var m;
+      if(m=l.match(/^\s*[-*•]\s+(.*)/)){if(list!=='ul'){close();html+='<ul>';list='ul'}html+='<li>'+inl(m[1])+'</li>';return}
+      if(m=l.match(/^\s*\d+[.)]\s+(.*)/)){if(list!=='ol'){close();html+='<ol>';list='ol'}html+='<li>'+inl(m[1])+'</li>';return}
+      close();
+      if(m=l.match(/^#{1,3}\s+(.*)/)){html+='<h3>'+inl(m[1])+'</h3>';return}
+      if(m=l.match(/^#{4,6}\s+(.*)/)){html+='<h4>'+inl(m[1])+'</h4>';return}
+      if(l.trim())html+='<p>'+inl(l)+'</p>'});
+    close();out.push(html)});
+  return out.join('')}
+function inl(s){return s.replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/(^|[^*])\*([^*\s][^*]*)\*/g,'$1<i>$2</i>')}
+
+function drawMsgs(){var L=$('mlist');
+  if(!CUR.msgs.length){L.innerHTML='<div class="empty">Чем помочь сегодня?</div>';return}
+  L.innerHTML=CUR.msgs.map(function(m,i){return m.role==='user'?'<div class="m u">'+(m.imgs&&m.imgs.length?'<div class="uimgs">'+m.imgs.map(function(u){return '<a href="'+esc(u)+'" target="_blank" rel="noopener"><img src="'+esc(u)+'" alt="" loading="lazy"></a>'}).join('')+'</div>':'')+(m.files&&m.files.length?'<div style="text-align:right">'+m.files.map(function(f){return '<span class="ufile">📄 '+esc(f.name)+'</span>'}).join('')+'</div>':'')+(m.video?'<span class="webtag">🎬 видео '+esc(m.video.name)+' · '+tc(m.video.dur)+' · '+m.video.frames+' кадров</span>':'')+(m.web?'<span class="webtag">🌐 с интернетом</span>':'')+(m.content?'<div class="ut clip">'+esc(m.content)+'</div>':'')+'</div>':'<div class="m a"><div class="tx">'+md(m.content)+'</div><div class="meta">'+(m.model?esc(pretty(m.model)):'')+(m.cost!=null?' · '+rub(m.cost):'')+'<button data-c="'+i+'">Копировать</button></div></div>'}).join('');
+  [].forEach.call(L.querySelectorAll('[data-c]'),function(b){b.onclick=function(){var t=CUR.msgs[+b.dataset.c].content;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){toast('Скопировано')},function(){toast('Не получилось скопировать')})}});
+  clipU(L);var box=$('msgs');box.scrollTop=box.scrollHeight;priceHint()}
+function clipU(L){[].forEach.call(L.querySelectorAll('.m.u .ut.clip'),function(u){if(u.scrollHeight<=u.clientHeight+2){u.classList.remove('clip');return}
+  if(u.nextSibling)return;var b=document.createElement('button');b.className='more';b.textContent='ещё';
+  b.onclick=function(){var o=u.classList.toggle('clip');b.textContent=o?'ещё':'свернуть'};u.parentNode.appendChild(b)})}
+
+/* ---------- отправка ---------- */
+var SEND='<svg viewBox="0 0 24 24"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg>',STOP='<svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
+function grow(){var t=$('q'),cs=getComputedStyle(t),max=parseFloat(cs.lineHeight)*7+parseFloat(cs.paddingTop)+parseFloat(cs.paddingBottom)+1;t.style.height='auto';var hh=t.scrollHeight;t.style.height=Math.min(hh,max)+'px';t.style.overflowY=hh>max?'auto':'hidden'}
+$('q').oninput=function(){grow();priceHint()};
+$('q').onkeydown=function(e){if(e.key==='Enter'&&!e.shiftKey&&window.matchMedia('(min-width:700px)').matches){e.preventDefault();$('sendBtn').click()}};
+$('sendBtn').onclick=function(){
+  if(ctl){ctl.abort();return}
+  var text=$('q').value.trim(),model=ls(key('model'));if(!text&&!ATT.length)return;if(!model){toast('Модели ещё загружаются');return}
+  if(ATT.some(function(a){return a.busy})){toast('Подожди, файл ещё читается');return}
+  if(ME.balance<=0){toast(ERR.no_money);go('wallet');return}
+  var NEED=ATT.filter(function(a){return a.wavs&&a.wavs.length&&a.stt==null});
+  if(NEED.length){var sb=$('sendBtn'),fake={};sb.disabled=true;toast('Расшифровываю речь…');
+    var jobs=NEED.map(function(a){var items=a.wavs.map(function(b){return {file:b,ext:'wav'}}),n=0;
+      return (function up(){var it=items[n++];if(!it)return Promise.resolve();return upFile(it,fake,'').then(up)})().then(function(){return post('/api/chat/transcribe',{urls:items.map(function(x){return x.url}),dur:a.dur||a.sdur})}).then(function(r){if(!r.ok)throw r;a.stt=r.text||'';if(ME&&r.balance!=null){ME.balance=r.balance;setMe(ME)}})});
+    Promise.all(jobs).then(function(){sb.disabled=false;$('sendBtn').click()},function(e){sb.disabled=false;toast(e&&e.error==='no_money'?ERR.no_money:'Не получилось расшифровать речь. Попробуй ещё раз.')});return}
+  var att=ATT.slice(),VD=att.filter(function(a){return a.k==='v'})[0],IM=att.filter(function(a){return a.k==='i'}).concat(VD?VD.sheets:[]),FL=att.filter(function(a){return a.k==='f'}).concat(att.filter(function(a){return a.k==='a'}).map(function(a){return {k:'f',name:'🎧 '+a.name+' (расшифровка речи)',text:a.stt||'(речи не слышно)'}}));
+  if(VD&&VD.stt)FL.push({k:'f',name:'Речь из видео '+VD.name,text:VD.stt});
+  if(IM.length&&!IM.every(function(a){return a.url})){var sb=$('sendBtn'),fake={};sb.disabled=true;var n=0;
+    (function next(){var it=IM[n++];if(!it){sb.disabled=false;$('sendBtn').click();return}upFile(it,fake,'').then(next,function(e){sb.disabled=false;toast(e&&e.error==='upload_failed'?'Фото не загрузилось. Попробуй ещё раз.':err(e&&e.error,e))})})();
+    toast('Загружаю фото…');return}
+  var web=WEB||/https?:\/\/\S+/i.test(text);
+  var um={role:'user',content:text};if(web)um.web=1;if(IM.length)um.imgs=IM.map(function(a){return a.url});if(FL.length)um.files=FL.map(function(a){return {name:a.name,text:a.text}});
+  if(VD){um.video={name:VD.name,dur:Math.round(VD.dur),frames:VD.frames};if(!text)um.content='Посмотри видео.'}
+  if(!text&&!VD&&att.some(function(a){return a.k==='a'}))um.content='Послушай аудио.';
+  CUR.msgs.push(um);if(!CUR.title)CUR.title=(text||(FL[0]&&FL[0].name)||'Фото').slice(0,60);
+  $('q').value='';ATT=[];drawAtt();grow();drawMsgs();dStore(CUR);priceHint();
+  var L=$('mlist'),el=document.createElement('div');el.className='m a';el.innerHTML=web?'<div class="tx typing"><p style="opacity:.7">🌐 Ищу в интернете…</p></div>':'<div class="tx typing"></div>';L.appendChild(el);$('msgs').scrollTop=$('msgs').scrollHeight;
+  var tx=el.querySelector('.tx'),acc='',info=null,dialog=CUR;
+  ctl=new AbortController();$('sendBtn').innerHTML=STOP;$('sendBtn').classList.add('stop');
+  function done(errText){ctl=null;$('sendBtn').innerHTML=SEND;$('sendBtn').classList.remove('stop');
+    if(acc)dialog.msgs.push({role:'assistant',content:acc,model:model,cost:info?info.cost:null});
+    else if(errText){dialog.msgs.pop();if(!$('q').value)$('q').value=text;if(!ATT.length){ATT=att;drawAtt()}grow()}
+    dStore(dialog);if(dialog===CUR)drawMsgs();if(errText)toast(errText);
+    if(info){ME.balance=info.balance;ME.spentToday=Math.round((ME.spentToday+info.cost)*100)/100;setMe(ME)}}
+  fetch(U('/api/chat'),{method:'POST',credentials:CRED,signal:ctl.signal,headers:H({'Content-Type':'application/json'}),
+    body:JSON.stringify({model:model,messages:dialog.msgs.map(function(m){var o={role:m.role,content:m.content};if(m.imgs)o.imgs=m.imgs;if(m.files)o.files=m.files;if(m.video)o.video=m.video;return o}),web:web})}).then(function(r){
+    var ct=r.headers.get('content-type')||'';
+    if(ct.indexOf('event-stream')<0)return r.json().then(function(j){if(j.error==='auth')showLogin();if(j.error==='need_pro'){ME.access=false;go('chat')}if(j.error==='need_terms')$('terms').hidden=false;if(j.error==='pin_locked')showPin('enter');done(err(j.error,j))});
+    var rd=r.body.getReader(),dec=new TextDecoder(),buf='',ev='';
+    function pump(){return rd.read().then(function(x){if(x.done){done(acc?'':'Нейросеть не ответила');return}
+      buf+=dec.decode(x.value,{stream:true});var i;
+      while((i=buf.indexOf('\n'))>-1){var line=buf.slice(0,i).trim();buf=buf.slice(i+1);
+        if(line.indexOf('event:')===0){ev=line.slice(6).trim();continue}
+        if(line.indexOf('data:')!==0){if(!line)ev='';continue}
+        var d=line.slice(5).trim();if(d==='[DONE]')continue;
+        try{var j=JSON.parse(d);
+          if(ev==='lure'){info=j;continue}
+          var c=j.choices&&j.choices[0]&&j.choices[0].delta&&j.choices[0].delta.content;
+          if(c){acc+=c;tx.innerHTML=md(acc);tx.classList.add('typing');var b=$('msgs');if(b.scrollHeight-b.scrollTop-b.clientHeight<160)b.scrollTop=b.scrollHeight}
+        }catch(e){}}
+      return pump()})}
+    return pump()}).catch(function(e){done(e&&e.name==='AbortError'?(acc?'':'Остановлено'):'Связь прервалась. Если включён VPN, выключи его.')})};
+
+/* ---------- вложения в чате: фото и файлы ---------- */
+var ATT=[];ERR.img_failed='Не получилось прочитать фото. Пришли его ещё раз.';
+function drawAtt(){priceHint();var R=$('attRow');R.hidden=!ATT.length;R.innerHTML=ATT.map(function(a,i){if(a.k==='a')return '<div class="ac"><span>'+(a.busy?'⏳ ':'🎧 ')+esc(a.name)+(a.dur?' · '+tc(a.dur):'')+'</span><button type="button" data-ax="'+i+'" aria-label="Убрать">×</button></div>';if(a.k==='v')return '<div class="ac'+(a.thumb?' i':'')+'">'+(a.thumb?'<img src="'+a.thumb+'" alt="">':'')+'<span>🎬 '+(a.busy?'кадры '+(a.prog||0)+'%':tc(a.dur)+' · '+a.frames+' кадров')+'</span><button type="button" data-ax="'+i+'" aria-label="Убрать">×</button></div>';return a.k==='i'?'<div class="ac i"><img src="'+a.thumb+'" alt=""><button type="button" data-ax="'+i+'" aria-label="Убрать">×</button></div>':'<div class="ac"><span>'+(a.busy?'⏳ ':'📄 ')+esc(a.name)+'</span><button type="button" data-ax="'+i+'" aria-label="Убрать">×</button></div>'}).join('');
+  [].forEach.call(R.querySelectorAll('[data-ax]'),function(b){b.onclick=function(){ATT.splice(+b.dataset.ax,1);drawAtt()}})}
+function shrinkJ(file,mx){return new Promise(function(ok,no){var u=URL.createObjectURL(file),im=new Image();im.onerror=function(){URL.revokeObjectURL(u);no()};im.onload=function(){var k=Math.min(1,mx/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);ok(c.toDataURL('image/jpeg',.82))};im.src=u})}
+// раскадровка видео прямо в браузере: n кадров с временем → листы 3×3 (их модель смотрит как фото)
+function tc(t){t=Math.round(t);return Math.floor(t/60)+':'+('0'+t%60).slice(-2)}
+function storyboard(f,maxSheets,onp){return new Promise(function(ok,no){var v=document.createElement('video'),u=URL.createObjectURL(f);v.muted=true;v.playsInline=true;v.preload='auto';
+  var fail=function(){URL.revokeObjectURL(u);no()};v.onerror=fail;
+  v.onloadedmetadata=function(){var d=v.duration;if(!(d>0)||!isFinite(d)){fail();return}
+    var n=Math.min(maxSheets*9,Math.max(4,Math.ceil(d/2))),W=400,H=Math.round(W*(v.videoHeight||9)/(v.videoWidth||16)),frames=[],i=0;
+    var c=document.createElement('canvas');c.width=W;c.height=H;var g=c.getContext('2d');
+    function step(){if(i>=n){finish();return}v.currentTime=Math.min(d-0.05,(i+0.5)*d/n)}
+    v.onseeked=function(){g.drawImage(v,0,0,W,H);g.fillStyle='rgba(0,0,0,.6)';g.fillRect(0,H-26,70,26);g.fillStyle='#fff';g.font='bold 16px sans-serif';g.fillText(tc(v.currentTime),8,H-8);
+      frames.push(g.getImageData(0,0,W,H));i++;onp&&onp(i,n);step()};
+    function finish(){var sheets=[];for(var k=0;k<frames.length;k+=9){var part=frames.slice(k,k+9),cols=Math.min(3,part.length),rows=Math.ceil(part.length/3),S=document.createElement('canvas');S.width=cols*W;S.height=rows*H;var sg=S.getContext('2d');
+        part.forEach(function(fr,j){sg.putImageData(fr,(j%3)*W,Math.floor(j/3)*H)});sheets.push(S.toDataURL('image/jpeg',.72))}
+      URL.revokeObjectURL(u);ok({dur:d,sheets:sheets,frames:frames.length})}
+    step()};v.src=u})}
+// звук → куски WAV 16 кГц моно по 4 минуты (для расшифровки речи), максимум 30 минут
+var STT_MIN=0.108*2.2;
+function speechWavs(f){return f.arrayBuffer().then(function(buf){var AC=window.AudioContext||window.webkitAudioContext,ctx;try{ctx=new AC({sampleRate:16000})}catch(e){ctx=new AC()}
+  return new Promise(function(ok,no){ctx.decodeAudioData(buf,ok,no)}).then(function(ab){try{ctx.close()}catch(e){}
+    var sr=ab.sampleRate,n=Math.min(ab.length,sr*1800),mono=new Float32Array(n),ch=ab.numberOfChannels;
+    for(var c=0;c<ch;c++){var d=ab.getChannelData(c);for(var i=0;i<n;i++)mono[i]+=d[i]/ch}
+    var step=sr/16000,len=Math.floor(n/step),pcm=new Int16Array(len);for(var j=0;j<len;j++){var v=mono[Math.floor(j*step)];v=v<-1?-1:v>1?1:v;pcm[j]=v*32767}
+    var out=[],CH=16000*240;for(var k=0;k<len;k+=CH){var part=pcm.subarray(k,Math.min(len,k+CH)),h=new DataView(new ArrayBuffer(44)),w=function(o,t){for(var q=0;q<t.length;q++)h.setUint8(o+q,t.charCodeAt(q))};
+      w(0,'RIFF');h.setUint32(4,36+part.length*2,true);w(8,'WAVE');w(12,'fmt ');h.setUint32(16,16,true);h.setUint16(20,1,true);h.setUint16(22,1,true);h.setUint32(24,16000,true);h.setUint32(28,32000,true);h.setUint16(32,2,true);h.setUint16(34,16,true);w(36,'data');h.setUint32(40,part.length*2,true);
+      out.push(new Blob([h,part],{type:'audio/wav'}))}
+    return {wavs:out,dur:len/16000,full:ab.length/sr}})})}
+var LIBS={};function lib(src){return LIBS[src]||(LIBS[src]=new Promise(function(ok,no){var s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=function(){delete LIBS[src];no()};document.head.appendChild(s)}))}
+function fileText(f){var ext=(f.name.split('.').pop()||'').toLowerCase();
+  if(ext==='pdf')return lib('lib/pdf.min.js').then(function(){pdfjsLib.GlobalWorkerOptions.workerSrc='lib/pdf.worker.min.js';return f.arrayBuffer()}).then(function(b){return pdfjsLib.getDocument({data:b}).promise}).then(function(doc){var n=Math.min(doc.numPages,300),out=[],i=1;
+    function pg(){if(i>n)return out.join('\n\n');return doc.getPage(i++).then(function(p){return p.getTextContent()}).then(function(t){out.push(t.items.map(function(x){return x.str+(x.hasEOL?'\n':'')}).join(' '));return pg()})}return pg()});
+  if(ext==='docx')return lib('lib/mammoth.browser.min.js').then(function(){return f.arrayBuffer()}).then(function(b){return mammoth.extractRawText({arrayBuffer:b})}).then(function(r){return r.value});
+  if(['txt','md','csv'].indexOf(ext)>=0)return f.text();
+  return Promise.reject({bad:1})}
+// цена до отправки (Андрей 17.11): история + текст + файлы + фото + интернет; ответ берём ≈600 токенов
+function priceHint(){var el=$('priceLine');if(!el)return;var mid=ls(key('model')),m=(typeof MODELS!=='undefined'?MODELS:[]).filter(function(x){return x.id===mid})[0];
+  var t=$('q').value.trim();if(!m||!m.per1M||(!t&&!ATT.length)){el.innerHTML='';return}
+  var ch=t.length,hc=0;(CUR&&CUR.msgs||[]).slice(-40).forEach(function(x){hc+=(x.content||'').length;(x.files||[]).forEach(function(f){hc+=f.text.length})});ch+=hc;
+  var ni=0;ATT.forEach(function(a){if(a.k==='f')ch+=(a.text||'').length;else if(a.k==='a')ch+=(a.stt!=null?a.stt.length:(a.dur||0)*15);else if(a.k==='v'){ni+=(a.sheets||[1]).length;ch+=(a.sdur||0)*15}else ni++});ni=Math.min(ni,4);
+  var tin=ch/2.5+ni*1600+50,web=WEB||/https?:\/\/\S+/i.test(t);
+  // ответ: короткий ≈30 токенов, подробный ≈800 — цена зависит от длины ответа, поэтому показываем вилку (Андрей 17.11: «привет» стоил 0,09, а не 3 ₽)
+  function cost(tout){var x=(tin*m.per1M.in+tout*m.per1M.out)/1e6;if(web)x=x*2+2.2;return x}
+  var lo=cost(30),r=cost(800);
+  var sd=0;ATT.forEach(function(a){if(a.wavs&&a.stt==null)sd+=(a.dur||a.sdur||0)});if(sd){var sc=Math.max(0.01,sd/60*STT_MIN);lo+=sc;r+=sc}
+  var hist=hc/2.5*m.per1M.in/1e6*(web?2:1),fresh=Math.max(0.01,lo-hist);
+  el.innerHTML='≈ <b>'+rub(Math.max(0.01,lo))+'</b> – <b>'+rub(Math.max(0.01,r))+'</b> за ответ <span style="opacity:.7">(короткий – подробный)</span>'+(sd?' · с расшифровкой речи '+tc(sd):'')
+    +(web?' · с интернетом':'')+(ATT.length?' · с вложениями':'')+(hist>0.3&&hist>fresh?'<br><span style="color:#c9a26a">Длинный чат: модель каждый раз перечитывает всю переписку (+'+rub(hist)+' к каждому ответу). В новом чате от '+rub(fresh)+'</span> <button type="button" id="phNew" style="font:700 12px var(--f);color:var(--gold);text-decoration:underline;padding:0">Открыть новый чат</button>':'');var nb=$('phNew');if(nb)nb.onclick=function(){openDialog(null);$('q').focus();priceHint()}}
+var WEB=ls(key('web'))==='1';function drawWeb(){var b=$('webBtn');b.classList.toggle('on',WEB);b.setAttribute('aria-pressed',WEB?'true':'false')}
+$('webBtn').onclick=function(){WEB=!WEB;ls(key('web'),WEB?'1':null);drawWeb();priceHint();toast(WEB?'Интернет включён: модель будет искать свежие данные и читать ссылки. Поиск +≈1 ₽.':'Интернет выключен')};
+$('attBtn').onclick=function(){$('attFile').value='';$('attFile').click()};
+$('attFile').onchange=function(){[].slice.call(this.files||[]).forEach(function(f){
+  if(/^audio\//.test(f.type)||/\.(mp3|m4a|wav|ogg|opus|flac|aac|oga)$/i.test(f.name)){if(ATT.filter(function(a){return a.k==='a'}).length>=2){toast('Можно до 2 аудио в одном сообщении');return}
+    var a={k:'a',busy:true,name:f.name};ATT.push(a);drawAtt();
+    speechWavs(f).then(function(r){a.busy=false;a.wavs=r.wavs;a.dur=r.dur;if(r.full>r.dur+1)toast('Аудио длиннее 30 минут, расшифрую первые 30');drawAtt()},function(){ATT.splice(ATT.indexOf(a),1);drawAtt();toast('Не получилось открыть аудио. Подходят mp3, m4a, wav, ogg.')});return}
+  if(/^video\//.test(f.type)||/\.(mp4|mov|webm|m4v)$/i.test(f.name)){if(ATT.some(function(a){return a.k==='v'})){toast('Одно видео в одном сообщении');return}
+    var free=4-ATT.filter(function(a){return a.k==='i'}).length;if(free<1){toast('Убери одно фото, чтобы добавить видео');return}
+    var a={k:'v',busy:true,name:f.name,file:f};ATT.push(a);drawAtt();
+    storyboard(f,free,function(i,n){a.prog=Math.round(i/n*100);drawAtt()}).then(function(r){return speechWavs(f).then(function(s2){a.wavs=s2.wavs;a.sdur=s2.dur;return r},function(){return r})}).then(function(r){a.busy=false;a.dur=r.dur;a.frames=r.frames;a.sheets=r.sheets.map(function(d){return {k:'i',thumb:d,file:d2b(d),ext:'jpg'}});a.thumb=r.sheets[0];drawAtt()},function(){ATT.splice(ATT.indexOf(a),1);drawAtt();toast('Не получилось открыть видео. Подходят mp4, mov, webm.')});return}
+  if(/^image\//.test(f.type)){if(ATT.filter(function(a){return a.k==='i'}).length>=4){toast('Можно до 4 фото в одном сообщении');return}
+    var a={k:'i',busy:true,thumb:''};ATT.push(a);shrinkJ(f,1280).then(function(d){a.busy=false;a.thumb=d;a.file=d2b(d);a.ext='jpg';drawAtt()},function(){ATT.splice(ATT.indexOf(a),1);drawAtt();toast('Не получилось открыть фото')});return}
+  if(ATT.filter(function(a){return a.k==='f'}).length>=3){toast('Можно до 3 файлов в одном сообщении');return}
+  if(f.size>30e6){toast('Файл больше 30 МБ');return}
+  var a={k:'f',busy:true,name:f.name};ATT.push(a);drawAtt();
+  fileText(f).then(function(t){t=String(t||'').replace(/[ \t]+/g,' ').replace(/\n{3,}/g,'\n\n').trim();
+    if(!t){ATT.splice(ATT.indexOf(a),1);drawAtt();toast('В файле нет текста. Если это скан, пришли страницы как фото.');return}
+    if(t.length>60000){t=t.slice(0,60000)+'\n…(дальше обрезано)';toast('Файл длинный, возьму первые 60 000 символов')}
+    a.text=t;a.busy=false;drawAtt()},function(e){ATT.splice(ATT.indexOf(a),1);drawAtt();toast(e&&e.bad?'Подходят фото, PDF, Word (.docx), txt, md, csv':'Не получилось прочитать файл')})});drawAtt()};
+
+/* ---------- кошелёк ---------- */
+var KIND={topup:'Пополнение кодом',credit:'Пополнение',gift:'Подарок',spend:'Ответ'};
+function loadWallet(){get('/api/wallet').then(function(r){if(!r.ok){if(r.error==='auth')showLogin();return}setMe(r.me);
+  $('hist').innerHTML=r.hist.length?r.hist.map(function(h){return '<div class="row"><span>'+new Date(h.at).toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+' · '+esc(h.kind==='spend'?pretty(h.note.split(' · ')[0]):(h.note||KIND[h.kind]))+'</span><b class="'+(h.sum>0?'plus':'')+'">'+(h.sum>0?'+':'')+rub(h.sum)+'</b></div>'}).join(''):'<p class="muted">Пока пусто.</p>';
+  if(r.me.owner)loadOwner()})}
+$('rBtn').onclick=function(){var c=$('rCode').value.trim();if(!c)return;var b=this;b.disabled=true;$('rErr').textContent='';
+  post('/api/redeem',{code:c}).then(function(r){b.disabled=false;if(!r.ok){$('rErr').textContent=err(r.error);return}$('rCode').value='';toast('Зачислено '+rub(r.sum));setMe(r.me);loadWallet()}).catch(function(){b.disabled=false})};
+$('logout').onclick=function(){post('/api/logout').then(function(){location.hash='';showLogin()})};
+$('topRe').onclick=$('reLogin').onclick=function(){post('/api/logout').then(function(){location.hash='';showLogin()})};
+
+/* ---------- касса Андрея ---------- */
+function loadOwner(){get('/api/admin/summary').then(function(r){if(!r.ok)return;
+  $('oSum').innerHTML='<div class="row"><span>Людей в LURE</span><b>'+r.users+'</b></div><div class="row"><span>Денег на счетах людей</span><b>'+rub(r.balances)+'</b></div><div class="row"><span>Потрачено сегодня</span><b>'+rub(r.spentDay)+'</b></div><div class="row"><span>Потрачено за месяц</span><b>'+rub(r.spentMonth)+'</b></div><div class="row"><span>Пополнено за месяц</span><b>'+rub(r.topMonth)+'</b></div><p class="muted" style="margin:10px 0 0">Сверяй «потрачено за месяц» с расходом в Polza: разница и есть твой доход.</p>';
+  $('oPeople').innerHTML='<b style="font:800 15px var(--f)">Люди</b>'+(r.people.map(function(p){return '<div class="row"><span>'+esc(p.name)+' · ID '+esc(p.id)+(p.blocked?' · закрыт':'')+'</span><b>'+rub(p.balance)+'</b></div>'}).join('')||'<p class="muted">Пока никого.</p>')+
+    (r.codes.length?'<p class="muted" style="margin-top:12px">Неиспользованные коды: '+r.codes.map(function(c){return esc(c.code)+' ('+c.sum+' ₽)'}).join(', ')+'</p>':'')})}
+$('cBtn').onclick=function(){var b=this;b.disabled=true;post('/api/admin/codes',{sum:$('cSum').value,count:$('cCnt').value}).then(function(r){b.disabled=false;
+  if(!r.ok){toast(err(r.error));return}$('cOut').innerHTML='<p class="muted">Коды на '+r.sum+' ₽, каждый срабатывает один раз:</p><div class="codebox">'+r.codes.join('\n')+'</div>';loadOwner()}).catch(function(){b.disabled=false})};
+$('kBtn').onclick=function(){$('kErr').textContent='';post('/api/admin/credit',{id:$('kId').value,sum:String($('kSum').value).replace(',','.').replace(/[−–—]/,'-').replace(/\s/g,'')}).then(function(r){
+  if(!r.ok){$('kErr').textContent=err(r.error);return}toast('Готово, на счёте '+rub(r.balance));$('kSum').value='';loadWallet()})};
+
+/* ---------- старт ---------- */
+boot();
+})();
+</script>
+<script>/* egTapV2: звук тапа как клавиатура iPhone (18.11.2026, как на app.eaglesteam.ru) */
+(function(){if(window.__egTapOn)return;window.__egTapOn=1;
+var actx=null;function getCtx(){if(!actx)actx=new (window.AudioContext||window.webkitAudioContext)();return actx;}
+/* EAGLES: щелчок клавиатуры iPhone на каждый тап (18.11.2026).
+   Замена старой функции egSoftTap(c): c = AudioContext, который уже создаёт и «будит» общий обработчик.
+   Звук = klik-iphone.wav (12 мс, 48 кГц, моно, 1196 байт, md5 0426c81422731ec2edb6d2098b65ce01), вшит base64, без запросов в сеть.
+   Буфер декодируется 1 раз и кэшируется в window.__egTapBuf (подходит к любому AudioContext на странице). */
+var EG_TAP_WAV="data:audio/wav;base64,UklGRqQEAABXQVZFZm10IBAAAAABAAEAgLsAAAB3AQACABAAZGF0YYAEAAD+/wIABwAJAAkABAAHAAIA/P/+//z/8v/y//n/AgATABMABwACAPf/6P/v//z//P/+/wAA/P/8/wQACQAHAAAAAAAEAAcADAATAAkA/v/+//T/7//8/wAA/P/+//z/+f8AAAkAGgAkABoAIgAsACIAJAAiAAAA7f/v/+P/9P8aABYACQAJAPT/7f/8//L/8v8EAAAA9P/8//n/7f/m/9f/4//8//n/9P8AAPf/+f8TAA4ADgAiACQAMABGACkADAARAPf/4f/t/9T/wf/S/6j/ev+h/6v/jv/L/wkACQAuAEkAPQBrAJ4AhAB6AIQAWAAWAOj/2f/q/9f/pv+y/7X/if+h/9D/sv/B/wwABAD8/0YAWgAzAGYAiwBGAFMAdQAaADMAlQD8/xgA+wDJ/Nbw9N/zyXqyaKYSqsSz2r5YztXgY/NcBpkYTCjBNUBAcEaxSChHlEG5OB8tJB/wD3UAWvGS487XnM6HyL3FQcbzyUjQ1thJ4/DuGPsAB/YRgxsfI2IoQiuaK1kpDSVEHyYY2g+5Bl79afQr7AHld9/F2xfaotpF3cnh/ud077b3YQDXCKAQYxehHBsg3SHMIdsfRhw5F/MQ6QlvAtv6r/NX7RLoLOT14XnhtOKU5dbpIe879dT7eQLhCM8OxBNtF78ZihrLGbgXfBQvECALogXy/1n6M/XK8DjtpOpG6U3pq+o47bnw9vS4+aj+dQPvB9AL6A4uEW4ShhKoEeQPQQ3uCS0GSAJ3/tH6j/f09AHzxvFw8erxBvPI9BX3uPmf/LX/tgJzBcoHpQnbClULLAtyCiEJWAdKBQ4DwwCX/p386fqa+bL4PfhJ+Nn4y/n/+lv8x/0p/3AAkAF2AiQDngPKA6MDSQOzAgECaQHoAGQA/P+6/4v/df9//6H/1P8AAAcADAAJAAcADAARAAwADAAEAPL/5v/v//z/AAAEAAcABwAHAAwABwD+//n/6P/Q/7z/sP+h/5z/qP+3/8v/6v8MACkARgBhAGsAZABcAFgARgA1ACwAEwD5/+r/1//D/8b/yP+1/6T/n/+c/5//tf/Q/+P//v8iAD0ASwBfAGYAZgBuAG4AWgBEACwAEwAEAPf/1//B/7X/rf+1/8v/1P/S/9T/2f/m//f/AgAHABMAIgAkACcAMAA4ADAAJAAfABYAAgD0/+//6P/e/97/4//o/+r/9P/8//7//v8AAAQABAD+//7/AgACAP7//v/+/wAAAgAAAAAAAgAAAP7/AgACAPz/AAAEAP7//P8EAAQA/v/+/wIAAgAAAAAAAgAAAPz//v8CAAIAAAAAAP7//v8AAAIAAgAAAP3//f/9/wAAAQAAAP3//f8BAAEAAAAAAAAA/f///wMAAwADAAIAAgD//wAAAQAAAPz//v//////////////AAABAAAAAQACAAEA//8AAAAA//8AAAAAAAAAAAAAAQAAAAAAAQACAAEAAAD//////////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+function egSoftTap(c){try{
+  var B=window.__egTapBuf;
+  var play=function(buf){var s=c.createBufferSource();s.buffer=buf;var g=c.createGain();g.gain.value=0.55;s.connect(g);g.connect(c.destination);s.start(0);};
+  if(B&&B!=='w'){play(B);return;}
+  if(B==='w')return;
+  window.__egTapBuf='w';
+  var bin=atob(EG_TAP_WAV.split(',')[1]),u=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+  var ok=function(buf){window.__egTapBuf=buf;play(buf);},bad=function(){window.__egTapBuf=null;};
+  var p=c.decodeAudioData(u.buffer,ok,bad);if(p&&p.catch)p.catch(bad);
+}catch(e){}}
+document.addEventListener('click',function(ev){var el=ev.target.closest&&ev.target.closest('a, button, [role=button], label, select, [data-gi], .refb');if(!el)return;try{var c=getCtx();if(c.state==='running')egSoftTap(c);else c.resume().then(function(){egSoftTap(c);}).catch(function(){});}catch(e){}},true);
+})();</script>
+<!-- lureGost1 (27.11.2026, витрина до старта): гость без входа видит, какие нейросети есть в LURE. Кнопки баланса и генерации серые → «Доступно только PRO». Открывается кнопкой на экране входа или ссылкой ?gost=1. В декабре можно убрать этот блок. -->
+<style id="lureGostCss">
+#lgOpen{display:block;width:100%;margin:14px 0 0;min-height:46px;border-radius:14px;border:1.5px solid rgba(255,210,63,.55);background:transparent;color:#ffd23f;font:800 14px Montserrat,system-ui,sans-serif;cursor:pointer}
+#lureGost *,#lgDlg *{box-sizing:border-box}
+#lureGost{position:fixed;inset:0;z-index:2147482000;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#070708;color:#f4f4f2;font-family:Montserrat,system-ui,sans-serif}
+#lureGost .lg-w{max-width:560px;margin:0 auto;padding:14px 16px 32px;display:flex;flex-direction:column;gap:14px}
+#lureGost .lg-tp{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-radius:16px;background:linear-gradient(90deg,#2a1b0c,#120d09);box-shadow:inset 0 0 0 1px rgba(255,210,63,.3)}
+#lureGost .lg-tp b{display:block;font:900 11px Montserrat,sans-serif;letter-spacing:.14em;color:#ffd23f}#lureGost .lg-tp small{display:block;font:600 11px Montserrat,sans-serif;color:#c9c0b2;margin-top:2px}
+#lureGost .lg-in{flex:none;min-height:38px;padding:0 16px;border-radius:999px;border:1.5px solid rgba(255,210,63,.6);background:transparent;color:#ffd23f;font:800 13px Montserrat,sans-serif;cursor:pointer}
+#lureGost .lg-hd{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#lureGost .lg-hd h2{margin:0;font:900 28px Montserrat,sans-serif;letter-spacing:.12em;color:#ffd23f}
+#lureGost .lg-bal{display:flex;align-items:center;gap:8px}#lureGost .lg-bal span{font:800 13px Montserrat,sans-serif;color:#6d675f}
+#lureGost .lg-gr{min-height:38px;padding:0 14px;border-radius:999px;border:0;background:#2a2725;color:#77706a;font:800 12px Montserrat,sans-serif;cursor:pointer}
+#lureGost .lg-sub{margin:0;font:600 13px/1.45 Montserrat,sans-serif;color:#a29b90}
+#lureGost .lg-tb{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+#lureGost .lg-tb button{min-height:40px;border-radius:12px;border:0;background:#141217;color:#a29b90;font:800 12px Montserrat,sans-serif;box-shadow:inset 0 0 0 1px #2a2622;cursor:pointer}
+#lureGost .lg-tb button.on{background:linear-gradient(135deg,#ffd23f,#ff9a2b);color:#1a1206;box-shadow:none}
+#lureGost .lg-m{width:100%;display:flex;flex-direction:column;gap:3px;padding:12px 14px;border-radius:16px;background:#141217;box-shadow:inset 0 0 0 1px #2a2622}
+#lureGost .lg-m b{font:800 15px Montserrat,sans-serif}#lureGost .lg-m small{font:600 12px/1.35 Montserrat,sans-serif;color:#a29b90}
+#lureGost .lg-tag{display:inline-block;margin-left:6px;padding:2px 6px;border-radius:6px;background:#ffd23f;color:#1a1206;font:900 9px Montserrat,sans-serif;vertical-align:2px}
+#lureGost .lg-q{display:flex;align-items:center;gap:8px;padding:8px 8px 8px 14px;border-radius:16px;background:#0f0e11;box-shadow:inset 0 0 0 1px #2a2622}
+#lureGost .lg-q span{flex:1;font:600 13px Montserrat,sans-serif;color:#6d675f}
+#lureGost .lg-max{display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:14px;background:linear-gradient(135deg,#ffd23f,#ff9a2b);color:#1a1206;font:800 14px Montserrat,sans-serif;text-decoration:none}
+#lgDlg{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.62)}
+#lgDlg div{width:100%;max-width:360px;box-sizing:border-box;border-radius:24px;padding:24px 20px 18px;text-align:center;background:linear-gradient(160deg,#2a1b0c,#120d09);box-shadow:inset 0 0 0 1.5px rgba(255,210,63,.55)}
+#lgDlg h3{margin:0 0 10px;font:900 19px Montserrat,sans-serif;color:#ffd23f}#lgDlg p{margin:0 0 16px;font:600 14px/1.5 Montserrat,sans-serif;color:#f4f4f2}
+#lgDlg a,#lgDlg button{display:flex;align-items:center;justify-content:center;width:100%;box-sizing:border-box;min-height:48px;line-height:1.2;margin-top:8px;border-radius:14px;font:800 14px Montserrat,sans-serif;text-decoration:none;cursor:pointer;padding:0}
+#lgDlg a{background:linear-gradient(135deg,#ffd23f,#ff9a2b);color:#1a1206}#lgDlg button{background:transparent;color:#ffd23f;border:1.5px solid rgba(255,210,63,.45)}
+</style>
+<script id="lureGostJs">
+(function(){
+  var MAX='https://max.ru/u/f9LHodD0cOIec-v91ujcZ-dap9pM51MzN00AwcIMTy-x29hys8Mcg8n8HJ4';
+  var L={
+    chat:[['Claude Opus 5.5','Самая умная, для сложных задач',1],['Claude Sonnet 5.5','Отличная на каждый день'],['GPT-6.1 Sol','Универсальная от OpenAI'],['GPT-6 Astra','Универсальная от OpenAI'],['Gemini 3.1 Pro','Сильная от Google']],
+    img:[['Nano Banana 2.1','Google · быстрая, лучшая цена'],['Nano Banana Pro','Google · лучшая для фото и текста на картинке'],['GPT Image 2.6','OpenAI · точно следует описанию']],
+    video:[['Veo 3.1 Fast','Google · кино со звуком, быстро'],['Veo 3.1','Google · лучшее кино-качество со звуком и речью'],['Seedance 2.5','ByteDance · новейшая, длинные ролики до 30 сек'],['Seedance 2','ByteDance · живые движения людей'],['Kling 3.0','Kuaishou · лучшая для движения и кино, до 15 сек'],['Kling 2.6','Kuaishou · качественно и дешевле'],['Kling 3.0 Motion Control','Персонаж с фото повторяет движения из твоего видео'],['Kling 2.6 Motion Control','Движения из видео, дешевле'],['Gemini Omni Flash','Google · быстро и недорого']],
+    sound:[['ElevenLabs v4','Озвучка текста живыми голосами, 21 голос'],['Suno Песни','Песни с голосом и мелодии по описанию или твоему тексту'],['Suno Sounds','Звуковые эффекты, шумы и лупы по описанию']]
+  };
+  var TN={chat:'Чат',img:'Картинки',video:'Видео',sound:'Звук'}, PH={chat:'Спроси что угодно…',img:'Опиши картинку…',video:'Опиши видео…',sound:'Опиши звук или вставь текст…'};
+  var tab='chat', box=null;
+  function e(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  function dlg(){if(document.getElementById('lgDlg'))return;var d=document.createElement('div');d.id='lgDlg';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');
+    d.innerHTML='<div><h3>Доступно только PRO</h3><p>Регистрация откроется в декабре. Напишите в MAX внизу страницы, чтобы забронировать очередь.</p><a href="'+MAX+'" target="_blank" rel="noopener">Написать в MAX</a><button type="button">Понятно</button></div>';
+    d.onclick=function(ev){if(ev.target===d||ev.target.tagName==='BUTTON')d.remove()};document.body.appendChild(d)}
+  function draw(){
+    box.innerHTML='<div class="lg-w"><div class="lg-tp"><div><b>РЕЖИМ ПРОСМОТРА</b><small>Старт EAGLES в декабре 2026</small></div><button type="button" class="lg-in" data-a="in">Войти</button></div>'
+      +'<div class="lg-hd"><h2>LURE</h2><div class="lg-bal"><span>— ₽</span><button type="button" class="lg-gr" data-a="pro">Пополнить</button></div></div>'
+      +'<p class="lg-sub">Лучшие нейросети мира без VPN в одном месте. Смотри, что есть внутри. Создавать — с PRO в декабре.</p>'
+      +'<div class="lg-tb">'+Object.keys(TN).map(function(k){return '<button type="button" data-t="'+k+'" class="'+(k===tab?'on':'')+'">'+TN[k]+'</button>'}).join('')+'</div>'
+      +L[tab].map(function(m){return '<div class="lg-m"><b>'+e(m[0])+(m[2]?'<span class="lg-tag">ЛУЧШАЯ</span>':'')+'</b><small>'+e(m[1])+'</small></div>'}).join('')
+      +'<div class="lg-q"><span>'+PH[tab]+'</span><button type="button" class="lg-gr" data-a="pro">Создать</button></div>'
+      +'<a class="lg-max" href="'+MAX+'" target="_blank" rel="noopener">Написать в MAX — забронировать очередь</a></div>';
+  }
+  function open(){if(box)return;box=document.createElement('div');box.id='lureGost';
+    box.onclick=function(ev){var t=ev.target.closest&&ev.target.closest('[data-t],[data-a]');if(!t)return;
+      if(t.dataset.t){tab=t.dataset.t;draw();return}
+      if(t.dataset.a==='pro')dlg();else if(t.dataset.a==='in'){box.remove();box=null}};
+    draw();document.body.appendChild(box)}
+  window.lureGost=open;
+  function tok(){try{return localStorage.getItem('lure_tok')||''}catch(x){return ''}}
+  function addBtn(){var f=document.getElementById('l1');if(!f||document.getElementById('lgOpen'))return;
+    var b=document.createElement('button');b.type='button';b.id='lgOpen';b.textContent='Посмотреть нейросети без входа';b.onclick=open;var fm=document.getElementById('lF1');if(fm&&fm.parentNode===f)f.insertBefore(b,fm.nextSibling);else f.appendChild(b)}
+  function go(){addBtn();if(/[?&]gost=1/.test(location.search)&&!tok())open()}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go();
+})();
+</script>
+
+</body>
+</html>

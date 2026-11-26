@@ -162,7 +162,7 @@
         + '<h4>ПРОДУКТЫ · МОЖНО ОТКРЫТЬ И ПОСМОТРЕТЬ</h4><div class="g">'
         + '<button type="button" class="t" data-v="cards"><b>Карты</b><small>смотреть пример</small></button>'
         + '<a class="t" href="/contacts.html"><b>Мои контакты</b><small>смотреть пример</small></a>'
-        + '<a class="t" href="https://lure.eaglesteam.ru/"><b>LURE</b><small>какие есть нейросети</small></a>'
+        + '<a class="t" href="https://lure.eaglesteam.ru/?gost=1"><b>LURE</b><small>какие есть нейросети</small></a>'
         + '<a class="t" href="/obuchenie.html"><b>Обучение</b><small>3 видео открыты</small></a>'
         + '<a class="t" href="/marketing.html"><b>Маркетинг</b><small>пакеты, ранги, бонусы</small></a>'
         + '<a class="t" href="/eyrie.html"><b>EYRIE</b><small>канал открыт</small></a>'
