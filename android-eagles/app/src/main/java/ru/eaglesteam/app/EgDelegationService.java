@@ -83,7 +83,10 @@ public class EgDelegationService extends DelegationService {
             .setChannelId(CALL_CH).setCategory(Notification.CATEGORY_CALL).setTimeoutAfter(50000)
             .setVisibility(Notification.VISIBILITY_PUBLIC).setAutoCancel(true).setActions();
         cb.setStyle(Notification.CallStyle.forIncomingCall(who, act("decl", tag, id, caller, 1), act("ans", tag, id, caller, 2)));
-        if (n.contentIntent != null) cb.setFullScreenIntent(n.contentIntent, true);
+        Intent fs = new Intent(Intent.ACTION_VIEW, Uri.parse("https://app.eaglesteam.ru/chat.html?to=" + caller))
+            .setClass(this, EgLauncherActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        cb.setFullScreenIntent(PendingIntent.getActivity(this, caller.hashCode() * 4 + 3, fs,
+            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE), true);
         Notification out = cb.build();
         out.flags |= Notification.FLAG_INSISTENT;
         nm.notify(tag, id, out);
@@ -111,11 +114,14 @@ public class EgDelegationService extends DelegationService {
     return false;
   }
 
+  /** 1.14: кнопка звонка сразу открывает EAGLES на /chat.html?to=ID&eyeans=ID (или eyedecl=ID), без промежуточного экрана —
+   *  на Samsung с кнопками CallStyle промежуточный экран не запускал приложение. Уведомление гасит EgLauncherActivity. */
   private PendingIntent act(String a, String tag, int id, String caller, int rq) {
-    Intent i = new Intent(this, CallActionActivity.class)
-        .setAction("ru.eaglesteam.app.CALL_" + a)
-        .putExtra("a", a).putExtra("tag", tag).putExtra("id", id).putExtra("caller", caller)
-        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+    String q = "ans".equals(a) ? "eyeans" : "eyedecl";
+    Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse("https://app.eaglesteam.ru/chat.html?to=" + caller + "&" + q + "=" + caller))
+        .setClass(this, EgLauncherActivity.class)
+        .putExtra("egCallTag", tag).putExtra("egCallId", id)
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
     int fl = PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0);
     return PendingIntent.getActivity(this, (caller.hashCode() * 4) + rq, i, fl);
   }

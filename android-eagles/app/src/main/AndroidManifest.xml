@@ -10,7 +10,7 @@
     <meta-data android:name="asset_statements" android:resource="@string/asset_statements"/>
     <activity android:name=".EgLauncherActivity" android:exported="true"
         android:label="EAGLES" android:launchMode="singleTask">
-      <meta-data android:name="android.support.customtabs.trusted.DEFAULT_URL" android:value="https://app.eaglesteam.ru/profile.html?app=android&amp;v=21&amp;ac=14"/>
+      <meta-data android:name="android.support.customtabs.trusted.DEFAULT_URL" android:value="https://app.eaglesteam.ru/profile.html?app=android&amp;v=21&amp;ac=15"/>
       <meta-data android:name="android.support.customtabs.trusted.STATUS_BAR_COLOR" android:resource="@color/eg_bg"/>
       <meta-data android:name="android.support.customtabs.trusted.NAVIGATION_BAR_COLOR" android:resource="@color/eg_bg"/>
       <meta-data android:name="android.support.customtabs.trusted.SPLASH_IMAGE_DRAWABLE" android:resource="@drawable/splash"/>
