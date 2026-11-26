@@ -43,7 +43,7 @@ import com.google.androidbrowserhelper.trusted.TwaProviderPicker;
  */
 public class EgLauncherActivity extends LauncherActivity {
     private static final Uri ORIGIN = Uri.parse("https://app.eaglesteam.ru");
-    private static final Uri START = Uri.parse("https://app.eaglesteam.ru/profile.html?app=android&v=19");
+    private static final Uri START = Uri.parse("https://app.eaglesteam.ru/profile.html?app=android&v=20");
     private static final long MAX_WAIT_MS = 4000;
 
     private final Handler mHandler = new Handler(Looper.getMainLooper());
