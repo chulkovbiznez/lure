@@ -50,8 +50,7 @@ public class EgDelegationService extends DelegationService {
           b.setAutoCancel(true).setTimeoutAfter(10 * 60 * 1000L).setVisibility(Notification.VISIBILITY_PUBLIC);
           try {
             Intent fs = new Intent(Intent.ACTION_VIEW, Uri.parse("https://app.eaglesteam.ru/karty.html"))
-                .setClass(this, EgLauncherActivity.class)
-                .putExtra("egCallTag", platformTag).putExtra("egCallId", platformId)
+                .setClass(this, EgLauncherActivity.class)   // без egCallId: открытие Карт не глушит будильник, глушит нажатие/смахивание
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
             b.setFullScreenIntent(PendingIntent.getActivity(this, 777000 + (platformId & 0xfff), fs,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE), true);
