@@ -120,6 +120,7 @@ public class AlarmService extends Service {
 
   private Notification build() {
     NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+    if (Build.VERSION.SDK_INT >= 26 && nm != null) { try { nm.deleteNotificationChannel("eagles_rem_v2"); nm.deleteNotificationChannel("eagles_rem_v1"); } catch (Exception ignored) { } }   // 1.20: старые каналы будильника не путают
     if (Build.VERSION.SDK_INT >= 26 && nm != null && nm.getNotificationChannel(CH) == null) {
       NotificationChannel ch = new NotificationChannel(CH, "Будильник EAGLES (звенит до выключения)", NotificationManager.IMPORTANCE_HIGH);
       ch.setSound(null, null);          // звук играет сама служба по кругу
