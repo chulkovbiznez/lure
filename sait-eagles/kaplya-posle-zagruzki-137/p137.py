@@ -20,4 +20,9 @@ new='''      /* 26.11 egDrop137: капли падают и звучат тол�
         setTimeout(step, go ? 450 : 700);
       })();'''
 s=s.replace(old,new)
+# 137b (Андрей): при каждом входе в Профиль показываем на одно касание меньше, через секунду падает капля и становится как есть
+old2 = "      if(todayN > seen) startDrop(seen, todayN);\n      else setLabels(todayN);"
+assert s.count(old2)==1
+s=s.replace(old2, "      if(todayN > seen) startDrop(seen, todayN);\n      else startDrop(todayN - 1, todayN); /* 137b: последняя капля падает при каждом входе */")
+s=s.replace("setTimeout(step, go ? 450 : 700);","setTimeout(step, go ? 450 : 1000);")
 open(dst,'w',encoding='utf-8').write(s)

@@ -1533,7 +1533,7 @@ function egSoftTap(c){try{
       }
       (function waitFree(){
         if(egBusy137()) return setTimeout(waitFree, 150);
-        setTimeout(step, go ? 450 : 700);
+        setTimeout(step, go ? 450 : 1000);
       })();
     }
     setLabels(0);
@@ -1874,7 +1874,7 @@ function egSoftTap(c){try{
       localStorage.setItem(seenKey, dayKey + '|' + todayN);
       if(todayN <= 0){ setLabels(0); return; }
       if(todayN > seen) startDrop(seen, todayN);
-      else setLabels(todayN);
+      else startDrop(todayN - 1, todayN); /* 137b: последняя капля падает при каждом входе */
     });
 
     // ночью круг обнуляется сам: наступил новый день — пустой круг
