@@ -44,9 +44,21 @@ public class EgDelegationService extends DelegationService {
             nm.createNotificationChannel(ch);
           }
           Notification.Builder b = Notification.Builder.recoverBuilder(this, notification); // кнопки «Отложить 10 мин» / «Готово» из sw.js сохраняются
-          b.setChannelId(REM_CH).setCategory(Notification.CATEGORY_REMINDER);
+          b.setChannelId(REM_CH).setCategory(Notification.CATEGORY_ALARM);
           b.setSmallIcon(R.drawable.ic_notify);
-          nm.notify(platformTag, platformId, b.build());
+          // 1.16: будильник звенит по кругу, пока не выключат; сам гаснет через 10 минут; на заблокированном экране открывает Карты
+          b.setAutoCancel(true).setTimeoutAfter(10 * 60 * 1000L).setVisibility(Notification.VISIBILITY_PUBLIC);
+          try {
+            Intent fs = new Intent(Intent.ACTION_VIEW, Uri.parse("https://app.eaglesteam.ru/karty.html"))
+                .setClass(this, EgLauncherActivity.class)
+                .putExtra("egCallTag", platformTag).putExtra("egCallId", platformId)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            b.setFullScreenIntent(PendingIntent.getActivity(this, 777000 + (platformId & 0xfff), fs,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE), true);
+          } catch (Exception eF) {}
+          Notification out = b.build();
+          out.flags |= Notification.FLAG_INSISTENT;
+          nm.notify(platformTag, platformId, out);
           return true;
         }
         // 1.9: свой канал «Сообщения EAGLES» с высокой важностью — уведомление всплывает поверх экрана.
