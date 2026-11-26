@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
 public class EgDelegationService extends DelegationService {
   static final String CALL_CH = "eye_calls_v2"; // 1.11: своя мелодия EYE (res/raw/eye_ring.ogg); звук канала менять нельзя, поэтому новый id
   static final String MSG_CH = "eagles_msgs_v2";
+  static final String REM_CH = "eagles_rem_v1";   // 1.15: будильник Карт (тред «Сделать напоминания-будильник в Картах»)
   private static final Pattern CALLER = Pattern.compile("call-(\\d{1,12})");
 
   @Override
@@ -30,6 +31,23 @@ public class EgDelegationService extends DelegationService {
         CharSequence t = notification.extras != null ? notification.extras.getCharSequence(Notification.EXTRA_TITLE) : null;
         if (t != null && t.toString().startsWith("📞") && nm.areNotificationsEnabled()) {
           return postCall(nm, platformTag, platformId, notification);
+        }
+        if (t != null && t.toString().startsWith("⏰") && nm.areNotificationsEnabled()) {
+          if (nm.getNotificationChannel(REM_CH) == null) {
+            NotificationChannel ch = new NotificationChannel(REM_CH, "Напоминания EAGLES", NotificationManager.IMPORTANCE_HIGH);
+            Uri snd = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.eagles_rem);
+            ch.setSound(snd, new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ALARM)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build());
+            ch.enableVibration(true);
+            ch.setVibrationPattern(new long[] {0, 400, 200, 400, 200, 400});
+            ch.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
+            nm.createNotificationChannel(ch);
+          }
+          Notification.Builder b = Notification.Builder.recoverBuilder(this, notification); // кнопки «Отложить 10 мин» / «Готово» из sw.js сохраняются
+          b.setChannelId(REM_CH).setCategory(Notification.CATEGORY_REMINDER);
+          b.setSmallIcon(R.drawable.ic_notify);
+          nm.notify(platformTag, platformId, b.build());
+          return true;
         }
         // 1.9: свой канал «Сообщения EAGLES» с высокой важностью — уведомление всплывает поверх экрана.
         // Старый канал (создан ещё в 1.1 Chrome-библиотекой с обычной важностью) поднять нельзя,
