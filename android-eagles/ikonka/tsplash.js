@@ -1,6 +1,6 @@
 const {chromium}=require('playwright');const fs=require('fs');
 (async()=>{const b=await chromium.launch();const c=await b.newContext({viewport:{width:360,height:840},deviceScaleFactor:2});const p=await c.newPage();
-const pr=fs.readFileSync('/tmp/w130/profile-131.html');
+const pr=fs.readFileSync('/tmp/w130/profile-132.html');
 await p.route(u=>new URL(u).pathname==='/profile.html',r=>r.fulfill({status:200,contentType:'text/html; charset=utf-8',body:pr}));
 await p.route(/functions\.yandexcloud/,r=>new Promise(()=>{}));
 await p.goto('https://app.eaglesteam.ru/egpwa/favicon-48.png');
