@@ -81,10 +81,6 @@ public class ShineSplashView extends View {
                 }
             }
         } catch (Throwable ignored) { top = 0; bot = h; }
-        // 1.10: замер на телефоне Андрея — без поправки картинка была выше Chrome на ~27 px,
-        // с полной поправкой на системные полосы — ниже на ~29 px. Берём середину.
-        top = top / 2f;
-        bot = h - (h - bot) / 2f;
         float ah = bot - top;
         float s = Math.max(w / (float) mImg.getWidth(), ah / (float) mImg.getHeight());
         mM.setScale(s, s);

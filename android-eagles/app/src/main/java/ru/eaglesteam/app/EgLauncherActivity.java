@@ -156,6 +156,32 @@ public class EgLauncherActivity extends LauncherActivity {
         }).start();
     }
 
+    /** Матрица для заставки в Chrome: CENTER_CROP в области между строкой состояния и кнопками. */
+    @Nullable
+    private float[] chromeMatrix() {
+        try {
+            if (Build.VERSION.SDK_INT < 23) return null;
+            android.view.WindowInsets in = getWindow().getDecorView().getRootWindowInsets();
+            if (in == null) return null;
+            android.util.DisplayMetrics dm = new android.util.DisplayMetrics();
+            getWindowManager().getDefaultDisplay().getRealMetrics(dm);
+            BitmapFactory.Options o = new BitmapFactory.Options();
+            o.inScaled = false;
+            o.inJustDecodeBounds = true;
+            BitmapFactory.decodeResource(getResources(), R.drawable.splash, o);
+            float iw = o.outWidth, ih = o.outHeight, W = dm.widthPixels, H = dm.heightPixels;
+            if (iw <= 0 || ih <= 0 || W <= 0 || H <= 0) return null;
+            float top = in.getSystemWindowInsetTop(), bot = H - in.getSystemWindowInsetBottom();
+            float ah = bot - top;
+            if (ah < H * 0.6f) return null;
+            float sc = Math.max(W / iw, ah / ih);
+            float tx = (W - iw * sc) / 2f, ty = top + (ah - ih * sc) / 2f;
+            return new float[] {sc, 0, tx, 0, sc, ty, 0, 0, 1};
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
     /** Когда связь проверена и заставка передана — открываем Chrome своей сессией. */
     private void tryOwnLaunch() {
         if (mLaunched || isFinishing()) return;
@@ -173,7 +199,15 @@ public class EgLauncherActivity extends LauncherActivity {
                 sp.putString(SplashScreenParamKey.KEY_VERSION, SplashScreenVersion.V1);
                 sp.putInt(SplashScreenParamKey.KEY_FADE_OUT_DURATION_MS, 300);
                 sp.putInt(SplashScreenParamKey.KEY_BACKGROUND_COLOR, bg);
-                sp.putInt(SplashScreenParamKey.KEY_SCALE_TYPE, ImageView.ScaleType.CENTER_CROP.ordinal());
+                float[] mx = chromeMatrix();
+                if (mx != null) {
+                    // 1.10: Chrome рисует заставку на ВЕСЬ экран (под полосками), а сайт — между полосками.
+                    // Передаём точную матрицу: картинка встаёт туда же, где потом будет экран загрузки сайта.
+                    sp.putInt(SplashScreenParamKey.KEY_SCALE_TYPE, ImageView.ScaleType.MATRIX.ordinal());
+                    sp.putFloatArray(SplashScreenParamKey.KEY_IMAGE_TRANSFORMATION_MATRIX, mx);
+                } else {
+                    sp.putInt(SplashScreenParamKey.KEY_SCALE_TYPE, ImageView.ScaleType.CENTER_CROP.ordinal());
+                }
                 b.setSplashScreenParams(sp);
             }
             try {
