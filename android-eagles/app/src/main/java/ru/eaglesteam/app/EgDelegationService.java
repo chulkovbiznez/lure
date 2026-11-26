@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
  *     до «Пропущенный звонок» или 50 с), кнопки «Сбросить» и «Принять». */
 public class EgDelegationService extends DelegationService {
   static final String CALL_CH = "eye_calls_v1";
+  static final String MSG_CH = "eagles_msgs_v2";
   private static final Pattern CALLER = Pattern.compile("call-(\\d{1,12})");
 
   @Override
@@ -31,15 +32,23 @@ public class EgDelegationService extends DelegationService {
         if (t != null && t.toString().startsWith("📞") && nm.areNotificationsEnabled()) {
           return postCall(nm, platformTag, platformId, notification);
         }
-        if (channelName != null) {
-          String id = channelName.toLowerCase(Locale.ROOT).replace(' ', '_') + "_channel_id";
-          if (nm.getNotificationChannel(id) == null) {
-            NotificationChannel ch = new NotificationChannel(id, channelName, NotificationManager.IMPORTANCE_HIGH);
+        // 1.9: свой канал «Сообщения EAGLES» с высокой важностью — уведомление всплывает поверх экрана.
+        // Старый канал (создан ещё в 1.1 Chrome-библиотекой с обычной важностью) поднять нельзя,
+        // поэтому перекладываем уведомление в новый канал сами.
+        if (nm.areNotificationsEnabled()) {
+          if (nm.getNotificationChannel(MSG_CH) == null) {
+            NotificationChannel ch = new NotificationChannel(MSG_CH, "Сообщения EAGLES", NotificationManager.IMPORTANCE_HIGH);
             ch.enableVibration(true);
             ch.setVibrationPattern(new long[] {0, 250, 150, 250});
             ch.setShowBadge(true);
+            ch.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
             nm.createNotificationChannel(ch);
           }
+          Notification.Builder b = Notification.Builder.recoverBuilder(this, notification);
+          b.setChannelId(MSG_CH);
+          b.setSmallIcon(R.drawable.ic_notify);
+          nm.notify(platformTag, platformId, b.build());
+          return true;
         }
       } catch (Exception ignored) { }
     }
