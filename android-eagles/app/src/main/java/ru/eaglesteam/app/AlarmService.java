@@ -36,6 +36,7 @@ public class AlarmService extends Service {
   static volatile CharSequence title, text;
   static volatile PendingIntent okPi, snzPi;
   static volatile boolean running;
+  static volatile String localId;   // 1.19: будильник из телефона (AlarmSched), а не из пуша
 
   private MediaPlayer mp;
   private Vibrator vib;
@@ -43,8 +44,16 @@ public class AlarmService extends Service {
   private final Runnable autoOff = new Runnable() { public void run() { stopAlarm(null); } };
 
   /** Запустить будильник. false — не получилось (тогда показываем обычное звенящее уведомление). */
+  /** 1.19: срок будильника из AlarmSched (AlarmManager даёт право запустить службу из фона). */
+  static void fireLocal(Context c, String id, String t) {
+    title = t; text = "Будильник EAGLES"; okPi = null; snzPi = null; localId = id;
+    Intent si = new Intent(c, AlarmService.class).setAction(A_START);
+    try { if (Build.VERSION.SDK_INT >= 26) c.startForegroundService(si); else c.startService(si); }
+    catch (Exception e) { android.util.Log.w("EAGLES", "local alarm start failed", e); }
+  }
+
   static boolean fire(Context c, CharSequence t, CharSequence body, Notification n) {
-    title = t; text = body; okPi = null; snzPi = null;
+    title = t; text = body; okPi = null; snzPi = null; localId = null;
     if (n != null && n.actions != null) {
       for (Notification.Action a : n.actions) {
         String s = a.title == null ? "" : a.title.toString().toLowerCase();
@@ -162,6 +171,13 @@ public class AlarmService extends Service {
   }
 
   private void stopAlarm(String which) {
+    String lid = localId;
+    if (lid != null) {   // 1.19: будильник из телефона — повторы и «отложить» решаем сами
+      try {
+        if ("ok".equals(which)) AlarmSched.cancelId(this, lid);
+        else if ("snz".equals(which)) AlarmSched.snooze(this, lid, title != null ? title.toString() : "", System.currentTimeMillis() + 10 * 60 * 1000L);
+      } catch (Exception e) { android.util.Log.w("EAGLES", "local alarm stop failed", e); }
+    }
     PendingIntent p = "snz".equals(which) ? snzPi : "ok".equals(which) ? okPi : null;
     if (p != null) { try { p.send(); } catch (Exception ignored) { } }   // сайт узнаёт «Готово» / «Отложить» (sw.js)
     if ("snz".equals(which) && p == null) android.util.Log.w("EAGLES", "no snooze action from site");
