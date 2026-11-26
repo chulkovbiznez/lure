@@ -43,7 +43,7 @@ import com.google.androidbrowserhelper.trusted.TwaProviderPicker;
  */
 public class EgLauncherActivity extends LauncherActivity {
     private static final Uri ORIGIN = Uri.parse("https://app.eaglesteam.ru");
-    private static final Uri START = Uri.parse("https://app.eaglesteam.ru/profile.html?app=android&v=21&ac=22");
+    private static final Uri START = Uri.parse("https://app.eaglesteam.ru/profile.html?app=android&v=22&ac=23");
     private static final long MAX_WAIT_MS = 4000;
 
     private final Handler mHandler = new Handler(Looper.getMainLooper());
@@ -77,6 +77,7 @@ public class EgLauncherActivity extends LauncherActivity {
         try {
             Intent in = getIntent();
             AlarmService.stop(this); AlarmSched.clearAll(this);   // 1.21: будильник снят — при каждом запуске гасим и стираем всё
+            try { android.app.NotificationManager nm0 = (android.app.NotificationManager) getSystemService(NOTIFICATION_SERVICE); if (nm0 != null) nm0.cancelAll(); } catch (Exception eC) {}   // 1.22: старые уведомления из шторки убираем
 
             if (in != null && in.hasExtra("egCallId")) {
                 android.app.NotificationManager nm = (android.app.NotificationManager) getSystemService(NOTIFICATION_SERVICE);
