@@ -28,6 +28,16 @@ public class AlarmSched extends BroadcastReceiver {
   }
   static void save(Context c, JSONArray a) { sp(c).edit().putString(K_LIST, a.toString()).apply(); }
 
+  /** 1.21: будильник снят (Андрей 26.11) — отменить всё заведённое и забыть список. */
+  static void clearAll(Context c) {
+    try { cancelAll(c, load(c)); } catch (Exception ignored) { }
+    sp(c).edit().clear().apply();
+    try {
+      android.app.NotificationManager nm = (android.app.NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
+      if (nm != null && Build.VERSION.SDK_INT >= 26) for (String id : new String[] {"eagles_alarm_v3", "eagles_rem_v2", "eagles_rem_v1"}) nm.deleteNotificationChannel(id);
+    } catch (Exception ignored) { }
+  }
+
   /** Полная замена списка будильников (из страницы Карт). */
   static void setAll(Context c, String json) {
     JSONArray in;
@@ -128,6 +138,11 @@ public class AlarmSched extends BroadcastReceiver {
 
   @Override public void onReceive(Context c, Intent intent) {
     String act = intent != null ? intent.getAction() : null;
+    if (true) {   // 1.21: будильник снят — любые старые сроки и перезагрузка только всё очищают
+      if (A_FIRE.equals(act) && intent != null) cancelOne(c, intent.getStringExtra("id"), intent.getStringExtra("t"), intent.getLongExtra("at", 0));
+      clearAll(c);
+      return;
+    }
     if (A_FIRE.equals(act)) {
       String id = intent.getStringExtra("id"), t = intent.getStringExtra("t");
       long at = intent.getLongExtra("at", 0);

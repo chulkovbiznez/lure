@@ -35,6 +35,7 @@ public class EgDelegationService extends DelegationService {
         boolean isRem = (t != null && t.toString().contains("⏰")) || (platformTag != null && platformTag.contains("rem-"));   // 1.17: и по tag rem-…
         if (isRem && nm.areNotificationsEnabled()) {
           // 1.18: настоящий будильник — служба играет звук по кругу, плашка висит до «Выключить»
+          if (true) return true;   // 1.21: будильник снят — уведомления будильника не показываем
           // 1.19: страница уже отдала будильники телефону — пуш сервера только запасной, не звеним второй раз
           if (AlarmSched.localMode(this) || AlarmService.running || AlarmSched.firedRecently(this)) return true;
           if (AlarmService.fire(this, t, notification.extras.getCharSequence(Notification.EXTRA_TEXT), notification)) return true;

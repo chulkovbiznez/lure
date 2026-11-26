@@ -16,7 +16,9 @@ public class LinkActivity extends Activity {
     try {
       Uri d = getIntent() != null ? getIntent().getData() : null;
       String host = d != null ? d.getHost() : null;
-      if ("alarms".equals(host)) {
+      if ("alarms".equals(host)) {   // 1.21: будильник снят — список не принимаем, всё старое очищаем
+        AlarmSched.clearAll(this);
+      } else if (false) {
         String q = d.getQueryParameter("d");
         if (q != null) AlarmSched.setAll(this, new String(android.util.Base64.decode(q,
             android.util.Base64.URL_SAFE | android.util.Base64.NO_WRAP | android.util.Base64.NO_PADDING), java.nio.charset.StandardCharsets.UTF_8));
