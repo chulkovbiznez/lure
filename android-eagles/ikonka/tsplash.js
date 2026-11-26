@@ -1,0 +1,14 @@
+const {chromium}=require('playwright');const fs=require('fs');
+(async()=>{const b=await chromium.launch();const c=await b.newContext({viewport:{width:360,height:840},deviceScaleFactor:2});const p=await c.newPage();
+const pr=fs.readFileSync('/tmp/w130/profile-131.html');
+await p.route(u=>new URL(u).pathname==='/profile.html',r=>r.fulfill({status:200,contentType:'text/html; charset=utf-8',body:pr}));
+await p.route(/functions\.yandexcloud/,r=>new Promise(()=>{}));
+await p.goto('https://app.eaglesteam.ru/egpwa/favicon-48.png');
+await p.evaluate(()=>{localStorage.clear();sessionStorage.clear();localStorage.setItem('eaglesfree_id','11111');localStorage.setItem('eaglesfree_session','x');localStorage.setItem('eaglesfree_last_activity',String(Date.now()));localStorage.setItem('eg_onb_done','1');localStorage.setItem('eg_pin_t','11111:'+Date.now())});
+await p.goto('https://app.eaglesteam.ru/profile.html?app=android').catch(()=>{});await p.waitForTimeout(1500);
+await p.evaluate(()=>{const s=document.createElement('style');s.textContent='.zgr,.zgr *,.zgr *::after{animation:none!important;transition:none!important}.zgr-glw{opacity:.75}';document.head.appendChild(s);
+const Z=document.getElementById('egpZ');Z.querySelector('.zgr-bar i').style.width='6%';window.zgrDone=()=>{};document.getElementById('egpZpc').textContent='6%';
+const P=document.getElementById('egPc131j');});
+await p.waitForTimeout(100);
+await p.evaluate(()=>{const t=document.getElementById('egpZpc');const n=t.cloneNode(false);n.textContent='6%';t.replaceWith(n);const B=document.querySelector('#egpZ .zgr-bar i');const nb=B.cloneNode(true);nb.style.width='6%';B.replaceWith(nb)});await p.waitForTimeout(200);
+await p.screenshot({path:'splash-new.png'});await b.close()})();
