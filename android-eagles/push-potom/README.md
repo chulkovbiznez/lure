@@ -6,10 +6,10 @@
 Что выключено:
 - приложение 1.22: EgDelegationService.onNotifyNotificationWithChannel сразу `return true` — ни одно
   уведомление Chrome (звонок CallStyle, сообщения, будильник) не показывается; при запуске шторка чистится;
-- сайт, задание 142 (sait-eagles/bez-push-142): pwa.js снимает подписку (push_off + unsubscribe), нет плашки
+- сайт, задание 143 (sait-eagles/bez-push-143): pwa.js снимает подписку (push_off + unsubscribe), нет плашки
   «Включить уведомления», нет шагов «Уведомления» и «Не усыплять»; eye.js: если человек не в EAGLES (сервер
   шлёт ringing с off=true), звонок сразу кончается «Человек сейчас не в EAGLES…».
 
 Как вернуть: EgDelegationService-1.21.java (здесь) — убрать строку `if (true) return true;   // 1.22`;
-на сайте взять bez-push-142/pwa-do-142.js и eye-do-142.js. Сервер и VM EYE не менялись (push_ остался, просто некому слать).
+на сайте взять bez-push-143/pwa-do-143.js и eye-do-143.js. Сервер и VM EYE не менялись (push_ остался, просто некому слать).
 Нерешённое: пуш не доходил, если приложение смахнуто (подозрение на slice(-5) подписок, не проверено).

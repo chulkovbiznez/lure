@@ -1,4 +1,4 @@
-/* egPwa5 (26.11.2026, задание 142): пуш-уведомления ВЫКЛЮЧЕНЫ (Андрей: «убирай уведомления пуш… только внутри приложения»). Подписка снимается (push_off + unsubscribe), плашки и шага «Уведомления» нет, шага «Не усыплять» нет. Старый код: sait-eagles/bez-push-142/pwa-do-142.js.
+/* egPwa5 (26.11.2026, задание 143): пуш-уведомления ВЫКЛЮЧЕНЫ (Андрей: «убирай уведомления пуш… только внутри приложения»). Подписка снимается (push_off + unsubscribe), плашки и шага «Уведомления» нет, шага «Не усыплять» нет. Старый код: sait-eagles/bez-push-143/pwa-do-143.js.
    egPwa4: приложение EAGLES (PWA) — 25.11.2026. v4: экран «3 шага» при первом запуске приложения (задание 124). v2: + уведомления (egPush1, задание 122). v3: ПИН держится час, шторка чистится (задание 123).
    1) регистрирует /sw.js; 2) в приложении ставит на <html> класс egapp;
    3) на Android в Профиле показывает плашку «Установить приложение EAGLES»
@@ -60,7 +60,7 @@ function subscribe(){
 }
 function pskipped(){try{return Date.now()-(+localStorage.getItem(PKEY)||0)<7*864e5;}catch(e){return false;}}
 function pshow(){
-  return; /* 142: плашка «Включить уведомления» убрана */
+  return; /* 143: плашка «Включить уведомления» убрана */
   if(!canPush()||Notification.permission!=='default'||!onProfile()||!logged()||pskipped())return;
   if(document.getElementById('egOnb')||(app&&inTwa()&&!onbDone()))return; /* v4: в приложении уведомления включает экран шагов */
   if(document.getElementById('egPwa'))return; /* сначала плашка «Установить», уведомления — потом */
@@ -79,7 +79,7 @@ function pshow(){
 }
 /* уже разрешено: раз в сутки (и при смене аккаунта) обновляем подписку на сервере */
 function psync(){
-  /* 142: вместо подписки — снимаем её: сервер больше не шлёт пуши на этот телефон */
+  /* 143: вместо подписки — снимаем её: сервер больше не шлёт пуши на этот телефон */
   if(!('serviceWorker' in navigator)||!('PushManager' in window))return;
   navigator.serviceWorker.getRegistration('/').then(function(reg){if(!reg||!reg.pushManager)return;
     return reg.pushManager.getSubscription().then(function(s){if(!s)return;
@@ -134,9 +134,9 @@ function onbStart(){
   if(pinOpen()){setTimeout(onbStart,1000);return;}
   Promise.all([canPush()?Promise.resolve(Notification.permission):Promise.resolve('denied'),permQ('camera'),permQ('microphone')]).then(function(r){
     var S=[],res={};
-    /* 142: шага «Уведомления» нет */
+    /* 143: шага «Уведомления» нет */
     if(r[1]!=='granted'||r[2]!=='granted')S.push('c');else res.c=true;
-    /* 142: шага «Не усыплять» нет (звонки только в открытом приложении) */
+    /* 143: шага «Не усыплять» нет (звонки только в открытом приложении) */
     if(!S.length){try{localStorage.setItem('eg_onb_done','1');}catch(e){}return;}
     var T={n:['Уведомления','Чтобы не пропустить <b>сообщения</b>, <b>звонки EYE</b> и <b>новых партнёров</b> в команде.','Включить'],
            c:['Камера и микрофон','Для <b>видеозвонков EYE</b> с командой и голосовых сообщений.','Разрешить'],

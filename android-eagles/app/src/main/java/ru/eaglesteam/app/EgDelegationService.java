@@ -25,7 +25,7 @@ public class EgDelegationService extends DelegationService {
 
   @Override
   public boolean onNotifyNotificationWithChannel(String platformTag, int platformId, Notification notification, String channelName) {
-    if (true) return true;   // 1.22 (задание 142): пуш-уведомлений нет совсем (Андрей: «только внутри приложения»). Старый код: android-eagles/push-potom/
+    if (true) return true;   // 1.22 (задание 143): пуш-уведомлений нет совсем (Андрей: «только внутри приложения»). Старый код: android-eagles/push-potom/
     NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
     if (Build.VERSION.SDK_INT >= 26 && nm != null) {
       try {

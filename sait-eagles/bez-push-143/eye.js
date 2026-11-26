@@ -1,4 +1,4 @@
-/* EYE v6.4 (26.11.2026, задание 142) — звонки только в открытый EAGLES: если человека нет в EAGLES (сервер говорит off), звонок сразу кончается «Человек сейчас не в EAGLES…», без пуша в закрытое приложение; всплывашки о звонке нет. Старый код: bez-push-142/eye-do-142.js.
+/* EYE v6.4 (26.11.2026, задание 143) — звонки только в открытый EAGLES: если человека нет в EAGLES (сервер говорит off), звонок сразу кончается «Человек сейчас не в EAGLES…», без пуша в закрытое приложение; всплывашки о звонке нет. Старый код: bez-push-143/eye-do-143.js.
 /* EYE v6.3 (26.11.2026, задание 140) — 1) звук собеседника играет через отдельный <audio> (в аудиозвонке видео-элемент ждал картинку и молчал);
    2) в аудиозвонке есть кнопка камеры: нажал — звонок становится видеозвонком (без перезвона); 3) EYE переподключается сразу, когда приложение
    снова на экране / появился интернет / нажали «позвонить» (раньше ждал до 30 с, а после too_many — 5 минут).
@@ -637,13 +637,13 @@
         call.byMe = true; send({ t: 'decline', cid: call.cid }); finish(''); toast('Звонок отклонён'); return;
       }
       startTone();
-      if (false && document.hidden && window.Notification) { // 142: уведомлений нет, звонок только в открытом EAGLES
+      if (false && document.hidden && window.Notification) { // 143: уведомлений нет, звонок только в открытом EAGLES
         try { new Notification('EYE · ' + m.from.name + ' звонит', { body: (m.video === false ? 'Аудиозвонок' : 'Видеозвонок') + ' EAGLES. Нажми, чтобы ответить.', tag: 'eye-' + m.cid }); } catch (e) {}
       }
       return;
     }
     if (!call || (m.cid && call.cid && m.cid !== call.cid)) return;
-    if (m.t === 'ringing' && m.off && !vals(call.peers).length) { call.byMe = true; send({ t: 'hangup', cid: m.cid }); finish(WHY.offline); return; } // 142: человек не в EAGLES — звонок в закрытое приложение не пробиваем
+    if (m.t === 'ringing' && m.off && !vals(call.peers).length) { call.byMe = true; send({ t: 'hangup', cid: m.cid }); finish(WHY.offline); return; } // 143: человек не в EAGLES — звонок в закрытое приложение не пробиваем
     if (m.t === 'ringing') { call.cid = m.cid; if (m.peer && m.peer.name) call.peer.name = m.peer.name; setSt('Вызываю…'); return; }
     if (m.t === 'accepted') {          // кто-то взял трубку — я уже в звонке и сам шлю ему приглашение
       var x = m.peer || call.peer;
