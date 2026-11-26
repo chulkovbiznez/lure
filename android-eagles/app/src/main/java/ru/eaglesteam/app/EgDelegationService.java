@@ -6,7 +6,6 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.media.AudioAttributes;
-import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import com.google.androidbrowserhelper.trusted.DelegationService;
@@ -19,7 +18,7 @@ import java.util.regex.Pattern;
  *  2) Звонок EYE (заголовок начинается с 📞): своя категория «Звонки EYE» с мелодией звонка, звук идёт по кругу (до ответа,
  *     до «Пропущенный звонок» или 50 с), кнопки «Сбросить» и «Принять». */
 public class EgDelegationService extends DelegationService {
-  static final String CALL_CH = "eye_calls_v1";
+  static final String CALL_CH = "eye_calls_v2"; // 1.11: своя мелодия EYE (res/raw/eye_ring.ogg); звук канала менять нельзя, поэтому новый id
   static final String MSG_CH = "eagles_msgs_v2";
   private static final Pattern CALLER = Pattern.compile("call-(\\d{1,12})");
 
@@ -57,8 +56,9 @@ public class EgDelegationService extends DelegationService {
 
   private boolean postCall(NotificationManager nm, String tag, int id, Notification n) {
     if (nm.getNotificationChannel(CALL_CH) == null) {
+      try { nm.deleteNotificationChannel("eye_calls_v1"); } catch (Exception ignored) { }
       NotificationChannel ch = new NotificationChannel(CALL_CH, "Звонки EYE", NotificationManager.IMPORTANCE_HIGH);
-      Uri ring = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+      Uri ring = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.eye_ring);
       ch.setSound(ring, new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
           .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build());
       ch.enableVibration(true);
