@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
 public class EgDelegationService extends DelegationService {
   static final String CALL_CH = "eye_calls_v2"; // 1.11: своя мелодия EYE (res/raw/eye_ring.ogg); звук канала менять нельзя, поэтому новый id
   static final String MSG_CH = "eagles_msgs_v2";
-  static final String REM_CH = "eagles_rem_v1";   // 1.15: будильник Карт (тред «Сделать напоминания-будильник в Картах»)
+  static final String REM_CH = "eagles_rem_v2";  // 1.17: v2 — новый канал, v1 удаляется   // 1.15: будильник Карт (тред «Сделать напоминания-будильник в Картах»)
   private static final Pattern CALLER = Pattern.compile("call-(\\d{1,12})");
 
   @Override
@@ -34,7 +34,8 @@ public class EgDelegationService extends DelegationService {
         }
         if (t != null && t.toString().startsWith("⏰") && nm.areNotificationsEnabled()) {
           if (nm.getNotificationChannel(REM_CH) == null) {
-            NotificationChannel ch = new NotificationChannel(REM_CH, "Напоминания EAGLES", NotificationManager.IMPORTANCE_HIGH);
+            try { nm.deleteNotificationChannel("eagles_rem_v1"); } catch (Exception ignored) { }
+            NotificationChannel ch = new NotificationChannel(REM_CH, "Будильник EAGLES", NotificationManager.IMPORTANCE_HIGH);
             Uri snd = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.eagles_rem);
             ch.setSound(snd, new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ALARM)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build());
@@ -43,11 +44,19 @@ public class EgDelegationService extends DelegationService {
             ch.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
             nm.createNotificationChannel(ch);
           }
-          Notification.Builder b = Notification.Builder.recoverBuilder(this, notification); // кнопки «Отложить 10 мин» / «Готово» из sw.js сохраняются
-          b.setChannelId(REM_CH).setCategory(Notification.CATEGORY_ALARM);
-          b.setSmallIcon(R.drawable.ic_notify);
-          // 1.16: будильник звенит по кругу, пока не выключат; сам гаснет через 10 минут; на заблокированном экране открывает Карты
-          b.setAutoCancel(true).setTimeoutAfter(10 * 60 * 1000L).setVisibility(Notification.VISIBILITY_PUBLIC);
+          // 1.17: уведомление собираем заново (как звонок): в копии Chrome-уведомления звук глушился (без звука при свёрнутом приложении)
+          Notification.Builder b = new Notification.Builder(this, REM_CH)
+              .setSmallIcon(R.drawable.ic_notify)
+              .setContentTitle(t)
+              .setContentText(notification.extras.getCharSequence(Notification.EXTRA_TEXT))
+              .setContentIntent(notification.contentIntent)
+              .setDeleteIntent(notification.deleteIntent)
+              .setCategory(Notification.CATEGORY_ALARM)
+              .setOnlyAlertOnce(false)
+              .setGroupAlertBehavior(Notification.GROUP_ALERT_ALL)
+              .setAutoCancel(true).setTimeoutAfter(10 * 60 * 1000L).setVisibility(Notification.VISIBILITY_PUBLIC);
+          if (notification.getLargeIcon() != null) b.setLargeIcon(notification.getLargeIcon());
+          if (notification.actions != null) for (Notification.Action a : notification.actions) b.addAction(a);   // «Отложить 10 мин» / «Готово» из sw.js
           try {
             Intent fs = new Intent(Intent.ACTION_VIEW, Uri.parse("https://app.eaglesteam.ru/karty.html"))
                 .setClass(this, EgLauncherActivity.class)   // без egCallId: открытие Карт не глушит будильник, глушит нажатие/смахивание
@@ -75,6 +84,7 @@ public class EgDelegationService extends DelegationService {
           Notification.Builder b = Notification.Builder.recoverBuilder(this, notification);
           b.setChannelId(MSG_CH);
           b.setSmallIcon(R.drawable.ic_notify);
+          b.setOnlyAlertOnce(false).setGroupAlertBehavior(Notification.GROUP_ALERT_ALL);   // 1.17: звук и всплытие и при свёрнутом приложении
           nm.notify(platformTag, platformId, b.build());
           return true;
         }
