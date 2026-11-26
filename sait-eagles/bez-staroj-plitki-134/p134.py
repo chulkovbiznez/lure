@@ -19,8 +19,9 @@ html.egd #loggedInBlock .cbrow{height:auto}
 .egp .cbrow #openKop,html.pfn .egp .cbrow #openKop{flex-direction:row!important;align-items:center!important;gap:16px!important;padding:12px 18px 12px 12px!important;min-height:0!important;height:auto!important}
 .egp .cbrow #openKop .cb-vid,html.pfn .egp .cbrow #openKop .cb-vid{width:86px!important;height:86px!important;min-height:0!important;flex:none!important;margin:0!important}
 .egp .cbrow #openKop .cb-vid img.pfn-art{width:100%!important;height:100%!important;object-fit:contain!important}
-.egp .cbrow #openKop .cb-t{flex:1;text-align:left}
-.egp .cbrow #openKop .cb-arr{display:block!important;margin-left:auto;position:static!important}
+.egp .cbrow #openKop,html.pfn .egp .cbrow #openKop{justify-content:center!important}
+.egp .cbrow #openKop .cb-t{flex:none!important;text-align:left}
+.egp .cbrow #openKop .cb-arr{display:none!important}
 @media (prefers-reduced-motion:reduce){#eyeVB:active{transform:none}}</style>'''
 TILE='''
 
