@@ -72,6 +72,24 @@ public class EgDelegationService extends DelegationService {
     Matcher m = CALLER.matcher(tag == null ? "" : tag);
     String caller = null;
     while (m.find()) caller = m.group(1);
+    if (caller != null && Build.VERSION.SDK_INT >= 31) {
+      // 1.12: настоящие кнопки звонка Android — круглые зелёная и красная трубки (CallStyle).
+      try {
+        CharSequence t = n.extras != null ? n.extras.getCharSequence(Notification.EXTRA_TITLE) : null;
+        String name = t == null ? "EYE" : t.toString().replace("📞", "").trim();
+        if (name.isEmpty()) name = "EYE";
+        android.app.Person who = new android.app.Person.Builder().setName(name).setImportant(true).build();
+        Notification.Builder cb = Notification.Builder.recoverBuilder(this, n)
+            .setChannelId(CALL_CH).setCategory(Notification.CATEGORY_CALL).setTimeoutAfter(50000)
+            .setVisibility(Notification.VISIBILITY_PUBLIC).setAutoCancel(true).setActions();
+        cb.setStyle(Notification.CallStyle.forIncomingCall(who, act("decl", tag, id, caller, 1), act("ans", tag, id, caller, 2)));
+        if (n.contentIntent != null) cb.setFullScreenIntent(n.contentIntent, true);
+        Notification out = cb.build();
+        out.flags |= Notification.FLAG_INSISTENT;
+        nm.notify(tag, id, out);
+        if (posted(nm, tag, id)) return true;
+      } catch (Exception ignored) { }
+    }
     if (caller != null) {
       b.setActions();
       b.addAction(new Notification.Action.Builder(null, "❌ Сбросить", act("decl", tag, id, caller, 1)).build());
@@ -81,6 +99,16 @@ public class EgDelegationService extends DelegationService {
     out.flags |= Notification.FLAG_INSISTENT;
     nm.notify(tag, id, out);
     return true;
+  }
+
+  /** Система могла молча отклонить уведомление о звонке — тогда покажем запасной вариант с обычными кнопками. */
+  private static boolean posted(NotificationManager nm, String tag, int id) {
+    try {
+      for (android.service.notification.StatusBarNotification sb : nm.getActiveNotifications()) {
+        if (sb.getId() == id && (tag == null ? sb.getTag() == null : tag.equals(sb.getTag()))) return true;
+      }
+    } catch (Exception ignored) { }
+    return false;
   }
 
   private PendingIntent act(String a, String tag, int id, String caller, int rq) {
