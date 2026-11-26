@@ -1,19 +1,15 @@
-/* eg-skoro.js v2 (27.11.2026: канал Андрея открыт хозяину) · v1 24.11.2026, задание 119: «Скоро, в декабре» на Обучении и в Канале Андрея.
+/* eg-skoro.js v3 (27.11.2026: канал открыт всем) · v1 24.11.2026, задание 119: «Скоро, в декабре» на Обучении и в Канале Андрея.
    Видео и уроки НЕ удаляются: они только скрыты стилем. Убрать этот файл из страниц = всё вернётся как было.
    Подключение: в <head> страницы obuchenie.html и kanal.html — <script src="/eg-skoro.js?v=1"></script> */
 (function(){
   if (window.__egSkoro) return; window.__egSkoro = 1;
   var page = /kanal\.html/.test(location.pathname) ? 'kanal' : 'obuchenie';
-  /* v2 (27.11.2026, Андрей): свой канал Андрей видит целиком и грузит контент с нуля.
-     Остальные до старта видят плашку «Скоро». 5 карточек-заготовок «Скоро в канале» в канале убраны для всех. */
+  /* v3 (27.11.2026, Андрей): канал открыт всем, плашки «Скоро» в канале нет. 5 карточек-заготовок «Скоро в канале» в канале убраны для всех. */
   if (page === 'kanal') {
     var c0 = document.createElement('style'); c0.id = 'egSkoroPlan';
     c0.textContent = '#eagles-kanal .kc-wall,#eagles-kanal .kc-plan{display:none!important}';
     (document.head || document.documentElement).appendChild(c0);
-    var me = '', qu = '';
-    try { me = localStorage.getItem('eaglesfree_id') || ''; qu = new URLSearchParams(location.search).get('u') || ''; } catch (e) {}
-    var own = ['11111','23933'].indexOf(me) >= 0 && (!qu || ['11111','23933'].indexOf(qu) >= 0);
-    if (own) return;
+    return; /* v3: канал открыт ВСЕМ (Андрей 27.11 00:33 «всё с нуля, без скоро»), плашка только на Обучении */
   }
 
   var HIDE = page === 'obuchenie'
