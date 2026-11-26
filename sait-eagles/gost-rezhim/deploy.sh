@@ -31,8 +31,10 @@ yc storage s3api put-object --bucket $B --key egpwa/pwa.js --body ~/kgost/do-pwa
 yc storage s3api put-object --bucket $B --key eg-kontent.js --body ~/kgost/do-eg-kontent.js --content-type 'application/javascript; charset=utf-8' --cache-control no-cache
 yc storage s3api put-object --bucket $B --key eg-skoro.js --body ~/kgost/do-eg-skoro.js --content-type 'application/javascript; charset=utf-8' --cache-control no-cache
 RB
-yc serverless function version create --function-id $FID --runtime nodejs22 --entrypoint index.handler \
-  --memory 256m --execution-timeout 60s --concurrency 1 --service-account-id $SA --log-folder-id b1gdk9v2q7ufbktofk7o \
+MEM=$(( $(jq -r .resources.memory old.json) / 1048576 ))m; TO=$(jq -r .execution_timeout old.json); CC=$(jq -r '.concurrency // 1' old.json); SA=$(jq -r .service_account_id old.json); RT=$(jq -r .runtime old.json); EP=$(jq -r .entrypoint old.json)
+echo "как у старой: $RT $EP $MEM $TO conc=$CC sa=$SA"
+yc serverless function version create --function-id $FID --runtime $RT --entrypoint $EP \
+  --memory $MEM --execution-timeout $TO --concurrency $CC --service-account-id $SA --log-folder-id b1gdk9v2q7ufbktofk7o \
   --source-path pkg --environment "$ENVS" $SECS --format json | jq -r '"NEW " + .id + " " + .status'
 # --- страницы (eg-gost.js первым, pwa.js последним)
 up(){ yc storage s3api put-object --bucket $B --key "$1" --body "$2" --content-type 'application/javascript; charset=utf-8' --cache-control no-cache >/dev/null && echo "up $1 $(curl -s "https://$B/$1?nc=$RANDOM" | md5sum | cut -c1-8)"; }
