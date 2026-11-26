@@ -9,12 +9,13 @@ CSS='''<style id="eyeVB133">#eyeVB{position:relative;display:block;aspect-ratio:
 #eyeVB .evb-cap{position:absolute;left:3%;width:43%;bottom:22px;text-align:center;font-size:11px;font-weight:600;color:#e7dfd1;white-space:nowrap;line-height:1.2}
 #eyeVB:focus-visible{outline:2px solid #ffd23f;outline-offset:3px}#eyeVB:active{transform:scale(.985)}
 html.pfn .egp #eyeVB{margin:0}
+#eyeVB .evb-dust{position:absolute;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none}
 html.egd #loggedInBlock #eyeVB{grid-column:span 6;height:280px!important;width:100%!important;max-width:none!important;box-sizing:border-box}
 html.egd #loggedInBlock #openMap{height:280px!important}
 @media (prefers-reduced-motion:reduce){#eyeVB:active{transform:none}}</style>'''
 TILE='''
 
-      <a id="eyeVB" href="/chat.html" aria-label="Открыть EYE, видеозвонки"><video muted loop playsinline preload="metadata" poster="/eye-knopka-poster.jpg" src="/eye-knopka.mp4"></video><img class="evb-logo" src="/eye-knopka-logo.webp" alt=""><span class="evb-cap">Звонки до 4 человек</span></a>
+      <a id="eyeVB" href="/chat.html" aria-label="Открыть EYE, видеозвонки"><video muted loop playsinline preload="metadata" poster="/eye-knopka-poster.jpg" src="/eye-knopka.mp4"></video><canvas class="evb-dust" aria-hidden="true"></canvas><img class="evb-logo" src="/eye-knopka-logo.webp" alt=""><span class="evb-cap">Звонки до 4 человек</span></a>
 '''
 # CSS в head, после pfnLvb
 i=s.find('<style id="pfnLvb">'); j=s.find('</style>',i)+8; assert i>0
@@ -32,4 +33,16 @@ s=s[:k]+mapb+TILE+'\n      '+lure+'\n\n      '+s[k:]
 # видео играет, только когда кнопку видно
 a="try{ vid($('lureVB')); }catch(e){}"; assert s.count(a)==1
 s=s.replace(a,a+"\n  try{ vid($('eyeVB')); }catch(e){}")
+JS=r"""<script id="eyeDust133">/* золотые частицы на кнопке EYE, как в шапке профиля; телефоны не перекрывают */
+(function(){var a=document.getElementById('eyeVB'),cv=a&&a.querySelector('.evb-dust');if(!cv||!cv.getContext)return;var cx=cv.getContext('2d');
+var red=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches,dpr=Math.min(2,window.devicePixelRatio||1),W=0,H=0,P=[],seen=true;
+function rs(){W=cv.clientWidth;H=cv.clientHeight;cv.width=W*dpr;cv.height=H*dpr;cx.setTransform(dpr,0,0,dpr,0,0);}rs();window.addEventListener('resize',rs);
+function ph(x,y){return x>.41&&x<.98&&y>.09&&y<.91;}
+for(var i=0;i<34;i++)P.push({x:Math.random(),y:Math.random(),r:Math.random()*1.6+.4,s:Math.random()*.0016+.0005,a:Math.random()*6.28});
+if('IntersectionObserver' in window)new IntersectionObserver(function(e){seen=e[0].isIntersecting;},{threshold:0}).observe(a);
+function fr(){cx.clearRect(0,0,W,H);for(var i=0;i<P.length;i++){var p=P[i];p.y-=p.s;p.a+=.02;if(p.y<0){p.y=1;p.x=Math.random();}
+var x=p.x+Math.sin(p.a)*6/(W||1);if(ph(x,p.y))continue;cx.beginPath();cx.arc(x*W,p.y*H,p.r,0,7);cx.fillStyle='rgba(255,214,110,'+(.35+.35*Math.sin(p.a))+')';cx.fill();}
+if(!red&&!document.hidden&&seen)requestAnimationFrame(fr);else setTimeout(function(){requestAnimationFrame(fr);},700);}fr();})();</script>"""
+b=s.rfind('</body>'); assert b>0
+s=s[:b]+JS+'\n'+s[b:]
 open(dst,'w',encoding='utf-8').write(s)
