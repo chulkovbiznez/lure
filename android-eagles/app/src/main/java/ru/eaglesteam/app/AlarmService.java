@@ -129,8 +129,10 @@ public class AlarmService extends Service {
       nm.createNotificationChannel(ch);
     }
     int fl = PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE;
-    PendingIntent open = PendingIntent.getActivity(this, 7304, kartyIntent(this, true), fl);
-    PendingIntent full = PendingIntent.getActivity(this, 7305, kartyIntent(this, false), fl);
+    // 1.19: свой экран будильника (быстро, без загрузки сайта)
+    Intent ai = new Intent(this, AlarmActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_USER_ACTION);
+    PendingIntent open = PendingIntent.getActivity(this, 7304, ai, fl);
+    PendingIntent full = PendingIntent.getActivity(this, 7305, ai, fl);
     PendingIntent off = PendingIntent.getService(this, 7306, new Intent(this, AlarmService.class).setAction(A_STOP).putExtra("which", "ok"), fl);
     PendingIntent snz = PendingIntent.getService(this, 7307, new Intent(this, AlarmService.class).setAction(A_STOP).putExtra("which", "snz"), fl);
     Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(this, CH) : new Notification.Builder(this);

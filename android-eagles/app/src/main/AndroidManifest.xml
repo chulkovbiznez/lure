@@ -73,6 +73,9 @@
         <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
       </intent-filter>
     </receiver>
+    <activity android:name=".AlarmActivity" android:exported="false" android:excludeFromRecents="true"
+        android:taskAffinity="ru.eaglesteam.app.alarm" android:launchMode="singleInstance" android:showWhenLocked="true" android:turnScreenOn="true"
+        android:screenOrientation="portrait" android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen"/>
     <service android:name=".AlarmService" android:exported="false" android:foregroundServiceType="mediaPlayback"/>
     <service android:name=".EgDelegationService" android:enabled="true" android:exported="true">
       <meta-data android:name="android.support.customtabs.trusted.SMALL_ICON" android:resource="@drawable/ic_notify"/>
