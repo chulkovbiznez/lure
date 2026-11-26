@@ -11,13 +11,18 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Shader;
+import android.os.Build;
 import android.view.View;
+import android.view.WindowInsets;
+import android.util.DisplayMetrics;
 import android.view.animation.AccelerateDecelerateInterpolator;
 
 /**
  * 1.6 (26.11.2026): заставка EAGLES с золотым переливом по логотипу (как на сайте).
  * Картинка splash рисуется на весь экран (CENTER_CROP), поверх по форме логотипа
  * (маска splash_shine) пробегает светлая полоса, раз в ~2,2 с.
+ * 1.8: картинка вписывается в область МЕЖДУ строкой состояния и кнопками внизу —
+ * так же, как её потом рисует Chrome, чтобы орёл не прыгал при переходе.
  */
 public class ShineSplashView extends View {
     private Bitmap mImg, mMask;
@@ -59,9 +64,27 @@ public class ShineSplashView extends View {
         super.onDraw(c);
         if (mImg == null) return;
         int w = getWidth(), h = getHeight();
-        float s = Math.max(w / (float) mImg.getWidth(), h / (float) mImg.getHeight());
+        float top = 0, bot = h;
+        try {
+            if (Build.VERSION.SDK_INT >= 23) {
+                WindowInsets in = getRootWindowInsets();
+                if (in != null) {
+                    int[] loc = new int[2];
+                    getLocationOnScreen(loc);
+                    DisplayMetrics dm = new DisplayMetrics();
+                    getDisplay().getRealMetrics(dm);
+                    float sTop = in.getSystemWindowInsetTop();
+                    float sBot = dm.heightPixels - in.getSystemWindowInsetBottom();
+                    top = Math.max(0, sTop - loc[1]);
+                    bot = Math.min(h, sBot - loc[1]);
+                    if (bot - top < h * 0.6f) { top = 0; bot = h; }
+                }
+            }
+        } catch (Throwable ignored) { top = 0; bot = h; }
+        float ah = bot - top;
+        float s = Math.max(w / (float) mImg.getWidth(), ah / (float) mImg.getHeight());
         mM.setScale(s, s);
-        mM.postTranslate((w - mImg.getWidth() * s) / 2f, (h - mImg.getHeight() * s) / 2f);
+        mM.postTranslate((w - mImg.getWidth() * s) / 2f, top + (ah - mImg.getHeight() * s) / 2f);
         c.drawBitmap(mImg, mM, mBmp);
         if (mMask == null) return;
         // полоса идёт слева направо за первые 70 % цикла, потом пауза
