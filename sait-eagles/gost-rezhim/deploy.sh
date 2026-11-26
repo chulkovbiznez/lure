@@ -4,11 +4,12 @@
 set -e
 mkdir -p ~/kgost && cd ~/kgost
 BR=claude/project-thread-t6vobs; R=https://raw.githubusercontent.com/chulkovbiznez/lure/$BR/sait-eagles/gost-rezhim
-FID=d4e7hbmkhkj14dq3e8ip; OLD=d4e0tpmcb1s7bfgler2e; SA=ajevbo38i28ud6fae5sk; B=app.eaglesteam.ru
+FID=d4e7hbmkhkj14dq3e8ip; OLD=d4eoql6ob1sh93612v9i; SA=ajevbo38i28ud6fae5sk; B=app.eaglesteam.ru
 CUR=$(yc serverless function version get-by-tag --function-id $FID --tag '$latest' --format json | jq -r .id)
 [ "$CUR" = "$OLD" ] || { echo "STOP: живая версия $CUR, а ждали $OLD"; exit 1; }
-[ -f ~/k121/pkg/server.js ] || { echo "STOP: нет ~/k121/pkg"; exit 1; }
-[ "$(md5sum < ~/k121/pkg/server.js | cut -c1-32)" = "2756ceb6ae67c2a67501f0872ac9ade7" ] || { echo "STOP: server.js не тот"; exit 1; }
+PK=~/krem3/pkg   # база живой версии d4eoql6ob1sh93612v9i (будильник v3, 26.11)
+[ -f $PK/server.js ] || { echo "STOP: нет $PK"; exit 1; }
+echo "base server.js $(md5sum < $PK/server.js | cut -c1-32) index.js $(md5sum < $PK/index.js | cut -c1-32)"; ls $PK
 # --- проверка страниц до замены
 chk(){ curl -s "https://$B/$1?nc=$RANDOM" -o "do-$(basename $1)"; M=$(md5sum < "do-$(basename $1)" | cut -c1-32); [ "$M" = "$2" ] || { echo "STOP: $1 на сайте $M, ждали $2"; exit 1; }; echo "ok was $1"; }
 chk egpwa/pwa.js 2c75dd704c1646acd32e9b7e0d7931b1
@@ -18,7 +19,7 @@ chk eg-skoro.js 3197e220f95a2aa8cfb94be15beb10a2
 for f in p-gost.py eg-gost.js pwa.js eg-kontent.js eg-skoro.js; do curl -fsS "$R/$f?nc=$RANDOM" -o new-$f; done
 echo "new md5: $(md5sum new-eg-gost.js new-pwa.js new-eg-kontent.js new-eg-skoro.js | cut -c1-8 | tr '\n' ' ')"
 # --- сервер
-rm -rf pkg && mkdir pkg && cp ~/k121/pkg/index.js ~/k121/pkg/server.js pkg/
+rm -rf pkg && mkdir pkg && cp -r $PK/. pkg/
 python3 new-p-gost.py pkg/server.js && node --check pkg/server.js
 yc serverless function version get $OLD --format json > old.json
 ENVS=$(jq -r '.environment|to_entries|map("\(.key)=\(.value)")|join(",")' old.json)
