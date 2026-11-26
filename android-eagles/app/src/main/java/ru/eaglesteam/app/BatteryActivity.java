@@ -16,12 +16,6 @@ public class BatteryActivity extends Activity {
     Uri d = getIntent() != null ? getIntent().getData() : null;
     String host = d != null && d.getHost() != null ? d.getHost() : "battery";
     try {
-      if ("alarms".equals(host)) {   // 1.19: список будильников Карт от страницы
-        String q = d.getQueryParameter("d");
-        if (q != null) AlarmSched.setAll(this, new String(android.util.Base64.decode(q, android.util.Base64.URL_SAFE | android.util.Base64.NO_WRAP | android.util.Base64.NO_PADDING), java.nio.charset.StandardCharsets.UTF_8));
-        finish(); return;
-      }
-      if ("alarmoff".equals(host)) { AlarmService.stop(this); finish(); return; }   // 1.18: кнопка «Выключить» на странице Карт
       if ("notif".equals(host)) {
         Intent i = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
         i.putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
